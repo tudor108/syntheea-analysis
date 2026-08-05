@@ -1,0 +1,125 @@
+adverse_event_probability: 0.18
+allowable_gap_days: 60
+care_setting_distribution:
+  academic_oncology: 0.25
+  community_oncology: 0.24
+  community_urology: 0.36
+  mixed_pathway: 0.15
+castration_resistant_transition_probability: 0.2
+contraindication_probability: 0.06
+death_probability: 0.09
+disclaimer: All values are synthetic demo assumptions and require clinical and business
+  validation.
+discontinuation_probability: 0.24
+eligibility_rule_version: DEMO-ARPI-v1
+follow_up_regular_probability:
+  academic_oncology: 0.88
+  community_oncology: 0.74
+  community_urology: 0.62
+  mixed_pathway: 0.72
+hormone_sensitive_probability: 0.88
+hospitalisation_probability: 0.15
+initiation:
+  academic_oncology:
+    days_mean: 27
+    days_sd: 14
+    probability_90d: 0.84
+  community_oncology:
+    days_mean: 39
+    days_sd: 18
+    probability_90d: 0.76
+  community_urology:
+    days_mean: 56
+    days_sd: 24
+    probability_90d: 0.62
+  mixed_pathway:
+    days_mean: 44
+    days_sd: 21
+    probability_90d: 0.72
+loss_to_follow_up_probability: 0.07
+maximum_age: 90
+metastatic_probability: 0.42
+minimum_age: 50
+minimum_follow_up_days: 90
+missing_data_probabilities:
+  ethnicity: 0.04
+  gleason_score: 0.05
+  insurance_type: 0.03
+  psa_value: 0.06
+  race: 0.03
+observation_end_date: '2025-12-31'
+persistence_12m_probability:
+  academic_oncology: 0.72
+  community_oncology: 0.64
+  community_urology: 0.55
+  mixed_pathway: 0.62
+persistence_sensitivity_gaps:
+- 30
+- 60
+- 90
+progression_probability: 0.29
+provider_specialty_distribution:
+  medical_oncology: 0.38
+  other: 0.06
+  primary_care: 0.1
+  radiation_oncology: 0.12
+  urology: 0.34
+random_seed: 42
+referral:
+  academic_oncology:
+    delay_mean_days: 12
+    delay_sd_days: 7
+    probability: 0.97
+  community_oncology:
+    delay_mean_days: 20
+    delay_sd_days: 11
+    probability: 0.93
+  community_urology:
+    delay_mean_days: 43
+    delay_sd_days: 20
+    probability: 0.78
+  mixed_pathway:
+    delay_mean_days: 29
+    delay_sd_days: 15
+    probability: 0.88
+refill_gap_distribution:
+  maximum_days: 120
+  mean_days: 12
+  minimum_days: 0
+  sd_days: 18
+restart_probability: 0.2
+scenario_version: demo-v1.0
+signals:
+  adverse_event_discontinuation_increase: 0.18
+  adverse_event_switch_increase: 0.1
+  high_comorbidity_discontinuation_increase: 0.12
+  high_comorbidity_hospitalisation_increase: 0.1
+  high_comorbidity_initiation_penalty: 0.12
+  progression_switch_increase: 0.18
+stage_distribution:
+  localized: 0.34
+  locally_advanced: 0.2
+  metastatic: 0.42
+  unknown: 0.04
+stage_metastatic_sites:
+  bone: 0.52
+  lymph_node: 0.18
+  multiple: 0.17
+  unknown: 0.03
+  visceral: 0.1
+switch_probability: 0.16
+switch_window_days: 90
+target_cohort_size: 10000
+treatment_duration_days:
+  maximum: 900
+  mean: 390
+  minimum: 45
+  sd: 150
+treatment_selection_probabilities:
+  ADT: 0.28
+  abiraterone: 0.18
+  apalutamide: 0.13
+  darolutamide: 0.12
+  docetaxel: 0.09
+  enzalutamide: 0.16
+  other_systemic_therapy: 0.04

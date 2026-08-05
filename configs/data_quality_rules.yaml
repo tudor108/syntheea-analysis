@@ -1,0 +1,15 @@
+disclaimer: "SYNTHETIC DEMO DATA – NOT REAL BAYER OR CLINICAL DATA"
+critical:
+  - patient_unique
+  - male_only
+  - birth_before_diagnosis
+  - chronology
+  - mhspc_logic
+  - eligibility_logic
+  - foreign_keys
+  - no_treatment_after_death
+warnings:
+  - missingness
+  - persistence_followup
+  - expected_categories
+

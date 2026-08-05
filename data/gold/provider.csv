@@ -1,0 +1,13 @@
+provider_id,organization_id,provider_specialty,care_setting,academic_flag,region,annual_prostate_volume,multidisciplinary_team_flag,synthetic_provider_flag
+PR-Massachusetts-000,ORG-Massachusetts-00,medical_oncology,community_oncology,False,Massachusetts,212,False,True
+PR-Massachusetts-001,ORG-Massachusetts-00,primary_care,community_urology,False,Massachusetts,357,False,True
+PR-Massachusetts-002,ORG-Massachusetts-00,medical_oncology,mixed_pathway,False,Massachusetts,442,True,True
+PR-Massachusetts-003,ORG-Massachusetts-01,radiation_oncology,mixed_pathway,False,Massachusetts,248,False,True
+PR-Massachusetts-004,ORG-Massachusetts-01,other,community_urology,False,Massachusetts,233,False,True
+PR-Massachusetts-005,ORG-Massachusetts-01,urology,academic_oncology,True,Massachusetts,386,True,True
+PR-Massachusetts-006,ORG-Massachusetts-02,radiation_oncology,community_urology,False,Massachusetts,123,False,True
+PR-Massachusetts-007,ORG-Massachusetts-02,urology,community_oncology,False,Massachusetts,270,True,True
+PR-Massachusetts-008,ORG-Massachusetts-02,medical_oncology,community_urology,False,Massachusetts,305,False,True
+PR-Massachusetts-009,ORG-Massachusetts-03,urology,community_urology,False,Massachusetts,31,False,True
+PR-Massachusetts-010,ORG-Massachusetts-03,medical_oncology,community_oncology,False,Massachusetts,201,False,True
+PR-Massachusetts-011,ORG-Massachusetts-03,urology,academic_oncology,True,Massachusetts,107,False,True

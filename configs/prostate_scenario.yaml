@@ -1,0 +1,52 @@
+disclaimer: "All values are synthetic demo assumptions and require clinical and business validation."
+random_seed: 42
+target_cohort_size: 10000
+minimum_age: 50
+maximum_age: 90
+scenario_version: "demo-v1.0"
+observation_end_date: "2025-12-31"
+stage_distribution: {localized: 0.34, locally_advanced: 0.20, metastatic: 0.42, unknown: 0.04}
+metastatic_probability: 0.42
+hormone_sensitive_probability: 0.88
+castration_resistant_transition_probability: 0.20
+care_setting_distribution: {community_urology: 0.36, community_oncology: 0.24, academic_oncology: 0.25, mixed_pathway: 0.15}
+provider_specialty_distribution: {urology: 0.34, medical_oncology: 0.38, radiation_oncology: 0.12, primary_care: 0.10, other: 0.06}
+stage_metastatic_sites: {bone: 0.52, lymph_node: 0.18, visceral: 0.10, multiple: 0.17, unknown: 0.03}
+referral:
+  community_urology: {probability: 0.78, delay_mean_days: 43, delay_sd_days: 20}
+  community_oncology: {probability: 0.93, delay_mean_days: 20, delay_sd_days: 11}
+  academic_oncology: {probability: 0.97, delay_mean_days: 12, delay_sd_days: 7}
+  mixed_pathway: {probability: 0.88, delay_mean_days: 29, delay_sd_days: 15}
+initiation:
+  community_urology: {probability_90d: 0.62, days_mean: 56, days_sd: 24}
+  community_oncology: {probability_90d: 0.76, days_mean: 39, days_sd: 18}
+  academic_oncology: {probability_90d: 0.84, days_mean: 27, days_sd: 14}
+  mixed_pathway: {probability_90d: 0.72, days_mean: 44, days_sd: 21}
+treatment_selection_probabilities: {ADT: 0.28, darolutamide: 0.12, enzalutamide: 0.16, apalutamide: 0.13, abiraterone: 0.18, docetaxel: 0.09, other_systemic_therapy: 0.04}
+treatment_duration_days: {mean: 390, sd: 150, minimum: 45, maximum: 900}
+refill_gap_distribution: {mean_days: 12, sd_days: 18, minimum_days: 0, maximum_days: 120}
+allowable_gap_days: 60
+persistence_sensitivity_gaps: [30, 60, 90]
+switch_window_days: 90
+switch_probability: 0.16
+restart_probability: 0.20
+progression_probability: 0.29
+death_probability: 0.09
+loss_to_follow_up_probability: 0.07
+adverse_event_probability: 0.18
+hospitalisation_probability: 0.15
+discontinuation_probability: 0.24
+contraindication_probability: 0.06
+follow_up_regular_probability: {community_urology: 0.62, community_oncology: 0.74, academic_oncology: 0.88, mixed_pathway: 0.72}
+persistence_12m_probability: {community_urology: 0.55, community_oncology: 0.64, academic_oncology: 0.72, mixed_pathway: 0.62}
+missing_data_probabilities: {race: 0.03, ethnicity: 0.04, psa_value: 0.06, gleason_score: 0.05, insurance_type: 0.03}
+signals:
+  high_comorbidity_initiation_penalty: 0.12
+  high_comorbidity_discontinuation_increase: 0.12
+  high_comorbidity_hospitalisation_increase: 0.10
+  adverse_event_discontinuation_increase: 0.18
+  adverse_event_switch_increase: 0.10
+  progression_switch_increase: 0.18
+eligibility_rule_version: "DEMO-ARPI-v1"
+minimum_follow_up_days: 90
+

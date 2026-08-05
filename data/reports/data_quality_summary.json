@@ -1,0 +1,244 @@
+{
+  "disclaimer": "SYNTHETIC DEMO DATA \u2013 NOT REAL BAYER OR CLINICAL DATA",
+  "rules": [
+    {
+      "rule": "patient_unique",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "patient_id must be unique"
+    },
+    {
+      "rule": "male_only",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "prostate cohort contains males only"
+    },
+    {
+      "rule": "birth_before_diagnosis",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "birth precedes diagnosis"
+    },
+    {
+      "rule": "diagnosis_before_metastatic",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "diagnosis <= metastatic"
+    },
+    {
+      "rule": "eligibility_before_treatment",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "eligibility <= start"
+    },
+    {
+      "rule": "treatment_dates",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "start < end"
+    },
+    {
+      "rule": "death_after_birth",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "death after birth"
+    },
+    {
+      "rule": "death_censor_alignment",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "death not after censor"
+    },
+    {
+      "rule": "mhspc_implies_metastatic",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "mHSPC => metastatic"
+    },
+    {
+      "rule": "mhspc_implies_hormone_sensitive",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "mHSPC => hormone sensitive"
+    },
+    {
+      "rule": "mhspc_excludes_cr",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "mHSPC excludes CR at index"
+    },
+    {
+      "rule": "eligibility_implies_mhspc",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "demo eligibility => mHSPC"
+    },
+    {
+      "rule": "nonnegative_referral_delay_days",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "referral_delay_days cannot be negative"
+    },
+    {
+      "rule": "nonnegative_days_to_initiation",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "days_to_initiation cannot be negative"
+    },
+    {
+      "rule": "nonnegative_days_to_discontinuation",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "days_to_discontinuation cannot be negative"
+    },
+    {
+      "rule": "nonnegative_days_to_switch",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "days_to_switch cannot be negative"
+    },
+    {
+      "rule": "nonnegative_days_to_progression",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "days_to_progression cannot be negative"
+    },
+    {
+      "rule": "persistence_requires_followup",
+      "severity": "warning",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "12m persistence requires follow-up"
+    },
+    {
+      "rule": "switch_has_date",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "switch implies date"
+    },
+    {
+      "rule": "restart_has_date",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "restart implies date"
+    },
+    {
+      "rule": "death_has_date",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "death implies date"
+    },
+    {
+      "rule": "ltfu_has_last_observed",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "LTFU implies last observed"
+    },
+    {
+      "rule": "no_switch_after_death",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "no switch after death"
+    },
+    {
+      "rule": "no_treatment_after_death",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "no treatment after death"
+    },
+    {
+      "rule": "death_not_nonadherence",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "death is a separate outcome"
+    },
+    {
+      "rule": "ltfu_not_discontinuation",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "LTFU is separate"
+    },
+    {
+      "rule": "persistence_requires_initiation",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "persistence requires initiation"
+    },
+    {
+      "rule": "refill_after_start",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "refill >= start"
+    },
+    {
+      "rule": "coverage_after_refill",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "coverage >= refill"
+    },
+    {
+      "rule": "encounter_provider_fk",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "encounter provider exists"
+    },
+    {
+      "rule": "treatment_provider_fk",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "prescriber exists"
+    },
+    {
+      "rule": "patient_foreign_keys",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "all patient foreign keys exist"
+    },
+    {
+      "rule": "diagnosis_patient_coverage",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "each patient has diagnosis"
+    },
+    {
+      "rule": "outcome_patient_coverage",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "each patient has outcome"
+    }
+  ],
+  "critical_failures": 0
+}

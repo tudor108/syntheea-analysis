@@ -1,0 +1,9 @@
+paths:
+  raw: data/raw/synthea
+  enriched: data/enriched
+  gold: data/gold
+  reports: data/reports
+observation_end_date: "2025-12-31"
+export_formats: [csv, parquet]
+critical_dq_failure: true
+

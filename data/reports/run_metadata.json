@@ -1,0 +1,20 @@
+{
+  "disclaimer": "SYNTHETIC DEMO DATA \u2013 NOT REAL BAYER OR CLINICAL DATA",
+  "generation_timestamp": "2026-08-05T13:33:52.136709+00:00",
+  "git_commit": "1b7765e1059f80a10788a474df153dce550d0242",
+  "python_version": "3.13.5",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "synthea_commit": "7e08387c68a7f0e21d13076609a159fd473fc902",
+  "random_seed": 42,
+  "cohort_size": 10000,
+  "scenario_version": "demo-v1.0",
+  "output_file_hashes": {
+    "diagnosis.parquet": "a75dbf44f3c5e0d5e132c2b5ca792691667a423dcc2b02327b48ce3f02520f10",
+    "encounter.parquet": "07cf8ab133dc1e5f663e3c15c0ed6f17595f9a121722f6b3ff5c5c824edafeda",
+    "outcome.parquet": "2cd3a6f5d0755685c98eae1959fec33185b66c08ef3d0e376939cb091ebe8515",
+    "patient.parquet": "826a78a15e724378d31a0b5a4125618da3a9b07fc1772c7ec4d230ed4901a583",
+    "patient_journey.parquet": "742e0de98ad57f2d4ad20d474a42ba674a4fffe2427937c7df163543abc68c58",
+    "provider.parquet": "4e62244d2d01d153f716508309babbdc872af0205cdc3ac848de061af92de373",
+    "treatment.parquet": "ea1a23edc29cd4e99c0b10c85aea767d33d1bee9fdbe0070a400b6d5cecb5209"
+  }
+}
