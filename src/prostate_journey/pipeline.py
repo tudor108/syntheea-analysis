@@ -10,6 +10,7 @@ import pandas as pd
 import yaml
 
 from .cohort_builder import build_patient_table
+from .dashboard import write_dashboard
 from .data_quality import raise_on_critical, validate_tables, write_quality_report
 from .diagnosis_generator import generate_diagnoses
 from .duckdb_loader import load_duckdb
@@ -64,7 +65,7 @@ def run_all(project_root: Path, config: dict, input_dir: Path, output_dir: Path 
     tables = generate_tables(config, input_dir)
     export_tables(tables, gold)
     results = validate_tables(tables); write_quality_report(results, reports); raise_on_critical(results)
-    load_duckdb(gold); write_cohort_report(tables, reports)
+    load_duckdb(gold); write_cohort_report(tables, reports); write_dashboard(tables["patient_journey"], reports)
     (reports / "config_snapshot.yaml").write_text(yaml.safe_dump(config, sort_keys=True), encoding="utf-8")
     write_run_metadata(project_root, config, len(tables["patient"]), gold, reports)
     return tables

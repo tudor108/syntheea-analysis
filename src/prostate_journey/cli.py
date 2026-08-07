@@ -8,6 +8,7 @@ import typer
 
 from .config import load_config
 from .data_quality import raise_on_critical, validate_tables, write_quality_report
+from .dashboard import write_dashboard
 from .duckdb_loader import load_duckdb
 from .logging_config import configure_logging
 from .pipeline import export_tables, generate_tables, load_exported_tables, run_all as execute_all
@@ -64,6 +65,12 @@ def report(output_dir: Path = typer.Option(ROOT / "data/gold")) -> None:
     write_cohort_report(load_exported_tables(output_dir), ROOT / "data/reports")
 
 
+@app.command()
+def dashboard(output_dir: Path = typer.Option(ROOT / "data/gold"), report_dir: Path = typer.Option(ROOT / "data/reports")) -> None:
+    """Create the visual cohort dashboard HTML."""
+    write_dashboard(load_exported_tables(output_dir)["patient_journey"], report_dir)
+
+
 @app.command("run-all")
 def run_all_command(
     config: Path = typer.Option(ROOT / "configs/prostate_scenario.yaml"), seed: Optional[int] = None,
@@ -78,4 +85,3 @@ def run_all_command(
 
 if __name__ == "__main__":
     app()
-
