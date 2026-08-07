@@ -57,6 +57,8 @@ Every normalized table (`patient`, `diagnosis`, `provider`, `encounter`, `treatm
 
 `population_representative_flag` is always false. Oversampling means prevalence and rates are not population estimates. See [business rules](docs/BUSINESS_RULES.md), [data dictionary](docs/DATA_DICTIONARY.md), [assumptions](docs/SYNTHETIC_ASSUMPTIONS.md), [DQ](docs/DATA_QUALITY.md), [architecture](docs/ARCHITECTURE.md), and [runbook](docs/RUNBOOK.md).
 
+For a Romanian explanation of the implementation, data flow, business rules, tables, commands and outputs, see [Ghid de implementare în română](docs/GHID_DE_IMPLEMENTARE_RO.md).
+
 ## Limitations
 
 - The prostate pathway is post-processing, not a clinical Synthea module.
@@ -64,4 +66,3 @@ Every normalized table (`patient`, `diagnosis`, `provider`, `encounter`, `treatm
 - The fallback base input is Synthea-shaped rather than an executed Synthea population.
 - This release generates descriptive/model-ready baseline features but no clinical prediction model.
 - Synthetic causal associations must not be interpreted as real treatment effects.
-
