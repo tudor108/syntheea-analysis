@@ -6,6 +6,16 @@
 
 Define a small set of analysis-ready cohorts that directly support the demo questions around treatment initiation, referral pathway and treatment persistence.
 
+## Implemented enrichment: prescription events
+
+The synthetic pipeline now includes a normalized `prescription_event` table generated from the existing seeded treatment/refill logic. It is not copied from CMS beneficiaries or joined to CMS data. CMS DE-SynPUF PDE remains a schema/reference source for the event-level representation.
+
+The table contains `prescription_event_id`, `patient_id`, `treatment_id`, `service_date`, `product_id`, `drug_name`, `quantity_dispensed`, `days_supply`, `covered_until_date`, `event_type`, `refill_gap_days` and `synthetic_event_flag`. One treatment may have multiple events: the first is `initial_fill`, followed by `refill` events. Event chronology is internally consistent: `covered_until_date = service_date + days_supply`, subsequent service dates incorporate the sampled refill gap after previous coverage, and `refill_gap_days` is the actual gap after that coverage. Treatment `max_refill_gap_days` remains consistent with the emitted events.
+
+`patient_journey` includes event-derived `prescription_event_count` and `max_refill_gap_days`. Persistence at 3, 6 and 12 months uses prescription-event coverage and refill gaps together with treatment initiation, discontinuation and sufficient follow-up. The existing `persistent_12m_gap_30d`, `persistent_12m_gap_60d` and `persistent_12m_gap_90d` sensitivity flags use the event-derived refill-gap information.
+
+`prescription_event` is exported to CSV and Parquet and loaded into DuckDB as a normal table. This is synthetic demo logic for application and analysis development, not clinical evidence.
+
 ## Cohort 1: 90-day treatment initiation gap
 
 **Base population**
@@ -79,17 +89,19 @@ Describe whether synthetic referral completion and delay are associated with tre
 - `persistent_12m_gap_60d`
 - `persistent_12m_gap_90d`
 
+These sensitivity flags are based on the event-derived maximum refill gap for the patient's initial treatment episode.
+
 **Purpose**
 Compare initiated patients who remain persistent at 12 months with those who do not, and test sensitivity to different allowable refill-gap thresholds.
 
 ## Current data limitations
 
 1. The gold `patient_journey` table is patient-level and contains the derived cohort flags needed for the three analyses.
-2. The current `treatment` model stores episode-level refill summaries such as `days_supply`, `refill_date`, `covered_until_date` and `max_refill_gap_days`, but not every prescription fill/refill as a separate event row.
-3. This limits traceability of persistence calculations and makes it harder to reconstruct medication coverage over time from individual dispensing events.
+2. The `treatment` model retains episode-level refill summaries such as `days_supply`, `refill_date`, `covered_until_date` and `max_refill_gap_days` for backward compatibility.
+3. The normalized `prescription_event` table provides event-level traceability for the initial treatment episode and is the source for event-derived persistence coverage and refill-gap calculations.
 4. Raw Synthea medication data already exists in the repository, but the current prostate-specific pipeline does not use it as the primary source for treatment/persistence logic.
 5. The current demo does not explicitly model an active-surveillance cohort, so that business leak would require additional scenario design before it can be analysed consistently.
 
-## Recommended next implementation step
+## Scope and future extensions
 
-Keep the three cohorts above as the initial analysis scope. Before adding new clinical logic, evaluate a normalized prescription-event representation that can support event-level persistence calculations. CMS DE-SynPUF PDE and the existing Synthea `medications.csv` should be used as schema references, not joined to the current synthetic patient IDs.
+Keep the three cohorts above as the initial analysis scope. Future extensions should preserve the distinction between synthetic demo events and external reference data: CMS DE-SynPUF PDE and the existing Synthea `medications.csv` may inform schema design, but should not be joined to the current synthetic patient IDs unless a separate, explicitly documented integration is designed.

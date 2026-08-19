@@ -30,6 +30,29 @@ CMS PDE contains one row per synthetic Part D event and only eight fields:
 
 This is directly useful as a structural reference for the **persistence-gap cohort**, because it models medication dispensing at event level rather than only at treatment-episode level.
 
+### Implementation status: prescription events
+
+The demo now implements a normalized synthetic `prescription_event` table. It is generated from the existing synthetic treatment and refill logic; it is not copied from CMS PDE and does not join CMS beneficiaries to the Synthea/prostate demo patients.
+
+The table contains one row per synthetic initial fill or refill and includes:
+
+- `prescription_event_id`
+- `patient_id`
+- `treatment_id`
+- `service_date`
+- `product_id`
+- `drug_name`
+- `quantity_dispensed`
+- `days_supply`
+- `covered_until_date`
+- `event_type`
+- `refill_gap_days`
+- `synthetic_event_flag`
+
+One treatment can have multiple events. The first event is `initial_fill`; subsequent events are `refill`. The event chronology is internally consistent: `covered_until_date` is `service_date + days_supply`, subsequent service dates account for the sampled refill gap after prior coverage, and `refill_gap_days` records that actual gap. The treatment-level `max_refill_gap_days` remains consistent with the emitted events.
+
+The event table is exported as `prescription_event.csv` and `prescription_event.parquet`, and is loaded into DuckDB as a normal table. It is not currently used to add CMS-derived clinical or utilization facts.
+
 ### 2. Outpatient and Carrier claims
 
 Outpatient claims contain beneficiary ID, claim ID, service start/end dates, provider identifiers, diagnosis codes, procedure codes and HCPCS fields. Carrier claims add physician/supplier line-level provider, HCPCS, diagnosis and payment fields.
@@ -47,11 +70,11 @@ The current demo already contains synthetic demographics, insurance class, comor
 | CMS concept | CMS field | Current demo equivalent | Status / recommendation |
 |---|---|---|---|
 | Patient identifier | `DESYNPUF_ID` | `patient_id` | Concept already exists; do not join IDs across datasets |
-| Prescription event identifier | `PDE_ID` | none | Missing at event level; candidate for `prescription_event_id` |
-| Fill/service date | `SRVC_DT` | `refill_date` | Exists only as episode-level summary; event-level representation would improve traceability |
-| Product identifier | `PROD_SRVC_ID` | `drug_name` / treatment mapping | Concept exists, but no event-level product ID |
-| Quantity dispensed | `QTY_DSPNSD_NUM` | none | Optional candidate if dispensing-level realism is needed |
-| Days supply | `DAYS_SUPLY_NUM` | `days_supply` | Already exists; should be attached to each fill event if event model is added |
+| Prescription event identifier | `PDE_ID` | `prescription_event_id` | Implemented as a synthetic event identifier; CMS remains a schema reference |
+| Fill/service date | `SRVC_DT` | `service_date` | Implemented for each synthetic fill/refill event |
+| Product identifier | `PROD_SRVC_ID` | `product_id` | Implemented synthetically for each event |
+| Quantity dispensed | `QTY_DSPNSD_NUM` | `quantity_dispensed` | Implemented synthetically for each event |
+| Days supply | `DAYS_SUPLY_NUM` | `days_supply` | Implemented on each synthetic event; currently 30 days where generated |
 | Patient pay | `PTNT_PAY_AMT` | none | Not required for current three cohorts; optional future access/cost analysis |
 | Gross drug cost | `TOT_RX_CST_AMT` | none | Not required for current three cohorts |
 | Claim ID | `CLM_ID` | none | Optional if a claims layer is introduced |
@@ -80,9 +103,9 @@ Therefore, the immediate recommendation is **not** to copy CMS data into the pro
 4. derive refill gaps and persistence from those events;
 5. keep CMS as external reference data only.
 
-## Proposed schema improvement
+## Implemented event-level schema
 
-If implementation is approved, add a normalized table similar to:
+The implemented normalized table is:
 
 ```text
 prescription_event
@@ -97,10 +120,11 @@ quantity_dispensed
 days_supply
 covered_until_date
 event_type
+refill_gap_days
 synthetic_event_flag
 ```
 
-One row should represent one synthetic fill/refill event.
+One row represents one synthetic fill/refill event. Events are generated from the current seeded synthetic treatment/refill process and are linked to the generated `patient_id` and `treatment_id`.
 
 ### Derived persistence logic
 
@@ -111,7 +135,7 @@ covered_until = service_date + days_supply
 refill_gap_days = next_service_date - covered_until
 ```
 
-The existing 30/60/90-day persistence sensitivity rules can then be calculated from explicit event history rather than relying only on an episode-level `max_refill_gap_days` summary.
+The existing 30/60/90-day persistence sensitivity rules are calculated from the explicit event history rather than relying only on an episode-level refill summary. `patient_journey` includes the event-derived `prescription_event_count` and `max_refill_gap_days` values. Persistence at 3, 6 and 12 months uses event-derived coverage and refill gaps together with treatment initiation, discontinuation and sufficient follow-up.
 
 ## Recommendation by cohort
 
@@ -119,11 +143,11 @@ The existing 30/60/90-day persistence sensitivity rules can then be calculated f
 |---|---|---|
 | Treatment initiation gap | Low/medium | Use current `patient_journey`; claims structure is optional future enrichment |
 | Referral gap | Low | Current encounter/referral/provider model is sufficient for MVP |
-| Persistence gap | High | Use PDE as schema reference for an event-level prescription/refill model |
+| Persistence gap | High | Use the implemented synthetic prescription-event table; retain PDE as a schema/reference source only |
 
 ## Conclusion
 
-For the current task, the three proposed cohorts can already be analysed with the existing synthetic gold model. The most defensible schema improvement identified from CMS is an event-level prescription/refill table for persistence analysis. CMS data should remain a reference and must not be patient-level joined to the Synthea/prostate demo cohort.
+The three cohorts can be analysed with the synthetic gold model, including event-level prescription/refill support for persistence. CMS DE-SynPUF PDE remains a schema/reference source that motivated this representation. The implemented events are synthetic demo logic, not CMS observations or clinical evidence; CMS data must remain external reference data and must not be patient-level joined to the Synthea/prostate demo cohort.
 
 ## Source notes
 
