@@ -9,7 +9,7 @@ def load_duckdb(gold_dir: str | Path) -> Path:
     """Materialize all Parquet tables and documented analytical views."""
     root = Path(gold_dir); db_path = root / "prostate_journey.duckdb"
     con = duckdb.connect(str(db_path))
-    for table in ("patient", "diagnosis", "provider", "encounter", "treatment", "outcome", "patient_journey"):
+    for table in ("patient", "diagnosis", "provider", "encounter", "treatment", "prescription_event", "outcome", "patient_journey"):
         path = (root / f"{table}.parquet").as_posix().replace("'", "''")
         con.execute(f"CREATE OR REPLACE TABLE {table} AS SELECT * FROM read_parquet('{path}')")
     con.execute("CREATE OR REPLACE VIEW vw_eligible_population AS SELECT * FROM patient_journey WHERE eligible_for_arpi")

@@ -118,6 +118,7 @@ def build_patient_journey(
     eligibility: pd.DataFrame,
     encounter: pd.DataFrame,
     treatment: pd.DataFrame,
+    prescription_event: pd.DataFrame,
     outcome: pd.DataFrame,
     config: dict,
 ) -> pd.DataFrame:
@@ -138,6 +139,21 @@ def build_patient_journey(
     base["referral_completed_flag"] = base.first_oncology_date.notna()
     base["referral_delay_days"] = (base.first_oncology_date - base.first_urology_date).dt.days.astype("Int64")
     starts = treatment.sort_values("treatment_start_date").groupby("patient_id").first() if not treatment.empty else pd.DataFrame()
+    if not starts.empty and not prescription_event.empty:
+        initial_treatment_ids = starts["treatment_id"]
+        initial_events = prescription_event[prescription_event.treatment_id.isin(initial_treatment_ids)].sort_values("service_date")
+        event_summary = initial_events.groupby("treatment_id").agg(
+            prescription_event_count=("prescription_event_id", "size"),
+            event_coverage_until_date=("covered_until_date", "max"),
+            event_max_refill_gap_days=("refill_gap_days", "max"),
+        )
+    else:
+        event_summary = pd.DataFrame(columns=[
+            "prescription_event_count", "event_coverage_until_date", "event_max_refill_gap_days",
+        ])
+    base["prescription_event_count"] = base.patient_id.map(starts["treatment_id"].map(event_summary["prescription_event_count"]) if not starts.empty else pd.Series(dtype="float64")).fillna(0).astype("int64")
+    base["max_refill_gap_days"] = base.patient_id.map(starts["treatment_id"].map(event_summary["event_max_refill_gap_days"]) if not starts.empty else pd.Series(dtype="float64")).fillna(0).astype("int64")
+    event_coverage_until = base.patient_id.map(starts["treatment_id"].map(event_summary["event_coverage_until_date"]) if not starts.empty else pd.Series(dtype="datetime64[ns]"))
     for target, source in {
         "initial_treatment": "drug_name",
         "initial_treatment_class": "drug_class",
@@ -162,12 +178,13 @@ def build_patient_journey(
     for months, day in ((3, 90), (6, 180), (12, 365)):
         base[f"persistent_{months}m"] = (
             base.treatment_initiated
-            & ((base.treatment_start_date + pd.to_timedelta(day, unit="D")) <= base.patient_id.map(starts["covered_until_date"]))
+            & ((base.treatment_start_date + pd.to_timedelta(day, unit="D")) <= event_coverage_until)
+            & (base.max_refill_gap_days <= config["allowable_gap_days"])
             & ~(base.discontinuation_flag.fillna(False) & (base.discontinuation_date <= base.treatment_start_date + pd.to_timedelta(day, unit="D")))
         )
     for gap in config["persistence_sensitivity_gaps"]:
         base[f"persistent_12m_gap_{gap}d"] = base["persistent_12m"] & (
-            base.patient_id.map(starts["max_refill_gap_days"]).fillna(999) <= gap
+            base.max_refill_gap_days <= gap
         )
     base["discontinued_within_12m"] = base.discontinuation_flag.fillna(False) & (
         (base.discontinuation_date - base.treatment_start_date).dt.days <= 365

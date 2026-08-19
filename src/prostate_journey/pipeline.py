@@ -19,10 +19,10 @@ from .outcome_generator import generate_outcomes
 from .provider_generator import assign_initial_providers, generate_providers
 from .reporting import write_cohort_report, write_run_metadata
 from .synthea_loader import load_synthea_csv, select_base_patients
-from .treatment_generator import generate_treatments
+from .treatment_generator import generate_treatments_with_events
 
 LOGGER = logging.getLogger(__name__)
-TABLES = ("patient", "diagnosis", "provider", "encounter", "treatment", "outcome", "patient_journey")
+TABLES = ("patient", "diagnosis", "provider", "encounter", "treatment", "prescription_event", "outcome", "patient_journey")
 
 
 def generate_tables(config: dict[str, Any], input_dir: str | Path) -> dict[str, pd.DataFrame]:
@@ -36,11 +36,11 @@ def generate_tables(config: dict[str, Any], input_dir: str | Path) -> dict[str, 
     diagnosis = generate_diagnoses(patient, config, rng)
     eligibility = build_eligibility(patient, diagnosis, config, rng)
     encounter = generate_encounters(patient, diagnosis, eligibility, assigned, config, rng)
-    treatment = generate_treatments(patient, eligibility, encounter, assigned, config, rng)
+    treatment, prescription_event = generate_treatments_with_events(patient, eligibility, encounter, assigned, config, rng)
     outcome = generate_outcomes(patient, eligibility, treatment, config, rng)
     patient["date_of_death"] = patient.patient_id.map(outcome.set_index("patient_id").death_date)
-    journey = build_patient_journey(patient, diagnosis, assigned, eligibility, encounter, treatment, outcome, config)
-    return {"patient": patient, "diagnosis": diagnosis.drop(columns="hormone_sensitive_confirmation_date"), "provider": provider, "encounter": encounter, "treatment": treatment, "outcome": outcome, "patient_journey": journey}
+    journey = build_patient_journey(patient, diagnosis, assigned, eligibility, encounter, treatment, prescription_event, outcome, config)
+    return {"patient": patient, "diagnosis": diagnosis.drop(columns="hormone_sensitive_confirmation_date"), "provider": provider, "encounter": encounter, "treatment": treatment, "prescription_event": prescription_event, "outcome": outcome, "patient_journey": journey}
 
 
 def export_tables(tables: dict[str, pd.DataFrame], gold_dir: str | Path) -> None:
