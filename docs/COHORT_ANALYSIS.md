@@ -89,7 +89,7 @@ Describe whether synthetic referral completion and delay are associated with tre
 - `persistent_12m_gap_60d`
 - `persistent_12m_gap_90d`
 
-These sensitivity flags are based on the event-derived maximum refill gap for the patient's initial treatment episode.
+These sensitivity flags are calculated independently from the same 12-month coverage, discontinuation and follow-up base, using the event-derived maximum refill gap for the patient's initial treatment episode. A patient may therefore fail the 30-day definition while passing the 60- or 90-day definition.
 
 **Purpose**
 Compare initiated patients who remain persistent at 12 months with those who do not, and test sensitivity to different allowable refill-gap thresholds.

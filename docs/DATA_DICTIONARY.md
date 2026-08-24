@@ -117,6 +117,25 @@
 | max_refill_gap_days | Largest generated gap | integer | 41 | derived | no | nonnegative |
 | synthetic_event_flag | Synthetic marker | boolean | true | constant | no | true |
 
+## prescription_event
+
+One row represents one synthetic initial fill or refill. Events are linked to a generated treatment episode and are not CMS observations.
+
+| Column | Definition | Type | Example | Source/method | Nullable | Validation |
+|---|---|---|---|---|---|---|
+| prescription_event_id | Prescription-event key | string | TR-00000001-0-RX-0000 | generated | no | unique |
+| patient_id | Patient FK | string | PJ-00000001 | patient | no | valid FK and treatment match |
+| treatment_id | Treatment FK | string | TR-00000001-0 | treatment | no | valid FK |
+| service_date | Fill/refill date | date | 2022-04-01 | generated | no | within treatment episode |
+| product_id | Synthetic product identifier | string | SYN-DAROLUTAMIDE | mapped | no | synthetic prefix |
+| drug_name | Dispensed demo drug | category | darolutamide | treatment | no | treatment-consistent |
+| quantity_dispensed | Synthetic quantity | integer | 30 | generated | no | positive |
+| days_supply | Supplied days | integer | 30 | generated | no | positive |
+| covered_until_date | Event coverage end | date | 2022-05-01 | derived | no | service date + days supply |
+| event_type | Dispensing event type | category | refill | derived | no | initial_fill then refill |
+| refill_gap_days | Gap after prior coverage | integer | 12 | derived | no | chronology-consistent |
+| synthetic_event_flag | Synthetic marker | boolean | true | constant | no | true |
+
 ## outcome
 
 | Column | Definition | Type | Example | Source/method | Nullable | Validation |
@@ -159,6 +178,8 @@ Common demographic/diagnostic columns (`patient_id`, `age_at_index`, `comorbidit
 | treatment_start_date | First start | date | 2022-04-01 | treatment | yes | after eligibility |
 | days_to_initiation | Eligibility-to-start days | integer | 69 | derived | yes | nonnegative |
 | treatment_initiated | Any start | boolean | true | derived | no | start evidence |
+| prescription_event_count | Events for initial treatment | integer | 8 | prescription_event | no | nonnegative |
+| max_refill_gap_days | Largest gap for initial treatment | integer | 41 | prescription_event | no | event-summary match |
 | initiated_within_30d | Start by day 30 | boolean | false | derived | no | eligible + elapsed |
 | initiated_within_60d | Start by day 60 | boolean | false | derived | no | eligible + elapsed |
 | initiated_within_90d | Start by day 90 | boolean | true | derived | no | eligible + elapsed |

@@ -53,7 +53,7 @@ python -m ruff check src tests
 
 ## Outputs
 
-Every normalized table (`patient`, `diagnosis`, `provider`, `encounter`, `treatment`, `outcome`) and `patient_journey` is exported to CSV and Parquet in `data/gold`. DuckDB contains all tables and eight analytics views, including `vw_treatment_gap_by_segment`. Reports include DQ JSON/CSV/Markdown, cohort summary/KPIs, configuration snapshot, environment metadata and SHA-256 hashes.
+Every normalized table (`patient`, `diagnosis`, `provider`, `encounter`, `treatment`, `prescription_event`, `outcome`) and `patient_journey` is exported to CSV and Parquet in `data/gold`. DuckDB contains all tables and eight analytics views, including `vw_treatment_gap_by_segment`. Reports include DQ JSON/CSV/Markdown, cohort summary/KPIs, configuration snapshot, environment metadata and SHA-256 hashes.
 
 The generated visual dashboard is [cohort_dashboard.html](data/reports/cohort_dashboard.html). Open it directly in a browser; it groups the cohort into cards and SVG charts for the funnel, stage, care setting, treatment gap, persistence, outcomes, treatments and high-gap segments. Regenerate it with `python -m prostate_journey.cli dashboard` or, on a machine without the Python environment installed, `py -3.13 scripts/create_cohort_dashboard.py`.
 

@@ -16,8 +16,8 @@
 | initiated_60d | 1827 |
 | initiated_90d | 2266 |
 | treatment_gap_90d | 1242 |
-| persistent_3m | 2213 |
-| persistent_6m | 1938 |
+| persistent_3m | 2161 |
+| persistent_6m | 1885 |
 | persistent_12m | 1035 |
 | discontinuations | 574 |
 | switches | 363 |
@@ -84,6 +84,8 @@
 | first_oncology_date | 6962 |
 | referral_completed_flag | 0 |
 | referral_delay_days | 6962 |
+| prescription_event_count | 0 |
+| max_refill_gap_days | 0 |
 | initial_treatment | 7637 |
 | initial_treatment_class | 7637 |
 | treatment_start_date | 7637 |

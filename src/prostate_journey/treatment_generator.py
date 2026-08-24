@@ -111,18 +111,38 @@ def generate_treatments_with_events(
         )
         if switch:
             switched_treatment_id = f"TR-{i:08d}-1"
+            switched_end = min(
+                switch_date + pd.Timedelta(days=max(31, duration // 2)),
+                observation_end,
+            )
+            switched_service_dates = list(pd.date_range(switch_date, switched_end, freq="30D"))
+            switched_max_gap = 0
+            switched_covered_until = min(
+                switched_end,
+                switched_service_dates[-1]
+                + pd.Timedelta(days=30 + config["allowable_gap_days"]),
+            )
             rows.append({
                 **rows[-1], "treatment_id": switched_treatment_id, "drug_name": switched_to,
                 "drug_class": DRUG_CLASS[str(switched_to)], "regimen_name": f"synthetic_{switched_to}_regimen",
                 "treatment_line": 2, "treatment_start_date": switch_date,
-                "treatment_end_date": min(switch_date + pd.Timedelta(days=max(31, duration // 2)), observation_end),
-                "refill_date": switch_date, "covered_until_date": min(switch_date + pd.Timedelta(days=max(31, duration // 2)), observation_end),
+                "treatment_end_date": switched_end,
+                "refill_date": switch_date, "covered_until_date": switched_covered_until,
                 "discontinuation_flag": False, "discontinuation_date": pd.NaT, "discontinuation_reason": pd.NA,
                 "switch_flag": False, "switch_date": pd.NaT, "previous_drug": drug,
                 "switched_to_drug": pd.NA, "restart_flag": False, "restart_date": pd.NaT, "temporary_gap_flag": False,
+                "max_refill_gap_days": switched_max_gap,
             })
-            prescription_events.append(
-                _prescription_event(person.patient_id, switched_treatment_id, switch_date, str(switched_to), 0, 0)
+            prescription_events.extend(
+                _prescription_event(
+                    person.patient_id,
+                    switched_treatment_id,
+                    service_date,
+                    str(switched_to),
+                    event_number,
+                    switched_max_gap,
+                )
+                for event_number, service_date in enumerate(switched_service_dates)
             )
     columns = [
         "treatment_id", "patient_id", "drug_name", "drug_class", "regimen_name", "treatment_line",

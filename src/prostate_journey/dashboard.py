@@ -55,7 +55,8 @@ def _segment_table(journey: pd.DataFrame) -> str:
     grouped = frame.groupby(["initial_care_setting", "age_group"], observed=True).agg(
         eligible=("eligible_for_arpi", "sum"), gap=("eligible_not_initiated_90d", "sum")
     ).reset_index()
-    grouped["gap_rate"] = (grouped.gap / grouped.eligible.replace(0, pd.NA) * 100).fillna(0)
+    eligible = grouped.eligible.mask(grouped.eligible.eq(0)).astype("float64")
+    grouped["gap_rate"] = (grouped.gap / eligible * 100).fillna(0.0)
     rows = "".join(f"<tr><td>{html.escape(str(row.initial_care_setting))}</td><td>{row.age_group}</td><td>{int(row.eligible)}</td><td>{int(row.gap)}</td><td>{row.gap_rate:.1f}%</td></tr>" for row in grouped.sort_values("gap_rate", ascending=False).head(12).itertuples())
     return f'<div class="table-wrap"><h3>Largest treatment gaps by segment</h3><table><thead><tr><th>Care setting</th><th>Age group</th><th>Eligible</th><th>Gap</th><th>Gap rate</th></tr></thead><tbody>{rows}</tbody></table></div>'
 

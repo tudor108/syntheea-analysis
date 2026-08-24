@@ -135,7 +135,7 @@ covered_until = service_date + days_supply
 refill_gap_days = next_service_date - covered_until
 ```
 
-The existing 30/60/90-day persistence sensitivity rules are calculated from the explicit event history rather than relying only on an episode-level refill summary. `patient_journey` includes the event-derived `prescription_event_count` and `max_refill_gap_days` values. Persistence at 3, 6 and 12 months uses event-derived coverage and refill gaps together with treatment initiation, discontinuation and sufficient follow-up.
+The existing 30/60/90-day persistence sensitivity rules are calculated independently from the explicit event history rather than relying only on an episode-level refill summary. `patient_journey` includes the event-derived `prescription_event_count` and `max_refill_gap_days` values. Persistence at 3, 6 and 12 months uses event-derived coverage and refill gaps together with treatment initiation, discontinuation and sufficient follow-up.
 
 ## Recommendation by cohort
 

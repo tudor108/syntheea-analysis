@@ -175,15 +175,18 @@ def build_patient_journey(
     for day in (30, 60, 90):
         base[f"initiated_within_{day}d"] = base.eligible_for_arpi & base.days_to_initiation.between(0, day).fillna(False)
     base["eligible_not_initiated_90d"] = base.eligible_for_arpi & ~base.initiated_within_90d
+    persistence_base: dict[int, pd.Series] = {}
     for months, day in ((3, 90), (6, 180), (12, 365)):
-        base[f"persistent_{months}m"] = (
+        persistence_base[months] = (
             base.treatment_initiated
             & ((base.treatment_start_date + pd.to_timedelta(day, unit="D")) <= event_coverage_until)
-            & (base.max_refill_gap_days <= config["allowable_gap_days"])
             & ~(base.discontinuation_flag.fillna(False) & (base.discontinuation_date <= base.treatment_start_date + pd.to_timedelta(day, unit="D")))
         )
+        base[f"persistent_{months}m"] = persistence_base[months] & (
+            base.max_refill_gap_days <= config["allowable_gap_days"]
+        )
     for gap in config["persistence_sensitivity_gaps"]:
-        base[f"persistent_12m_gap_{gap}d"] = base["persistent_12m"] & (
+        base[f"persistent_12m_gap_{gap}d"] = persistence_base[12] & (
             base.max_refill_gap_days <= gap
         )
     base["discontinued_within_12m"] = base.discontinuation_flag.fillna(False) & (

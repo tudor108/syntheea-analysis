@@ -1,5 +1,7 @@
 rule,severity,status,failure_count,detail
 patient_unique,critical,pass,0,patient_id must be unique
+treatment_unique,critical,pass,0,treatment_id must be unique
+prescription_event_unique,critical,pass,0,prescription_event_id must be unique
 male_only,critical,pass,0,prostate cohort contains males only
 birth_before_diagnosis,critical,pass,0,birth precedes diagnosis
 diagnosis_before_metastatic,critical,pass,0,diagnosis <= metastatic
@@ -31,5 +33,18 @@ coverage_after_refill,critical,pass,0,coverage >= refill
 encounter_provider_fk,critical,pass,0,encounter provider exists
 treatment_provider_fk,critical,pass,0,prescriber exists
 patient_foreign_keys,critical,pass,0,all patient foreign keys exist
+prescription_event_treatment_fk,critical,pass,0,every prescription event references an existing treatment
+prescription_event_patient_matches_treatment,critical,pass,0,event patient_id matches its treatment patient_id
+prescription_event_drug_matches_treatment,critical,pass,0,event drug_name matches its treatment drug_name
+prescription_event_synthetic_product,critical,pass,0,product_id uses the synthetic identifier prefix
+prescription_event_within_treatment,critical,pass,0,service_date is within the treatment episode
+prescription_event_positive_supply,critical,pass,0,days_supply and quantity_dispensed are positive
+prescription_event_coverage,critical,pass,0,covered_until_date equals service_date + days_supply
+prescription_event_nonnegative_gap,critical,pass,0,refill_gap_days is nonnegative
+prescription_event_synthetic,critical,pass,0,all prescription events are explicitly synthetic
+prescription_event_type_sequence,critical,pass,0,first event is initial_fill and subsequent events are refill
+prescription_event_gap_consistency,critical,pass,0,refill_gap_days equals service_date minus previous coverage
+prescription_event_treatment_coverage,critical,pass,0,every treatment has exactly one initial fill
+prescription_event_max_gap_consistency,critical,pass,0,treatment max_refill_gap_days matches its emitted events
 diagnosis_patient_coverage,critical,pass,0,each patient has diagnosis
 outcome_patient_coverage,critical,pass,0,each patient has outcome

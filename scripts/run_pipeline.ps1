@@ -4,10 +4,16 @@ $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $ProjectRoot
 $env:PYTHONPATH = Join-Path $ProjectRoot "src"
 $VenvPython = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
+$VenvReady = $false
 if (Test-Path $VenvPython) {
-    & $VenvPython -c "import pandas, pyarrow, duckdb, yaml, pydantic, typer" 2>$null
+    try {
+        & $VenvPython -c "import pandas, pyarrow, duckdb, yaml, pydantic, typer" 2>$null
+        $VenvReady = $LASTEXITCODE -eq 0
+    } catch {
+        $VenvReady = $false
+    }
 }
-if ((Test-Path $VenvPython) -and $LASTEXITCODE -eq 0) {
+if ($VenvReady) {
     & $VenvPython -m prostate_journey.cli run-all --cohort-size $CohortSize --seed $Seed --log-level $LogLevel
 } else {
     Write-Warning "The venv is incomplete; using installed compatible Python 3.13."

@@ -9,6 +9,20 @@
       "detail": "patient_id must be unique"
     },
     {
+      "rule": "treatment_unique",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "treatment_id must be unique"
+    },
+    {
+      "rule": "prescription_event_unique",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "prescription_event_id must be unique"
+    },
+    {
       "rule": "male_only",
       "severity": "critical",
       "status": "pass",
@@ -224,6 +238,97 @@
       "status": "pass",
       "failure_count": 0,
       "detail": "all patient foreign keys exist"
+    },
+    {
+      "rule": "prescription_event_treatment_fk",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "every prescription event references an existing treatment"
+    },
+    {
+      "rule": "prescription_event_patient_matches_treatment",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "event patient_id matches its treatment patient_id"
+    },
+    {
+      "rule": "prescription_event_drug_matches_treatment",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "event drug_name matches its treatment drug_name"
+    },
+    {
+      "rule": "prescription_event_synthetic_product",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "product_id uses the synthetic identifier prefix"
+    },
+    {
+      "rule": "prescription_event_within_treatment",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "service_date is within the treatment episode"
+    },
+    {
+      "rule": "prescription_event_positive_supply",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "days_supply and quantity_dispensed are positive"
+    },
+    {
+      "rule": "prescription_event_coverage",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "covered_until_date equals service_date + days_supply"
+    },
+    {
+      "rule": "prescription_event_nonnegative_gap",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "refill_gap_days is nonnegative"
+    },
+    {
+      "rule": "prescription_event_synthetic",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "all prescription events are explicitly synthetic"
+    },
+    {
+      "rule": "prescription_event_type_sequence",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "first event is initial_fill and subsequent events are refill"
+    },
+    {
+      "rule": "prescription_event_gap_consistency",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "refill_gap_days equals service_date minus previous coverage"
+    },
+    {
+      "rule": "prescription_event_treatment_coverage",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "every treatment has exactly one initial fill"
+    },
+    {
+      "rule": "prescription_event_max_gap_consistency",
+      "severity": "critical",
+      "status": "pass",
+      "failure_count": 0,
+      "detail": "treatment max_refill_gap_days matches its emitted events"
     },
     {
       "rule": "diagnosis_patient_coverage",
