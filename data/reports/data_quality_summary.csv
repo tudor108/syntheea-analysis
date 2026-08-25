@@ -1,50 +1,91 @@
 rule,severity,status,failure_count,detail
-patient_unique,critical,pass,0,patient_id must be unique
-treatment_unique,critical,pass,0,treatment_id must be unique
-prescription_event_unique,critical,pass,0,prescription_event_id must be unique
+pk_patient,critical,pass,0,patient_id is non-null and unique at documented grain
+pk_diagnosis,critical,pass,0,diagnosis_id is non-null and unique at documented grain
+pk_disease_state_event,critical,pass,0,disease_state_event_id is non-null and unique at documented grain
+pk_eligibility,critical,pass,0,eligibility_id is non-null and unique at documented grain
+pk_organization,critical,pass,0,organization_id is non-null and unique at documented grain
+pk_provider,critical,pass,0,provider_id is non-null and unique at documented grain
+pk_encounter,critical,pass,0,encounter_id is non-null and unique at documented grain
+pk_referral,critical,pass,0,referral_id is non-null and unique at documented grain
+pk_active_surveillance,critical,pass,0,active_surveillance_id is non-null and unique at documented grain
+pk_observation,critical,pass,0,observation_id is non-null and unique at documented grain
+pk_treatment_episode,critical,pass,0,treatment_episode_id is non-null and unique at documented grain
+pk_treatment_regimen,critical,pass,0,regimen_id is non-null and unique at documented grain
+pk_treatment_regimen_component,critical,pass,0,component_id is non-null and unique at documented grain
+pk_prescription_event,critical,pass,0,prescription_event_id is non-null and unique at documented grain
+pk_adverse_event,critical,pass,0,adverse_event_id is non-null and unique at documented grain
+pk_outcome,critical,pass,0,outcome_id is non-null and unique at documented grain
+pk_patient_split,critical,pass,0,patient_split_id is non-null and unique at documented grain
+pk_feature_timing,critical,pass,0,feature_metadata_id is non-null and unique at documented grain
+pk_patient_journey,critical,pass,0,patient_id is non-null and unique at documented grain
+fk_patient,critical,pass,0,all patient foreign keys resolve
+fk_provider_organization,critical,pass,0,provider organization foreign keys resolve
+fk_encounter_provider,critical,pass,0,encounter provider foreign keys resolve
+fk_referral_providers,critical,pass,0,referral source and destination providers resolve
+fk_treatment,critical,pass,0,all normalized treatment foreign keys resolve
+age_derived,critical,pass,0,age is derived from DOB and index date
+age_configured_range,critical,pass,0,age stays within the configured 50-90 year cohort contract
 male_only,critical,pass,0,prostate cohort contains males only
+independent_archetypes,critical,pass,0,each generated patient has an independent archetype identifier
+no_source_cloning,critical,pass,0,raw Synthea IDs are never cloned
+all_markets,critical,pass,0,all seven required markets are present
 birth_before_diagnosis,critical,pass,0,birth precedes diagnosis
-diagnosis_before_metastatic,critical,pass,0,diagnosis <= metastatic
-eligibility_before_treatment,critical,pass,0,eligibility <= start
-treatment_dates,critical,pass,0,start < end
-death_after_birth,critical,pass,0,death after birth
-death_censor_alignment,critical,pass,0,death not after censor
-mhspc_implies_metastatic,critical,pass,0,mHSPC => metastatic
-mhspc_implies_hormone_sensitive,critical,pass,0,mHSPC => hormone sensitive
-mhspc_excludes_cr,critical,pass,0,mHSPC excludes CR at index
-eligibility_implies_mhspc,critical,pass,0,demo eligibility => mHSPC
-nonnegative_referral_delay_days,critical,pass,0,referral_delay_days cannot be negative
-nonnegative_days_to_initiation,critical,pass,0,days_to_initiation cannot be negative
-nonnegative_days_to_discontinuation,critical,pass,0,days_to_discontinuation cannot be negative
-nonnegative_days_to_switch,critical,pass,0,days_to_switch cannot be negative
-nonnegative_days_to_progression,critical,pass,0,days_to_progression cannot be negative
-persistence_requires_followup,warning,pass,0,12m persistence requires follow-up
-switch_has_date,critical,pass,0,switch implies date
-restart_has_date,critical,pass,0,restart implies date
-death_has_date,critical,pass,0,death implies date
-ltfu_has_last_observed,critical,pass,0,LTFU implies last observed
-no_switch_after_death,critical,pass,0,no switch after death
-no_treatment_after_death,critical,pass,0,no treatment after death
-death_not_nonadherence,critical,pass,0,death is a separate outcome
-ltfu_not_discontinuation,critical,pass,0,LTFU is separate
-persistence_requires_initiation,critical,pass,0,persistence requires initiation
-refill_after_start,critical,pass,0,refill >= start
-coverage_after_refill,critical,pass,0,coverage >= refill
-encounter_provider_fk,critical,pass,0,encounter provider exists
-treatment_provider_fk,critical,pass,0,prescriber exists
-patient_foreign_keys,critical,pass,0,all patient foreign keys exist
-prescription_event_treatment_fk,critical,pass,0,every prescription event references an existing treatment
-prescription_event_patient_matches_treatment,critical,pass,0,event patient_id matches its treatment patient_id
-prescription_event_drug_matches_treatment,critical,pass,0,event drug_name matches its treatment drug_name
-prescription_event_synthetic_product,critical,pass,0,product_id uses the synthetic identifier prefix
-prescription_event_within_treatment,critical,pass,0,service_date is within the treatment episode
-prescription_event_positive_supply,critical,pass,0,days_supply and quantity_dispensed are positive
-prescription_event_coverage,critical,pass,0,covered_until_date equals service_date + days_supply
-prescription_event_nonnegative_gap,critical,pass,0,refill_gap_days is nonnegative
-prescription_event_synthetic,critical,pass,0,all prescription events are explicitly synthetic
-prescription_event_type_sequence,critical,pass,0,first event is initial_fill and subsequent events are refill
-prescription_event_gap_consistency,critical,pass,0,refill_gap_days equals service_date minus previous coverage
-prescription_event_treatment_coverage,critical,pass,0,every treatment has exactly one initial fill
-prescription_event_max_gap_consistency,critical,pass,0,treatment max_refill_gap_days matches its emitted events
-diagnosis_patient_coverage,critical,pass,0,each patient has diagnosis
-outcome_patient_coverage,critical,pass,0,each patient has outcome
+gleason_isup_mapping,critical,pass,0,"Gleason patterns, score and ISUP mapping are coherent"
+metastatic_state_consistency,critical,pass,0,hormone-sensitive and resistant metastatic states are coherent
+disease_state_transitions,critical,pass,0,disease states are chronological and only configured forward transitions occur
+eligibility_reconstructable,critical,pass,0,eligibility reconstructs exactly from exported source variables
+eligibility_date_semantics,critical,pass,0,eligibility date exists only for eligible patients
+ineligibility_explained,critical,pass,0,every ineligible/insufficient patient has a reason
+no_event_after_censor,critical,pass,0,no clinical event occurs after censor/death/LTFU
+downstream_events_after_diagnosis,critical,pass,0,clinical pathway events do not precede diagnosis
+observation_competing_risks,critical,pass,0,death and LTFU are competing and censor equals last observation
+encounter_specialty_matches_provider,critical,pass,0,encounter specialty matches provider master specialty
+encounter_setting_matches_provider,critical,pass,0,encounter care setting derives from provider organization
+encounter_organization_matches_provider,critical,pass,0,encounter organization matches the provider master
+referral_distinct_providers,critical,pass,0,real transfers use distinct source and destination providers
+referral_specialty_consistency,critical,pass,0,referral specialties match provider masters
+referral_organization_consistency,critical,pass,0,referral source and destination organizations match provider masters
+referral_completion_semantics,critical,pass,0,only completed referrals have completion dates
+referral_decision_owner_semantics,critical,pass,0,decision ownership transfers only when the referral completes
+treatment_episode_dates,critical,pass,0,episode intervals and terminal events are coherent
+treatment_censor_status,critical,pass,0,ongoing versus censored episode status reflects the terminal boundary
+regimen_episode_dates,critical,pass,0,regimens stay within episodes
+component_episode_dates,critical,pass,0,regimen components stay within their episode
+intensification_reconstructable,critical,pass,0,intensification derives from mHSPC state and regimen components
+treatment_provider_compatibility,critical,pass,0,"chemotherapy, radiotherapy and surgery use compatible specialists"
+chemotherapy_referral_coherence,critical,pass,0,"chemotherapy occurs only after an observed, already-completed oncology referral"
+radiotherapy_referral_coherence,critical,pass,0,radiotherapy occurs only after a completed radiation-oncology transfer
+chemotherapy_cycle_limit,critical,pass,0,chemotherapy dispensing does not exceed the explicit planned cycle count
+prescription_component_match,critical,pass,0,prescription events match component drug and patient
+prescription_dates,critical,pass,0,dispensing dates and nominal/effective coverage are coherent
+prescription_sequence,critical,pass,0,initial/refill sequence and early/on-time/late gaps reconstruct
+prescription_coverage_monotonic,critical,pass,0,effective coverage never moves backward after an early refill
+prescription_component_coverage,critical,pass,0,every component with dispensing detail has exactly one initial event
+prescription_episode_summary,critical,pass,0,episode maximum refill gap reconciles to events
+switch_restart_nonoverlap,critical,pass,0,switch/restart episodes link to and follow the closed prior episode
+no_old_drug_after_switch,critical,pass,0,true switch closes previous dispensing
+active_surveillance_logic,critical,pass,0,"AS start, exit and treatment transition are coherent"
+active_surveillance_treatment_reconciliation,critical,pass,0,every observed AS treatment transition has a matching normalized episode
+active_surveillance_reclassification_semantics,critical,pass,0,AS reclassification is a dated event reconciled to AS exit
+persistence_rule_version,critical,pass,0,every mart persistence label carries the configured v2.1 definition
+persistence_3m_status_reconstructable,critical,pass,0,persistence_3m_status reconstructs from landmark-bounded dispensing events
+persistence_6m_status_reconstructable,critical,pass,0,persistence_6m_status reconstructs from landmark-bounded dispensing events
+persistence_12m_status_reconstructable,critical,pass,0,persistence_12m_status reconstructs from landmark-bounded dispensing events
+persistence_right_censoring,critical,pass,0,12-month status distinguishes observed gap failure from right censoring
+persistence_sensitivity_reconstructable_30,critical,pass,0,30-day persistence reconstructs independently from events
+persistence_status_flag_30,critical,pass,0,30-day status and nullable flag agree
+persistence_sensitivity_reconstructable_60,critical,pass,0,60-day persistence reconstructs independently from events
+persistence_status_flag_60,critical,pass,0,60-day status and nullable flag agree
+persistence_sensitivity_reconstructable_90,critical,pass,0,90-day persistence reconstructs independently from events
+persistence_status_flag_90,critical,pass,0,90-day status and nullable flag agree
+persistence_sensitivity_monotonic,critical,pass,0,persistence cannot decrease when the permissible gap increases
+split_one_per_patient,critical,pass,0,each independent patient/archetype belongs to one split
+split_archetype_no_overlap,critical,pass,0,no archetype crosses train/validation/test
+feature_timing_leakage,critical,pass,0,future/outcome features are prohibited from predictive feature sets
+feature_timing_mart_coverage,critical,pass,0,every analytical mart field has one explicit timing/governance record
+mart_eligibility_reconciliation,critical,pass,0,mart eligibility reconciles to eligibility table
+mart_treatment_reconciliation,critical,pass,0,mart initiation reconciles to episodes
+mart_outcome_reconciliation,critical,pass,0,mart outcomes reconcile to normalized outcome table
+outcome_status_reconstructable,critical,pass,0,terminal outcome status and model version reconstruct from dated source states
+mart_care_setting_reconciliation,critical,pass,0,initial care setting and specialty derive only from the first encounter
+mart_pathway_setting_reconciliation,critical,pass,0,descriptive pathway setting reconciles to the complete encounter sequence

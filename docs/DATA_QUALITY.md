@@ -1,7 +1,33 @@
-# Data Quality
+# Data Quality and Readiness Gates
 
-Critical rules stop `run-all`; warnings are reported and permit continuation. Outputs are `data_quality_summary.json`, `.csv`, and `data_quality_report.md`. Checks cover uniqueness, male-only cohort, all requested chronology constraints, mHSPC/eligibility implications, persistence observability, switch/restart/death/LTFU evidence, no events after death, separation of death/LTFU from adherence, refill coverage and every patient/provider foreign key.
+`validate_tables` executes critical cross-table rules. Any failure stops `run-all` before gold export. The generated report preserves rule, severity, status, failure count, and evidence.
 
-Prescription-event checks additionally enforce unique event IDs, valid patient and treatment foreign keys, patient/treatment and drug/treatment agreement, synthetic product identifiers, service dates within treatment episodes, positive supply and quantity, the coverage-date formula, nonnegative and chronologically correct refill gaps, an `initial_fill` followed only by `refill` events, exactly one initial fill per treatment, explicit synthetic provenance, and agreement between event-level and treatment-level maximum refill gaps.
+Coverage includes:
 
-The executable definitions in `data_quality.py` are authoritative and tested. Missingness is a warning because configured nulls are intentional.
+- non-null/unique PKs for all 19 tables and zero orphan patient/provider/organization/treatment FKs;
+- DOB/diagnosis and downstream chronology, positive intervals, valid state transitions, and no events after censor/death/LTFU;
+- DOB-derived age, Gleason/ISUP, metastatic/hormonal coherence, and eligibility reconstruction/reasons;
+- provider specialty/setting consistency, distinct referral endpoints, referral completion chronology, and treatment-specialty compatibility;
+- regimen/component containment, intensification reconstruction, prescription sequence/coverage/summary agreement;
+- switch/restart non-overlap, no old-line fills after switch, and AS transition logic;
+- right-censor persistence, nullable status/flag agreement, and monotonic 30/60/90 sensitivity;
+- patient/archetype split isolation and feature-timing leakage prevention;
+- mart reconciliation for eligibility, initiation, outcomes, and care setting.
+
+The independent readiness audit evaluates the 25 requested acceptance requirements. Each contributes four points; score is computed from actual results, not assigned. Outputs include:
+
+- `readiness_requirement_matrix.csv` and `readiness_audit.md/json`;
+- `readiness_scorecard.csv` by category;
+- `adversarial_audit.md/json` and `adversarial_audit_scorecard.csv`, produced by a separate record-level recalculation that does not consume the readiness score;
+- `schema_summary.csv`, `missingness_summary.csv`, and `market_summary.csv`;
+- stable content/schema fingerprints for every table.
+
+Full runs also generate every table twice with the same seed and require exact equality. `runtime_reproducibility_verified=true` is saved in the final configuration snapshot only after that check succeeds.
+
+Run manually:
+
+```powershell
+python -m prostate_journey.cli validate --output-dir data/gold
+python -m pytest -q
+python -m ruff check src tests
+```

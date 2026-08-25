@@ -1,4 +1,5 @@
 """Central logging configuration."""
+
 import logging
 
 

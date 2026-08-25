@@ -1,0 +1,315 @@
+{
+  "independent_audit_score": 100,
+  "maximum_score": 100,
+  "p0_blockers_remaining": 0,
+  "p1_issues_remaining": 0,
+  "ready_for_bayer_diagnostic": true,
+  "independent_metrics": {
+    "patient_count": 10000,
+    "unique_archetypes": 10000,
+    "duplicate_demographic_signatures": 0,
+    "raw_source_records_used": 4,
+    "split_contamination_archetypes": 0,
+    "market_patient_counts": {
+      "AU": 800,
+      "CA": 900,
+      "CN": 1200,
+      "DE": 1800,
+      "FR": 1100,
+      "JP": 1600,
+      "US": 2600
+    },
+    "market_metastatic_rates": {
+      "AU": 0.1925,
+      "CA": 0.232222,
+      "CN": 0.389167,
+      "DE": 0.263333,
+      "FR": 0.251818,
+      "JP": 0.260625,
+      "US": 0.325385
+    },
+    "deep_encounters_per_patient": 9.525066,
+    "scan_encounters_per_patient": 5.119362,
+    "deep_to_scan_encounter_ratio": 1.860596,
+    "deep_product_missing_rate": 0.0,
+    "scan_product_missing_rate": 0.189018,
+    "eligible_patients": 2281,
+    "chemotherapy_components": 451,
+    "maximum_chemotherapy_events": 6,
+    "critical_events_after_censor": 0,
+    "persistence_mismatches": {
+      "persistence_3m_status": 0,
+      "persistence_6m_status": 0,
+      "persistence_12m_status": 0,
+      "persistence_12m_status_gap_30d": 0,
+      "persistence_12m_status_gap_60d": 0,
+      "persistence_12m_status_gap_90d": 0
+    },
+    "age_minimum": 50,
+    "age_maximum": 90,
+    "progression_rate_by_metastatic_flag": {
+      "False": 0.185299,
+      "True": 0.454641
+    },
+    "treated_eligible": 1752,
+    "untreated_eligible": 529,
+    "initiated_within_90_days": 1691,
+    "eligible_treatment_gap_90_days": 590,
+    "persistence_12m_evaluable": 1659,
+    "discontinued_or_switched_by_12m": 722,
+    "market_treatment_gap": {
+      "AU": 27,
+      "CA": 50,
+      "CN": 150,
+      "DE": 80,
+      "FR": 54,
+      "JP": 59,
+      "US": 170
+    },
+    "care_setting_treatment_gap": {
+      "academic_oncology": 146,
+      "community_oncology": 45,
+      "community_urology": 294,
+      "mixed_pathway": 105
+    },
+    "segment_treatment_gap": {
+      "high": 125,
+      "low": 134,
+      "medium": 331
+    }
+  },
+  "remaining_warnings": [
+    "All records and effect relationships are synthetic and are not population-representative.",
+    "Clinical assumptions and guideline classifications still require Bayer clinical review.",
+    "Scan-market product detail is intentionally incomplete and must not be treated as absence.",
+    "Referral variables are predictors only when their event/completion date is on or before the prediction index.",
+    "Raw Synthea contributes only unique compatible archetypes; most records are generated independently."
+  ],
+  "scorecard": [
+    {
+      "check_id": 1,
+      "check": "Independent patients and no split contamination",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "archetypes=10000; duplicate signatures=0; contaminated archetypes=0"
+    },
+    {
+      "check_id": 2,
+      "check": "Seven markets with non-identical clinical distributions",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "counts={'AU': 800, 'CA': 900, 'CN': 1200, 'DE': 1800, 'FR': 1100, 'JP': 1600, 'US': 2600}; age mean range=4.291; metastatic range=0.197"
+    },
+    {
+      "check_id": 3,
+      "check": "Deep and Scan markets differ in pathway depth and missingness",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "encounter ratio=1.861; product missing deep=0.000, scan=0.189"
+    },
+    {
+      "check_id": 4,
+      "check": "Configured market-specific provider capacity is realised",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "actual={'AU': 4, 'CA': 4, 'CN': 5, 'DE': 13, 'FR': 5, 'JP': 12, 'US': 21}; expected={'US': 21, 'DE': 13, 'JP': 12, 'FR': 5, 'CN': 5, 'AU': 4, 'CA': 4}"
+    },
+    {
+      "check_id": 5,
+      "check": "Eligibility and null semantics reconstruct",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "eligible=2281; label mismatches=0; semantic failures=0"
+    },
+    {
+      "check_id": 6,
+      "check": "Eligibility rule version is complete and configured",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "expected version=ARPI-ELIG-SYN-v2.0; observed=['ARPI-ELIG-SYN-v2.0']"
+    },
+    {
+      "check_id": 7,
+      "check": "First treatment, regimen components and intensity reconstruct",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "episodes=2383; regimens=2383; components=4231; reconstruction failures=0"
+    },
+    {
+      "check_id": 8,
+      "check": "Treatment combinations, lines and chemotherapy cycles are plausible",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "incompatible regimens=0; invalid line sequences=0; chemo cycle failures=0"
+    },
+    {
+      "check_id": 9,
+      "check": "No clinical event occurs after censor, death or LTFU",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "events after final observable date=0"
+    },
+    {
+      "check_id": 10,
+      "check": "Persistence reconstructs at 3/6/12 months and 30/60/90-day gaps",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "mismatches={'persistence_3m_status': 0, 'persistence_6m_status': 0, 'persistence_12m_status': 0, 'persistence_12m_status_gap_30d': 0, 'persistence_12m_status_gap_60d': 0, 'persistence_12m_status_gap_90d': 0}"
+    },
+    {
+      "check_id": 11,
+      "check": "Switch, add-on and restart semantics are non-contradictory",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "linked transitions=290; add-ons=55; failures=0"
+    },
+    {
+      "check_id": 12,
+      "check": "Active surveillance is a dated state/event sequence",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "AS episodes=1738; monitors=13243; transition/reclassification failures=0"
+    },
+    {
+      "check_id": 13,
+      "check": "Provider, referral, organization and decision ownership reconstruct",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "provider/referral/treatment incompatibilities=0"
+    },
+    {
+      "check_id": 14,
+      "check": "Age, Gleason/ISUP and disease-state transitions are coherent",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "age range=50-90; clinical-state failures=0"
+    },
+    {
+      "check_id": 15,
+      "check": "Outcomes are dated, non-deterministic and clinically structured",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "date/status failures=0; progression rates={'False': 0.185299, 'True': 0.454641}"
+    },
+    {
+      "check_id": 16,
+      "check": "Missingness is explicit, market-varying and does not hide derivations",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "critical derivation fields complete=True; product missing by market={'AU': 0.1472, 'CA': 0.1566, 'CN': 0.2306, 'DE': 0.0, 'FR': 0.1681, 'JP': 0.0, 'US': 0.0}"
+    },
+    {
+      "check_id": 17,
+      "check": "Feature timing blocks target, outcome and pathway leakage",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "unclassified mart fields=0; future predictors=0; target predictors=0; conditional referrals=3/3"
+    },
+    {
+      "check_id": 18,
+      "check": "No obvious clone, tiny-support or formula artefact remains",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "duplicate signatures=0; continuous support={'access_index': 753, 'frailty_proxy': 788, 'psa_value': 926}"
+    },
+    {
+      "check_id": 19,
+      "check": "Primary keys are unique and non-null",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "primary-key failures=0"
+    },
+    {
+      "check_id": 20,
+      "check": "Foreign keys resolve across normalized domains",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "foreign-key failures=0"
+    },
+    {
+      "check_id": 21,
+      "check": "Initial and whole-pathway care settings are not conflated",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "care-setting reconstruction failures=0"
+    },
+    {
+      "check_id": 22,
+      "check": "Core eligible-to-value deliverables independently reconstruct",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "eligible=2281; treated=1752; untreated=529; initiated90=1691; gap90=590; 12m evaluable=1659"
+    },
+    {
+      "check_id": 23,
+      "check": "Analytical mart reconciles to normalized source domains",
+      "priority": "P0",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "eligibility=0; first treatment=0; outcome=0"
+    },
+    {
+      "check_id": 24,
+      "check": "Clinical, censoring and outcome rule versions are complete",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "all exported rule-version domains contain exactly one non-null configured version"
+    },
+    {
+      "check_id": 25,
+      "check": "Deterministic generation contract and full-run rerun verification",
+      "priority": "P1",
+      "status": "PASS",
+      "score": 4,
+      "max_score": 4,
+      "evidence": "seed=42; scenario=diagnostic-v2.0; runtime full rerun verified=True"
+    }
+  ]
+}

@@ -1,45 +1,69 @@
-from copy import deepcopy
-from pathlib import Path
-
 import pandas as pd
 
-from prostate_journey.pipeline import generate_tables
+
+def test_normalized_treatment_hierarchy_and_chronology(generated_tables):
+    episode = generated_tables["treatment_episode"]
+    regimen = generated_tables["treatment_regimen"]
+    component = generated_tables["treatment_regimen_component"]
+    assert (episode.treatment_start_date < episode.treatment_end_date).all()
+    assert regimen.treatment_episode_id.isin(episode.treatment_episode_id).all()
+    assert component.regimen_id.isin(regimen.regimen_id).all()
+    assert component.treatment_episode_id.isin(episode.treatment_episode_id).all()
+    assert {"ADT", "ARPI", "chemotherapy", "procedure"}.issubset(set(component.drug_class))
+    assert {"monotherapy", "doublet", "triplet"}.issubset(set(regimen.regimen_type))
 
 
-def test_treatment_chronology_and_switch(small_config, tmp_path: Path):
-    treatment = generate_tables(small_config, tmp_path)["treatment"]
-    assert (treatment.treatment_end_date > treatment.treatment_start_date).all()
-    assert (treatment.refill_date >= treatment.treatment_start_date).all()
-    switched = treatment[treatment.switch_flag]
-    assert switched.switch_date.notna().all()
-    assert (switched.drug_name != switched.switched_to_drug).all()
-
-
-def test_prescription_events_match_treatment_summaries(small_config, tmp_path: Path):
-    config = deepcopy(small_config)
-    config["switch_probability"] = 1.0
-    tables = generate_tables(config, tmp_path)
-    treatment = tables["treatment"]
-    events = tables["prescription_event"].sort_values(
-        ["treatment_id", "service_date", "prescription_event_id"]
+def test_dispensing_has_realistic_supply_refill_and_effective_coverage(generated_tables):
+    event = generated_tables["prescription_event"].sort_values(
+        ["component_id", "service_date", "prescription_event_id"]
     )
+    component = generated_tables["treatment_regimen_component"].set_index("component_id")
+    nominal = event.service_date + pd.to_timedelta(event.days_supply, unit="D")
+    assert event.nominal_covered_until_date.equals(nominal)
+    assert (event.covered_until_date >= event.service_date).all()
+    assert (event.covered_until_date <= event.component_id.map(component.component_end_date)).all()
+    ordered_previous_coverage = event.groupby("component_id").covered_until_date.shift()
+    early_refills = ordered_previous_coverage.notna() & event.service_date.lt(
+        ordered_previous_coverage
+    )
+    assert (
+        event.loc[early_refills, "covered_until_date"]
+        >= ordered_previous_coverage.loc[early_refills]
+    ).all()
+    assert (event.covered_until_date <= event.component_id.map(component.component_end_date)).all()
+    assert event.days_supply.nunique() >= 5
+    assert {"early", "on_time", "late"}.issubset(set(event.refill_timing))
+    first = event.groupby("component_id").cumcount().eq(0)
+    assert event.loc[first, "event_type"].eq("initial_fill").all()
+    assert event.loc[~first, "event_type"].eq("refill").all()
 
-    expected_coverage = events.service_date + pd.to_timedelta(events.days_supply, unit="D")
-    assert events.prescription_event_id.is_unique
-    assert events.covered_until_date.equals(expected_coverage)
 
-    event_number = events.groupby("treatment_id").cumcount()
-    assert events.loc[event_number.eq(0), "event_type"].eq("initial_fill").all()
-    assert events.loc[event_number.gt(0), "event_type"].eq("refill").all()
+def test_switch_restart_add_on_and_discontinuation_are_distinct(transition_tables):
+    episode = transition_tables["treatment_episode"]
+    regimen = transition_tables["treatment_regimen"]
+    event = transition_tables["prescription_event"]
+    assert {"switch", "restart"}.issubset(set(episode.transition_type))
+    assert {"planned_combination", "add_on"}.issubset(set(regimen.combination_strategy))
+    assert episode.discontinuation_flag.any()
 
-    previous_coverage = events.groupby("treatment_id").covered_until_date.shift()
-    expected_gap = (events.service_date - previous_coverage).dt.days.fillna(0)
-    assert events.refill_gap_days.equals(expected_gap.astype("int64"))
+    lookup = episode.set_index("treatment_episode_id")
+    linked = episode[episode.transition_type.isin(["switch", "restart"])]
+    previous_end = linked.previous_episode_id.map(lookup.treatment_end_date)
+    assert (linked.treatment_start_date > previous_end).all()
+    switched_previous = set(linked.loc[linked.transition_type.eq("switch"), "previous_episode_id"])
+    old_events = event[event.treatment_episode_id.isin(switched_previous)]
+    assert (
+        old_events.service_date <= old_events.treatment_episode_id.map(lookup.treatment_end_date)
+    ).all()
 
-    event_max_gap = events.groupby("treatment_id").refill_gap_days.max()
-    treatment_max_gap = treatment.set_index("treatment_id").max_refill_gap_days
-    assert treatment_max_gap.equals(event_max_gap.reindex(treatment_max_gap.index))
 
-    switched_ids = treatment.loc[treatment.treatment_line.eq(2), "treatment_id"]
-    assert not switched_ids.empty
-    assert events[events.treatment_id.isin(switched_ids)].groupby("treatment_id").size().ge(2).all()
+def test_persistence_sensitivity_is_nullable_and_monotonic(generated_tables):
+    journey = generated_tables["patient_journey"]
+    p30 = journey.persistent_12m_gap_30d.fillna(False)
+    p60 = journey.persistent_12m_gap_60d.fillna(False)
+    p90 = journey.persistent_12m_gap_90d.fillna(False)
+    assert not (p30 & ~p60).any()
+    assert not (p60 & ~p90).any()
+    censored = journey.persistence_12m_status.eq("CENSORED_NOT_EVALUABLE")
+    assert journey.loc[censored, "persistent_12m"].isna().all()
+    assert p30.sum() < p90.sum()

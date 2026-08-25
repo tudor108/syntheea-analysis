@@ -1,55 +1,63 @@
 from copy import deepcopy
-from pathlib import Path
 
 import pandas as pd
 
-from prostate_journey.pipeline import generate_tables, run_all
+from prostate_journey.data_quality import validate_tables
+from prostate_journey.pipeline import TABLES, generate_tables, run_all
+from prostate_journey.readiness_audit import audit_tables
 
 
-def test_reproducibility(small_config, tmp_path: Path):
-    first = generate_tables(small_config, tmp_path / "missing-a")
-    second = generate_tables(small_config, tmp_path / "missing-b")
-    pd.testing.assert_frame_equal(first["patient_journey"], second["patient_journey"])
+def test_reproducibility_same_seed_same_normalized_and_mart_outputs(small_config, tmp_path):
+    config = deepcopy(small_config)
+    config["target_cohort_size"] = 120
+    first = generate_tables(config, tmp_path / "missing-a")
+    second = generate_tables(config, tmp_path / "missing-b")
+    for table_name in TABLES:
+        pd.testing.assert_frame_equal(first[table_name], second[table_name])
 
 
-def test_end_to_end_outputs(small_config, tmp_path: Path):
+def test_market_depth_and_leakage_controls(generated_tables, small_config):
+    patient = generated_tables["patient"]
+    encounter = generated_tables["encounter"]
+    event_rate = encounter.groupby("market_code").size() / patient.groupby("market_code").size()
+    deep_rate = event_rate.loc[["US", "DE", "JP"]].mean()
+    scan_rate = event_rate.loc[["FR", "CN", "AU", "CA"]].mean()
+    assert deep_rate > scan_rate * 1.35
+
+    split = generated_tables["patient_split"]
+    assert split.groupby("source_archetype_id").split.nunique().max() == 1
+    timing = generated_tables["feature_timing"]
+    assert not timing.loc[timing.future_information_flag, "predictor_allowed_flag"].any()
+
+    matrix, *_ = audit_tables(generated_tables, validate_tables(generated_tables), small_config)
+    assert matrix.loc[matrix.requirement_id.ne(11), "status"].eq("PASS").all()
+
+
+def test_end_to_end_exports_contract_database_and_reports(small_config, tmp_path):
+    config = deepcopy(small_config)
+    config["target_cohort_size"] = 180
+    config["readiness"]["fail_on_p0_p1"] = False
     project = tmp_path / "project"
     project.mkdir()
     gold = tmp_path / "gold"
-    tables = run_all(project, small_config, tmp_path / "raw", gold)
-    assert set(tables) == {"patient", "diagnosis", "provider", "encounter", "treatment", "prescription_event", "outcome", "patient_journey"}
-    for name in tables:
+    tables = run_all(project, config, tmp_path / "raw", gold)
+    assert set(tables) == set(TABLES)
+    for name in TABLES:
         assert (gold / f"{name}.csv").exists()
         assert (gold / f"{name}.parquet").exists()
     assert (gold / "prostate_journey.duckdb").exists()
-
-
-def test_journey_persistence_uses_initial_treatment_events(small_config, tmp_path: Path):
-    tables = generate_tables(small_config, tmp_path)
-    journey = tables["patient_journey"].set_index("patient_id")
-    treatment = tables["treatment"].sort_values("treatment_start_date").drop_duplicates("patient_id").set_index("patient_id")
-    events = tables["prescription_event"]
-    initial_events = events[events.treatment_id.isin(treatment.treatment_id)]
-    expected_count = initial_events.groupby("patient_id").size()
-    expected_max_gap = initial_events.groupby("patient_id").refill_gap_days.max()
-
-    assert journey.prescription_event_count.equals(journey.index.to_series().map(expected_count).fillna(0).astype("int64"))
-    assert journey.max_refill_gap_days.equals(journey.index.to_series().map(expected_max_gap).fillna(0).astype("int64"))
-    assert (journey.persistent_12m_gap_30d <= journey.persistent_12m_gap_60d).all()
-    assert (journey.persistent_12m_gap_60d <= journey.persistent_12m_gap_90d).all()
-
-
-def test_persistence_sensitivity_thresholds_are_independent(small_config, tmp_path: Path):
-    config = deepcopy(small_config)
-    config["allowable_gap_days"] = 30
-    config["refill_gap_distribution"] = {
-        "mean_days": 45,
-        "sd_days": 0,
-        "minimum_days": 0,
-        "maximum_days": 45,
-    }
-
-    journey = generate_tables(config, tmp_path)["patient_journey"]
-
-    assert journey.persistent_12m_gap_60d.sum() > journey.persistent_12m.sum()
-    assert journey.persistent_12m_gap_60d.equals(journey.persistent_12m_gap_90d)
+    for report in [
+        "data_quality_summary.json",
+        "readiness_audit.json",
+        "readiness_requirement_matrix.csv",
+        "readiness_scorecard.csv",
+        "adversarial_audit.json",
+        "adversarial_audit.md",
+        "adversarial_audit_scorecard.csv",
+        "market_summary.csv",
+        "schema_summary.csv",
+        "missingness_summary.csv",
+        "cohort_dashboard.html",
+        "config_snapshot.yaml",
+    ]:
+        assert (project / "data" / "reports" / report).exists()

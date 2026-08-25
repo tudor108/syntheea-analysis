@@ -1,19 +1,38 @@
-import numpy as np
 import pandas as pd
-from prostate_journey.cohort_builder import build_patient_table
-from prostate_journey.synthea_loader import make_base_patients, select_base_patients
+
+REQUIRED_MARKETS = {"US", "DE", "JP", "FR", "CN", "AU", "CA"}
 
 
-def test_cohort_is_male_and_not_representative(small_config):
-    base = make_base_patients(20, 1, 50, 90)
-    result = build_patient_table(base, small_config, np.random.default_rng(1))
-    assert result.patient_id.is_unique
-    assert set(result.sex) == {"male"}
-    assert not result.population_representative_flag.any()
+def test_population_has_independent_archetypes_and_all_markets(generated_tables):
+    patient = generated_tables["patient"]
+    assert set(patient.market_code) == REQUIRED_MARKETS
+    assert patient.patient_id.is_unique
+    assert patient.source_archetype_id.is_unique
+    raw_sources = patient.loc[
+        patient.source_record_type.eq("synthea_unique"), "source_patient_id"
+    ].dropna()
+    assert raw_sources.is_unique
+    assert set(patient.sex) == {"male"}
+    assert not patient.population_representative_flag.any()
 
 
-def test_synthea_birthdates_are_filtered_and_oversampled():
-    raw = pd.DataFrame({"Id": ["a", "b"], "BIRTHDATE": ["1955-06-01", "2010-01-01"], "GENDER": ["M", "M"]})
-    selected = select_base_patients({"patients": raw}, 5, 42, 50, 90)
-    assert len(selected) == 5
-    assert set(selected.Id) == {"a"}
+def test_age_is_derived_from_dates_and_has_variation(generated_tables):
+    patient = generated_tables["patient"]
+    expected = (
+        pd.to_datetime(patient.index_date) - pd.to_datetime(patient.birth_date)
+    ).dt.days // 365
+    pd.testing.assert_series_equal(patient.age_at_index, expected, check_names=False)
+    assert patient.age_at_index.nunique() >= 30
+    assert patient.age_at_index.between(50, 90).all()
+
+
+def test_market_profiles_are_not_country_label_clones(generated_tables):
+    patient = generated_tables["patient"]
+    market_means = patient.groupby("market_code").agg(
+        access=("access_index", "mean"),
+        comorbidity=("comorbidity_score", "mean"),
+        age=("age_at_index", "mean"),
+    )
+    assert market_means.access.max() - market_means.access.min() > 0.08
+    assert market_means.age.max() - market_means.age.min() > 1.0
+    assert patient.groupby("market_code").insurance_type.nunique().min() >= 2

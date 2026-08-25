@@ -1,0 +1,57 @@
+version: "CLINICAL-RULES-v1.0"
+
+clinical_rules:
+  clinical_state_model:
+    version: "CLINICAL-STATE-v2.1"
+    inputs: [prostate_stage, hormone_sensitive_flag, castration_resistant_flag, dated_progression]
+    output: disease_state_event
+    source_assumption: "Forward-only synthetic prostate disease-state model; requires clinical validation."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  mhspc_derivation:
+    version: "MHSPC-SYN-v2.0"
+    inputs: [prostate_cancer_flag, metastatic_flag, hormone_sensitive_flag, castration_resistant_flag]
+    output: mhspc_flag
+    source_assumption: "Synthetic cohort definition; requires clinical validation and is not a treatment guideline."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  arpi_eligibility:
+    version: "ARPI-ELIG-SYN-v2.0"
+    inputs: [mhspc_flag, age_at_index, contraindication_flag, data_sufficiency_flag, possible_followup_days]
+    output: eligibility_flag
+    source_assumption: "Synthetic diagnostic denominator for pathway analysis; not authoritative clinical criteria."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  isup_mapping:
+    version: "ISUP-MAP-v1.0"
+    inputs: [gleason_primary_pattern, gleason_secondary_pattern, gleason_score]
+    output: isup_grade_group
+    source_assumption: "Standard score-pattern mapping represented explicitly for synthetic validation."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  intensification:
+    version: "INTENSIFICATION-SYN-v1.0"
+    inputs: [disease_state, regimen_components]
+    output: intensification_flag
+    source_assumption: "For synthetic mHSPC analysis, ADT plus ARPI and/or chemotherapy is classified as intensified; not a recommendation."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  persistence:
+    version: "PERSISTENCE-SYN-v2.1"
+    inputs: [treatment_start_date, dispensing_coverage, refill_gap_days, discontinuation_date, switch_date, censor_date]
+    output: persistence_status
+    source_assumption: "Operational sensitivity definitions using independently evaluated 30/60/90-day permissible gaps."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  active_surveillance:
+    version: "ACTIVE-SURVEILLANCE-v1.1"
+    inputs: [localized_flag, risk_group, isup_grade_group, age_at_index, observation_window]
+    output: active_surveillance_state_and_events
+    source_assumption: "Synthetic AS pathway with monitoring, reclassification, exit and observed treatment transition."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  observation_censoring:
+    version: "OBSERVATION-v2.1"
+    inputs: [diagnosis_date, administrative_end, death_date, loss_to_follow_up_date]
+    output: censor_date
+    source_assumption: "Censoring is the earliest observable terminal boundary; death and LTFU compete."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]
+  outcome_model:
+    version: "OUTCOME-SYN-v2.1"
+    inputs: [disease_state, psa, comorbidity, treatment_observed_before_candidate_date]
+    output: dated_outcome_events
+    source_assumption: "Probabilistic synthetic outcomes with time-aligned upstream inputs; not causal evidence."
+    market_applicability: [US, DE, JP, FR, CN, AU, CA]

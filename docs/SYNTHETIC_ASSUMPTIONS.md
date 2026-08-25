@@ -1,28 +1,24 @@
-# Synthetic Assumptions
+# Synthetic Assumptions and Missingness
 
-> **SYNTHETIC DEMO DATA – NOT REAL BAYER OR CLINICAL DATA**
+> All probabilities are scenario parameters requiring domain review. They are not prevalence, utilization, effectiveness, or market estimates.
 
-## Technical
+`configs/prostate_scenario.yaml` holds shared clinical/pathway generation parameters. `configs/markets.yaml` explicitly controls, per market:
 
-One seeded RNG controls all generation. Dates end at the configured observation date. Missingness is injected after generation. The demo is oversampled, has weight 1 only for internal scenario summaries and is never population representative.
+- unequal full and quick sample sizes;
+- age, race, insurance, stage, and care-setting distributions;
+- access, referral probability/delay/status, and initiation behavior;
+- AS uptake, provider density, follow-up visit richness;
+- prescription and clinical missingness.
 
-## Demonstrative clinical and business assumptions
+Deep markets (US/DE/JP) receive more encounters, monitoring, prescription detail, adverse-event detail, and provider/referral depth. Scan markets (FR/CN/AU/CA) retain directional denominator/initiation/pathway capability with fewer events and more missing product/clinical detail.
 
-Community-urology referral is slower in the configured scenario; longer referral may reduce/slow initiation. Higher comorbidity can delay initiation and increase stops/hospitalization. Academic oncology has faster initiation and more multidisciplinary care. Adverse events can increase interruption/switch, and progression can increase later-line switching. Relationships remain probabilistic with individual noise. These are not real estimates or causal claims.
+Missingness is not uniformly MCAR:
 
-| Parameter | Default synthetic value | Rationale | Requires validation | Config location |
-|---|---:|---|---|---|
-| cohort size | 10,000 | useful demo scale | yes | `target_cohort_size` |
-| metastatic | 0.42 via stage mix | enrich pathway events | yes | `stage_distribution` |
-| hormone sensitive | 0.88 | populate demo mHSPC | yes | `hormone_sensitive_probability` |
-| allowable gap | 60 days | operational persistence rule | yes | `allowable_gap_days` |
-| switch | 0.16 | ensure observable transitions | yes | `switch_probability` |
-| restart | 0.20 | ensure observable restarts | yes | `restart_probability` |
-| progression | 0.29 | ensure follow-up events | yes | `progression_probability` |
-| death | 0.09 | ensure survival outcomes | yes | `death_probability` |
-| LTFU | 0.07 | demonstrate censoring | yes | `loss_to_follow_up_probability` |
-| community-urology referral delay | mean 43 days | synthetic pathway gap | yes | `referral.community_urology` |
-| academic initiation | mean 27 days | synthetic setting contrast | yes | `initiation.academic_oncology` |
+- Structural: procedure components do not require dispensing; non-referred patients have no referral completion; non-AS patients have no AS dates; untreated patients have no regimen/persistence events.
+- Market-dependent: Scan market product IDs/quantities and clinical fields have higher configured null rates.
+- Event-dependent: missingness applies only when the relevant diagnosis, prescription, referral, or AS event exists.
+- Censor-dependent: future events and not-yet-evaluable persistence are absent/null rather than generated beyond follow-up.
 
-All remaining probabilities, distributions, ranges, penalties and missingness rates are in `configs/prostate_scenario.yaml`; none should be interpreted outside the scenario.
+Patients are independent archetypes. Optional raw Synthea patients are used at most once and keep `source_patient_id`; generated rows have a unique `source_archetype_id`. The dataset is enriched for analytical coverage and is explicitly not population representative.
 
+Outcomes have noisy upstream relationships and residual randomness. They are suitable for verifying analysis workflows and detecting synthetic pathway signals, not causal estimation or real-world decisions.

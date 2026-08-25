@@ -1,0 +1,178 @@
+version: "MARKET-PROFILE-v1.0"
+
+markets:
+  US:
+    market_name: United States
+    depth: deep
+    full_sample_size: 2600
+    quick_sample_size: 140
+    regions: [Northeast, Midwest, South, West]
+    age_mean: 69
+    age_sd: 8.5
+    stage_distribution: {localized: 0.48, locally_advanced: 0.17, metastatic: 0.31, unknown: 0.04}
+    race_distribution: {white: 0.61, black: 0.19, asian: 0.08, other: 0.12}
+    insurance_distribution: {commercial: 0.24, medicare: 0.61, medicaid: 0.10, other: 0.05}
+    care_setting_distribution: {community_urology: 0.37, community_oncology: 0.24, academic_oncology: 0.23, mixed_pathway: 0.16}
+    referral_probability: 0.84
+    referral_delay_mean_days: 34
+    referral_delay_sd_days: 18
+    referral_status_distribution: {completed: 0.82, pending: 0.07, rejected: 0.03, cancelled: 0.04, not_completed: 0.04}
+    initiation_probability_90d: 0.72
+    initiation_delay_mean_days: 43
+    initiation_delay_sd_days: 22
+    active_surveillance_uptake: 0.53
+    providers_per_1000: 8.0
+    followup_visit_mean: 5.0
+    prescription_missingness: 0.01
+    clinical_missingness_multiplier: 1.0
+    access_index_mean: 0.66
+  DE:
+    market_name: Germany
+    depth: deep
+    full_sample_size: 1800
+    quick_sample_size: 100
+    regions: [North, East, South, West]
+    age_mean: 70
+    age_sd: 8.0
+    stage_distribution: {localized: 0.52, locally_advanced: 0.18, metastatic: 0.27, unknown: 0.03}
+    race_distribution: {white: 0.82, black: 0.03, asian: 0.06, other: 0.09}
+    insurance_distribution: {statutory: 0.82, private: 0.14, other: 0.04}
+    care_setting_distribution: {community_urology: 0.42, community_oncology: 0.18, academic_oncology: 0.25, mixed_pathway: 0.15}
+    referral_probability: 0.88
+    referral_delay_mean_days: 27
+    referral_delay_sd_days: 14
+    referral_status_distribution: {completed: 0.87, pending: 0.05, rejected: 0.02, cancelled: 0.03, not_completed: 0.03}
+    initiation_probability_90d: 0.76
+    initiation_delay_mean_days: 36
+    initiation_delay_sd_days: 18
+    active_surveillance_uptake: 0.58
+    providers_per_1000: 7.0
+    followup_visit_mean: 5.4
+    prescription_missingness: 0.015
+    clinical_missingness_multiplier: 0.9
+    access_index_mean: 0.72
+  JP:
+    market_name: Japan
+    depth: deep
+    full_sample_size: 1600
+    quick_sample_size: 90
+    regions: [Hokkaido-Tohoku, Kanto, Chubu-Kansai, Chugoku-Shikoku-Kyushu]
+    age_mean: 72
+    age_sd: 7.2
+    stage_distribution: {localized: 0.55, locally_advanced: 0.16, metastatic: 0.26, unknown: 0.03}
+    race_distribution: {asian: 0.96, other: 0.04}
+    insurance_distribution: {national_health_insurance: 0.55, employee_health: 0.39, other: 0.06}
+    care_setting_distribution: {community_urology: 0.31, community_oncology: 0.14, academic_oncology: 0.37, mixed_pathway: 0.18}
+    referral_probability: 0.91
+    referral_delay_mean_days: 22
+    referral_delay_sd_days: 12
+    referral_status_distribution: {completed: 0.90, pending: 0.04, rejected: 0.01, cancelled: 0.02, not_completed: 0.03}
+    initiation_probability_90d: 0.79
+    initiation_delay_mean_days: 31
+    initiation_delay_sd_days: 16
+    active_surveillance_uptake: 0.47
+    providers_per_1000: 7.5
+    followup_visit_mean: 5.8
+    prescription_missingness: 0.02
+    clinical_missingness_multiplier: 0.8
+    access_index_mean: 0.75
+  FR:
+    market_name: France
+    depth: scan
+    full_sample_size: 1100
+    quick_sample_size: 60
+    regions: [North, East, South, West]
+    age_mean: 70
+    age_sd: 8.2
+    stage_distribution: {localized: 0.54, locally_advanced: 0.18, metastatic: 0.24, unknown: 0.04}
+    race_distribution: {white: 0.74, black: 0.08, asian: 0.05, other: 0.13}
+    insurance_distribution: {public: 0.88, complementary: 0.09, other: 0.03}
+    care_setting_distribution: {community_urology: 0.36, community_oncology: 0.18, academic_oncology: 0.29, mixed_pathway: 0.17}
+    referral_probability: 0.86
+    referral_delay_mean_days: 30
+    referral_delay_sd_days: 17
+    referral_status_distribution: {completed: 0.83, pending: 0.06, rejected: 0.02, cancelled: 0.04, not_completed: 0.05}
+    initiation_probability_90d: 0.74
+    initiation_delay_mean_days: 39
+    initiation_delay_sd_days: 21
+    active_surveillance_uptake: 0.55
+    providers_per_1000: 4.2
+    followup_visit_mean: 2.1
+    prescription_missingness: 0.16
+    clinical_missingness_multiplier: 1.6
+    access_index_mean: 0.70
+  CN:
+    market_name: China
+    depth: scan
+    full_sample_size: 1200
+    quick_sample_size: 65
+    regions: [East, Central, South, West]
+    age_mean: 68
+    age_sd: 8.8
+    stage_distribution: {localized: 0.35, locally_advanced: 0.21, metastatic: 0.39, unknown: 0.05}
+    race_distribution: {asian: 0.97, other: 0.03}
+    insurance_distribution: {urban_employee: 0.44, urban_resident: 0.25, rural: 0.23, self_pay_other: 0.08}
+    care_setting_distribution: {community_urology: 0.18, community_oncology: 0.17, academic_oncology: 0.46, mixed_pathway: 0.19}
+    referral_probability: 0.72
+    referral_delay_mean_days: 46
+    referral_delay_sd_days: 27
+    referral_status_distribution: {completed: 0.71, pending: 0.10, rejected: 0.04, cancelled: 0.05, not_completed: 0.10}
+    initiation_probability_90d: 0.64
+    initiation_delay_mean_days: 52
+    initiation_delay_sd_days: 29
+    active_surveillance_uptake: 0.31
+    providers_per_1000: 3.8
+    followup_visit_mean: 1.8
+    prescription_missingness: 0.24
+    clinical_missingness_multiplier: 1.9
+    access_index_mean: 0.52
+  AU:
+    market_name: Australia
+    depth: scan
+    full_sample_size: 800
+    quick_sample_size: 45
+    regions: [New-South-Wales, Victoria, Queensland, Other]
+    age_mean: 69
+    age_sd: 8.4
+    stage_distribution: {localized: 0.57, locally_advanced: 0.17, metastatic: 0.22, unknown: 0.04}
+    race_distribution: {white: 0.72, asian: 0.13, indigenous: 0.03, other: 0.12}
+    insurance_distribution: {medicare_public: 0.67, private: 0.29, other: 0.04}
+    care_setting_distribution: {community_urology: 0.39, community_oncology: 0.17, academic_oncology: 0.26, mixed_pathway: 0.18}
+    referral_probability: 0.85
+    referral_delay_mean_days: 32
+    referral_delay_sd_days: 18
+    referral_status_distribution: {completed: 0.84, pending: 0.06, rejected: 0.02, cancelled: 0.03, not_completed: 0.05}
+    initiation_probability_90d: 0.73
+    initiation_delay_mean_days: 40
+    initiation_delay_sd_days: 21
+    active_surveillance_uptake: 0.60
+    providers_per_1000: 4.5
+    followup_visit_mean: 2.3
+    prescription_missingness: 0.14
+    clinical_missingness_multiplier: 1.4
+    access_index_mean: 0.73
+  CA:
+    market_name: Canada
+    depth: scan
+    full_sample_size: 900
+    quick_sample_size: 50
+    regions: [Atlantic, Quebec, Ontario, West]
+    age_mean: 69
+    age_sd: 8.3
+    stage_distribution: {localized: 0.55, locally_advanced: 0.18, metastatic: 0.23, unknown: 0.04}
+    race_distribution: {white: 0.68, black: 0.06, asian: 0.14, indigenous: 0.03, other: 0.09}
+    insurance_distribution: {provincial_public: 0.86, private_supplemental: 0.10, other: 0.04}
+    care_setting_distribution: {community_urology: 0.38, community_oncology: 0.19, academic_oncology: 0.27, mixed_pathway: 0.16}
+    referral_probability: 0.84
+    referral_delay_mean_days: 38
+    referral_delay_sd_days: 22
+    referral_status_distribution: {completed: 0.81, pending: 0.08, rejected: 0.02, cancelled: 0.03, not_completed: 0.06}
+    initiation_probability_90d: 0.70
+    initiation_delay_mean_days: 45
+    initiation_delay_sd_days: 24
+    active_surveillance_uptake: 0.57
+    providers_per_1000: 4.3
+    followup_visit_mean: 2.2
+    prescription_missingness: 0.15
+    clinical_missingness_multiplier: 1.5
+    access_index_mean: 0.68

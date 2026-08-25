@@ -1,28 +1,45 @@
-from pathlib import Path
-
-import pandas as pd
-
-from prostate_journey.data_quality import validate_tables
-from prostate_journey.pipeline import generate_tables
+def _copy_tables(tables):
+    return {name: frame.copy(deep=True) for name, frame in tables.items()}
 
 
-def test_generated_data_passes_critical_rules(small_config, tmp_path: Path):
-    results = validate_tables(generate_tables(small_config, tmp_path))
-    assert not [r for r in results if r["severity"] == "critical" and r["failure_count"]]
+def _rule(results, name):
+    return next(result for result in results if result["rule"] == name)
 
 
-def test_quality_catches_duplicate_patient(small_config, tmp_path: Path):
-    tables = generate_tables(small_config, tmp_path)
+def test_generated_data_passes_every_quality_rule(generated_tables):
+    from prostate_journey.data_quality import validate_tables
+
+    results = validate_tables(generated_tables)
+    assert len(results) >= 65
+    assert not [result for result in results if result["failure_count"]]
+
+
+def test_quality_catches_duplicate_primary_key(generated_tables):
+    from prostate_journey.data_quality import validate_tables
+
+    tables = _copy_tables(generated_tables)
     tables["patient"].loc[1, "patient_id"] = tables["patient"].loc[0, "patient_id"]
+    assert _rule(validate_tables(tables), "pk_patient")["failure_count"] == 1
+
+
+def test_quality_catches_event_after_censor(generated_tables):
+    from prostate_journey.data_quality import validate_tables
+
+    tables = _copy_tables(generated_tables)
+    patient_id = tables["encounter"].loc[0, "patient_id"]
+    censor = tables["observation"].set_index("patient_id").loc[patient_id, "censor_date"]
+    tables["encounter"].loc[0, "encounter_date"] = censor + type(censor - censor)(days=1)
+    assert _rule(validate_tables(tables), "no_event_after_censor")["failure_count"] >= 1
+
+
+def test_quality_catches_opaque_eligibility_and_provider_mismatch(generated_tables):
+    from prostate_journey.data_quality import validate_tables
+
+    tables = _copy_tables(generated_tables)
+    tables["eligibility"].loc[0, "eligibility_flag"] = ~tables["eligibility"].loc[
+        0, "eligibility_flag"
+    ]
+    tables["encounter"].loc[0, "provider_specialty"] = "invalid_specialty"
     results = validate_tables(tables)
-    assert next(r for r in results if r["rule"] == "patient_unique")["failure_count"] == 1
-
-
-def test_quality_catches_invalid_prescription_event_coverage(small_config, tmp_path: Path):
-    tables = generate_tables(small_config, tmp_path)
-    tables["prescription_event"].loc[0, "covered_until_date"] += pd.Timedelta(days=1)
-
-    results = validate_tables(tables)
-
-    rule = next(r for r in results if r["rule"] == "prescription_event_coverage")
-    assert rule["failure_count"] == 1
+    assert _rule(results, "eligibility_reconstructable")["failure_count"] >= 1
+    assert _rule(results, "encounter_specialty_matches_provider")["failure_count"] == 1

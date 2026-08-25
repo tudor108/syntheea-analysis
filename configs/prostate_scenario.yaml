@@ -1,52 +1,110 @@
 disclaimer: "All values are synthetic demo assumptions and require clinical and business validation."
 random_seed: 42
 target_cohort_size: 10000
+profile: full
+scenario_version: "diagnostic-v2.0"
+market_config_file: markets.yaml
+clinical_rules_file: clinical_rules.yaml
+
 minimum_age: 50
 maximum_age: 90
-scenario_version: "demo-v1.0"
+diagnosis_start_date: "2019-01-01"
+diagnosis_end_date: "2024-09-30"
 observation_end_date: "2025-12-31"
-stage_distribution: {localized: 0.34, locally_advanced: 0.20, metastatic: 0.42, unknown: 0.04}
-metastatic_probability: 0.42
-hormone_sensitive_probability: 0.88
-castration_resistant_transition_probability: 0.20
-care_setting_distribution: {community_urology: 0.36, community_oncology: 0.24, academic_oncology: 0.25, mixed_pathway: 0.15}
-provider_specialty_distribution: {urology: 0.34, medical_oncology: 0.38, radiation_oncology: 0.12, primary_care: 0.10, other: 0.06}
-stage_metastatic_sites: {bone: 0.52, lymph_node: 0.18, visceral: 0.10, multiple: 0.17, unknown: 0.03}
-referral:
-  community_urology: {probability: 0.78, delay_mean_days: 43, delay_sd_days: 20}
-  community_oncology: {probability: 0.93, delay_mean_days: 20, delay_sd_days: 11}
-  academic_oncology: {probability: 0.97, delay_mean_days: 12, delay_sd_days: 7}
-  mixed_pathway: {probability: 0.88, delay_mean_days: 29, delay_sd_days: 15}
-initiation:
-  community_urology: {probability_90d: 0.62, days_mean: 56, days_sd: 24}
-  community_oncology: {probability_90d: 0.76, days_mean: 39, days_sd: 18}
-  academic_oncology: {probability_90d: 0.84, days_mean: 27, days_sd: 14}
-  mixed_pathway: {probability_90d: 0.72, days_mean: 44, days_sd: 21}
-treatment_selection_probabilities: {ADT: 0.28, darolutamide: 0.12, enzalutamide: 0.16, apalutamide: 0.13, abiraterone: 0.18, docetaxel: 0.09, other_systemic_therapy: 0.04}
-treatment_duration_days: {mean: 390, sd: 150, minimum: 45, maximum: 900}
-refill_gap_distribution: {mean_days: 12, sd_days: 18, minimum_days: 0, maximum_days: 120}
-allowable_gap_days: 60
-persistence_sensitivity_gaps: [30, 60, 90]
-switch_window_days: 90
-switch_probability: 0.16
-restart_probability: 0.20
-progression_probability: 0.29
-death_probability: 0.09
-loss_to_follow_up_probability: 0.07
-adverse_event_probability: 0.18
-hospitalisation_probability: 0.15
-discontinuation_probability: 0.24
-contraindication_probability: 0.06
-follow_up_regular_probability: {community_urology: 0.62, community_oncology: 0.74, academic_oncology: 0.88, mixed_pathway: 0.72}
-persistence_12m_probability: {community_urology: 0.55, community_oncology: 0.64, academic_oncology: 0.72, mixed_pathway: 0.62}
-missing_data_probabilities: {race: 0.03, ethnicity: 0.04, psa_value: 0.06, gleason_score: 0.05, insurance_type: 0.03}
-signals:
-  high_comorbidity_initiation_penalty: 0.12
-  high_comorbidity_discontinuation_increase: 0.12
-  high_comorbidity_hospitalisation_increase: 0.10
-  adverse_event_discontinuation_increase: 0.18
-  adverse_event_switch_increase: 0.10
-  progression_switch_increase: 0.18
-eligibility_rule_version: "DEMO-ARPI-v1"
 minimum_follow_up_days: 90
 
+hormone_sensitive_probability: 0.88
+castration_resistant_at_index_probability: 0.06
+castration_resistant_transition_probability: 0.20
+stage_metastatic_sites: {bone: 0.52, lymph_node: 0.18, visceral: 0.10, multiple: 0.17, unknown: 0.03}
+risk_distribution_by_stage:
+  localized: {low: 0.31, intermediate: 0.44, high: 0.22, unknown: 0.03}
+  locally_advanced: {low: 0.03, intermediate: 0.22, high: 0.72, unknown: 0.03}
+  metastatic: {low: 0.01, intermediate: 0.08, high: 0.88, unknown: 0.03}
+  unknown: {low: 0.05, intermediate: 0.10, high: 0.15, unknown: 0.70}
+
+contraindication:
+  base_probability: 0.025
+  high_comorbidity_increment: 0.10
+  high_frailty_increment: 0.12
+  reasons: {severe_cardiovascular_risk: 0.34, hepatic_impairment: 0.18, drug_interaction: 0.20, functional_status: 0.20, other_synthetic: 0.08}
+
+referral:
+  eligible_probability_increment: 0.08
+  high_complexity_completion_penalty: 0.05
+
+treatment:
+  high_comorbidity_initiation_penalty: 0.11
+  low_access_initiation_penalty: 0.10
+  completed_referral_initiation_increment: 0.08
+  duration_days: {mean: 500, sd: 185, minimum: 90, maximum: 1050}
+  regimen_distribution:
+    adt_monotherapy: 0.24
+    adt_arpi_doublet: 0.48
+    adt_chemotherapy_doublet: 0.13
+    adt_arpi_chemotherapy_triplet: 0.15
+  arpi_distribution: {darolutamide: 0.25, enzalutamide: 0.27, apalutamide: 0.21, abiraterone: 0.27}
+  switch_probability: 0.12
+  add_on_probability: 0.10
+  restart_probability: 0.08
+  discontinuation_probability: 0.20
+  transition_min_days: 90
+  guideline_rule_version: "INTENSIFICATION-SYN-v1.0"
+  chemotherapy:
+    cycle_length_days: 21
+    planned_cycles: 6
+
+prescription:
+  days_supply_by_class:
+    ADT: {values: [28, 84, 90], probabilities: [0.12, 0.23, 0.65]}
+    ARPI: {values: [28, 30, 60, 84, 90], probabilities: [0.12, 0.43, 0.18, 0.12, 0.15]}
+    chemotherapy: {values: [21], probabilities: [1.0]}
+  adherence_profiles: {high: 0.58, variable: 0.29, low: 0.13}
+  refill_gap_by_profile:
+    high: {mean: 1, sd: 6, minimum: -14, maximum: 25}
+    variable: {mean: 14, sd: 18, minimum: -10, maximum: 75}
+    low: {mean: 38, sd: 30, minimum: -5, maximum: 120}
+  permissible_gap_days: 60
+  sensitivity_gaps: [30, 60, 90]
+  definition_version: "PERSISTENCE-SYN-v2.1"
+
+active_surveillance:
+  eligibility_risk_groups: [low, intermediate]
+  minimum_monitoring_days: 120
+  exit_probability: 0.28
+  transition_to_treatment_probability: 0.72
+  exit_reasons: {progression: 0.35, grade_reclassification: 0.30, psa_rise: 0.20, patient_choice: 0.15}
+
+outcomes:
+  progression_base_probability: 0.18
+  metastatic_increment: 0.24
+  high_psa_increment: 0.08
+  untreated_eligible_increment: 0.07
+  hospitalisation_base_probability: 0.09
+  high_comorbidity_increment: 0.13
+  metastatic_hospitalisation_increment: 0.08
+  adverse_event_base_probability: 0.16
+  death_base_probability: 0.035
+  metastatic_death_increment: 0.12
+  frailty_death_increment: 0.09
+  ltfu_base_probability: 0.07
+
+missingness:
+  race_base: 0.025
+  ethnicity_base: 0.035
+  psa_base: 0.04
+  gleason_base: 0.035
+  insurance_base: 0.025
+
+splitting:
+  train: 0.70
+  validation: 0.15
+  test: 0.15
+  version: "PATIENT-MARKET-SPLIT-v1.0"
+
+readiness:
+  minimum_market_patients_smoke: 5
+  minimum_market_patients_full: 500
+  deep_to_scan_event_ratio_minimum: 1.35
+  verify_reproducibility_full: true
+  fail_on_p0_p1: true
