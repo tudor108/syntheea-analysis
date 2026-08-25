@@ -16,7 +16,7 @@ Eligible rows have an eligibility date/reason. Ineligible rows have clinical, co
 
 ## Pathway and active surveillance
 
-Every encounter specialty and setting comes from the referenced stable provider master. A referral contains distinct source and destination providers/organizations/specialties, referral/completion dates, status, reason, and decision owner. Only completed referrals have completion dates. Oncology-led systemic treatment starts on or after oncology referral completion; radiotherapy requires a completed transfer to radiation oncology before treatment.
+Every encounter specialty and setting comes from the referenced stable provider master. A referral contains distinct source and destination providers and specialties, while each organization ID must reconcile to its referenced provider; the transfer may be internal to one organization or cross-organizational. It also records referral/completion dates, status, reason, and decision owner. Only completed referrals have completion dates. Oncology-led systemic treatment starts on or after oncology referral completion; radiotherapy requires a completed transfer to radiation oncology before treatment.
 
 Localized low/intermediate-risk patients can be AS-eligible; eligibility does not imply uptake. Started AS can include PSA, imaging, and biopsy monitoring, continued/censored status, exit reason, and an observable transition to local treatment.
 
