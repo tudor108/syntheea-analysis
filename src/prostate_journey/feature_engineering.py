@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 import pandas as pd
 
-IDENTIFIERS = {"patient_id", "source_archetype_id"}
+IDENTIFIERS = {"patient_id", "source_archetype_id", "treatment_episode_id"}
 BASELINE_FEATURES = {
     "market_code",
     "country",
@@ -61,14 +61,13 @@ ACTIVE_SURVEILLANCE_FIELDS = {
     "active_surveillance_reclassification_date",
 }
 TREATMENT_START_FEATURES = {
-    "treatment_episode_id",
     "treatment_start_date",
     "days_to_initiation",
-    "initial_regimen",
-    "initial_regimen_type",
-    "combination_strategy",
-    "intensification_flag",
-    "regimen_component_count",
+    "regimen_at_treatment_start",
+    "regimen_type_at_treatment_start",
+    "combination_strategy_at_treatment_start",
+    "intensification_at_treatment_start_flag",
+    "regimen_component_count_at_treatment_start",
 }
 TARGET_LABELS = {
     "treatment_initiated",
@@ -107,6 +106,11 @@ TARGET_LABELS = {
 }
 FUTURE_DESCRIPTIVE_FIELDS = {
     "pathway_care_setting",
+    "initial_regimen",
+    "initial_regimen_type",
+    "combination_strategy",
+    "intensification_flag",
+    "regimen_component_count",
     "prescription_event_count",
     "max_refill_gap_days",
     "event_coverage_until_date",
@@ -198,7 +202,7 @@ def build_feature_timing_metadata(
                 "predictor_allowed_flag": predictor_allowed,
                 "availability_condition": condition,
                 "target_label_flag": feature in TARGET_LABELS,
-                "timing_rule_version": "FEATURE-TIMING-v2.0",
+                "timing_rule_version": "FEATURE-TIMING-v2.1",
             }
         )
     return pd.DataFrame(rows)
@@ -252,7 +256,7 @@ def discontinuation_features(journey: pd.DataFrame) -> pd.DataFrame:
         *sorted(BASELINE_FEATURES - {"country", "market_depth"}),
         *sorted(DIAGNOSIS_FEATURES),
         *sorted(INITIAL_PATHWAY_FEATURES),
-        *sorted(TREATMENT_START_FEATURES - {"treatment_episode_id"}),
+        *sorted(TREATMENT_START_FEATURES),
         "persistence_12m_status",
     ]
     return journey.loc[journey.treatment_initiated, columns].copy()

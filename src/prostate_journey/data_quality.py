@@ -12,6 +12,19 @@ from .diagnosis_generator import isup_from_patterns
 from .journey_builder import derive_persistence_status
 
 
+def _calendar_age(birth: pd.Series, reference: pd.Series) -> pd.Series:
+    """Independently reconstruct completed calendar years for DQ."""
+    birth_dates = pd.to_datetime(birth)
+    reference_dates = pd.to_datetime(reference)
+    birthday_not_reached = (reference_dates.dt.month < birth_dates.dt.month) | (
+        reference_dates.dt.month.eq(birth_dates.dt.month)
+        & reference_dates.dt.day.lt(birth_dates.dt.day)
+    )
+    return (
+        reference_dates.dt.year - birth_dates.dt.year - birthday_not_reached.astype(int)
+    ).astype("int64")
+
+
 def _result(rule: str, severity: str, failures: int, detail: str) -> dict:
     return {
         "rule": rule,
@@ -141,12 +154,12 @@ def validate_tables(tables: dict[str, pd.DataFrame]) -> list[dict]:
         "all normalized treatment foreign keys resolve",
     )
 
-    expected_age = (pd.to_datetime(p.index_date) - pd.to_datetime(p.birth_date)).dt.days // 365
+    expected_age = _calendar_age(p.birth_date, p.index_date)
     add(
         "age_derived",
         "critical",
         p.age_at_index.ne(expected_age).sum(),
-        "age is derived from DOB and index date",
+        "age is completed calendar years derived from DOB and index date",
     )
     add(
         "age_configured_range",
@@ -316,12 +329,30 @@ def validate_tables(tables: dict[str, pd.DataFrame]) -> list[dict]:
         downstream_after_diagnosis,
         "clinical pathway events do not precede diagnosis",
     )
+    reconstructed_censor = pd.concat(
+        [
+            observation.observation_end_date,
+            observation.death_date,
+            observation.loss_to_follow_up_date,
+        ],
+        axis=1,
+    ).min(axis=1)
+    reconstructed_reason = pd.Series("administrative_end", index=observation.index, dtype="string")
+    reconstructed_reason.loc[
+        observation.loss_to_follow_up_date.notna()
+        & observation.loss_to_follow_up_date.eq(reconstructed_censor)
+    ] = "loss_to_follow_up"
+    reconstructed_reason.loc[
+        observation.death_date.notna() & observation.death_date.eq(reconstructed_censor)
+    ] = "death"
     add(
         "observation_competing_risks",
         "critical",
         (observation.death_date.notna() & observation.loss_to_follow_up_date.notna()).sum()
-        + observation.censor_date.ne(observation.last_observed_date).sum(),
-        "death and LTFU are competing and censor equals last observation",
+        + observation.censor_date.ne(reconstructed_censor).sum()
+        + observation.censor_date.ne(observation.last_observed_date).sum()
+        + observation.censor_reason.ne(reconstructed_reason).sum(),
+        "censor and reason independently reconstruct as min(death, LTFU, administrative end)",
     )
 
     provider_lookup = provider.set_index("provider_id")
@@ -394,6 +425,34 @@ def validate_tables(tables: dict[str, pd.DataFrame]) -> list[dict]:
             & referral.decision_owner_specialty.ne(referral.source_specialty)
         ).sum(),
         "decision ownership transfers only when the referral completes",
+    )
+    completed_referrals = referral.loc[referral.referral_status.eq("completed")].copy()
+    destination_encounter_latest = encounter.groupby(
+        ["patient_id", "provider_id"]
+    ).encounter_date.max()
+    destination_treatment_latest = episode.groupby(
+        ["patient_id", "prescribing_provider_id"]
+    ).treatment_start_date.max()
+    referral_evidence_failures = 0
+    for completed_referral in completed_referrals.itertuples():
+        key = (
+            completed_referral.patient_id,
+            completed_referral.destination_provider_id,
+        )
+        encounter_date = destination_encounter_latest.get(key, pd.NaT)
+        treatment_date = destination_treatment_latest.get(key, pd.NaT)
+        evidence_dates = [
+            pd.Timestamp(value) for value in (encounter_date, treatment_date) if pd.notna(value)
+        ]
+        referral_evidence_failures += int(
+            not evidence_dates
+            or max(evidence_dates) < pd.Timestamp(completed_referral.completion_date)
+        )
+    add(
+        "referral_destination_event_evidence",
+        "critical",
+        referral_evidence_failures,
+        "every completed referral has a dated destination-provider encounter or treatment event",
     )
 
     add(
@@ -803,6 +862,46 @@ def validate_tables(tables: dict[str, pd.DataFrame]) -> list[dict]:
         "critical",
         journey.treatment_initiated.ne(journey.patient_id.isin(episode.patient_id)).sum(),
         "mart initiation reconciles to episodes",
+    )
+    first_start = (
+        episode.sort_values(["patient_id", "treatment_start_date", "treatment_episode_id"])
+        .drop_duplicates("patient_id")
+        .set_index("patient_id")
+        .treatment_start_date.reindex(journey_index.index)
+    )
+    eligibility_date = elig.set_index("patient_id").eligibility_date.reindex(journey_index.index)
+    eligible_mask = eligibility_match.reindex(journey_index.index).astype(bool)
+    initiation_days = (first_start - eligibility_date).dt.days.astype("Int64")
+    expected_initiated_30 = eligible_mask & initiation_days.le(30).fillna(False)
+    expected_initiated_60 = eligible_mask & initiation_days.le(60).fillna(False)
+    expected_initiated_90 = eligible_mask & initiation_days.le(90).fillna(False)
+    initiation_target = eligibility_date + pd.Timedelta(days=90)
+    patient_censor = observation.set_index("patient_id").censor_date.reindex(journey_index.index)
+    expected_censored_90 = (
+        eligible_mask & ~expected_initiated_90 & patient_censor.lt(initiation_target)
+    )
+    expected_gap_90 = eligible_mask & ~expected_initiated_90 & ~expected_censored_90
+    expected_status = pd.Series("NOT_ELIGIBLE", index=journey_index.index, dtype="string")
+    expected_status.loc[expected_gap_90] = "NOT_INITIATED_WITHIN_90D"
+    expected_status.loc[expected_censored_90] = "CENSORED_NOT_EVALUABLE"
+    expected_status.loc[expected_initiated_90] = "INITIATED_WITHIN_90D"
+    expected_days = initiation_days.where(eligible_mask & first_start.notna())
+    day_presence_mismatch = journey_index.days_to_initiation.notna().ne(expected_days.notna())
+    day_value_mismatch = (
+        journey_index.days_to_initiation.astype("Int64").ne(expected_days).fillna(False)
+    )
+    add(
+        "mart_initiation_window_reconciliation",
+        "critical",
+        journey_index.initiation_90d_status.ne(expected_status).sum()
+        + journey_index.initiated_within_30d.ne(expected_initiated_30).sum()
+        + journey_index.initiated_within_60d.ne(expected_initiated_60).sum()
+        + journey_index.initiated_within_90d.ne(expected_initiated_90).sum()
+        + journey_index.eligible_not_initiated_90d.ne(expected_gap_90).sum()
+        + day_presence_mismatch.sum()
+        + day_value_mismatch.sum(),
+        "initiation dates/statuses independently reconstruct from eligibility, first episode, "
+        "and censor dates",
     )
     add(
         "mart_outcome_reconciliation",

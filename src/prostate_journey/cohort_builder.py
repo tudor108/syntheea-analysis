@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from .market import market_profiles
+from .synthea_loader import calendar_year_age
 
 
 def build_patient_table(base: pd.DataFrame, config: dict, rng: np.random.Generator) -> pd.DataFrame:
@@ -17,7 +18,14 @@ def build_patient_table(base: pd.DataFrame, config: dict, rng: np.random.Generat
     index_date = pd.to_datetime(
         base.get("synthetic_index_date", pd.Series(pd.Timestamp("2022-01-01"), index=base.index))
     ).dt.normalize()
-    age = ((index_date - birth).dt.days // 365).astype("int64")
+    age = pd.Series(
+        [
+            calendar_year_age(birth_date, reference_date)
+            for birth_date, reference_date in zip(birth, index_date, strict=True)
+        ],
+        index=base.index,
+        dtype="int64",
+    )
     market_code = base.get("market_code", pd.Series("US", index=base.index)).astype(str)
     profiles = market_profiles(config)
 

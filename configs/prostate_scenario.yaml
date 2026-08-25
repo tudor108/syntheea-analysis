@@ -2,7 +2,8 @@ disclaimer: "All values are synthetic demo assumptions and require clinical and 
 random_seed: 42
 target_cohort_size: 10000
 profile: full
-scenario_version: "diagnostic-v2.0"
+generator_version: "2.1.0"
+scenario_version: "diagnostic-v2.1-release"
 market_config_file: markets.yaml
 clinical_rules_file: clinical_rules.yaml
 

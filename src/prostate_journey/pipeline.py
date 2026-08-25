@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -198,10 +199,12 @@ def run_all(
     config: dict,
     input_dir: Path,
     output_dir: Path | None = None,
+    report_dir: Path | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Generate, audit, export, load DuckDB and report; fail on actual P0/P1 issues."""
     gold = output_dir or project_root / "data" / "gold"
-    reports = project_root / "data" / "reports"
+    reports = report_dir or project_root / "data" / "reports"
+    generation_started_at = datetime.now(UTC).isoformat()
     runtime_config = deepcopy(config)
     tables = generate_tables(runtime_config, input_dir)
     verify_full = bool(
@@ -231,5 +234,12 @@ def run_all(
     (reports / "config_snapshot.yaml").write_text(
         yaml.safe_dump(runtime_config, sort_keys=True), encoding="utf-8"
     )
-    write_run_metadata(project_root, runtime_config, len(tables["patient"]), gold, reports)
+    write_run_metadata(
+        project_root,
+        runtime_config,
+        len(tables["patient"]),
+        gold,
+        reports,
+        generation_started_at=generation_started_at,
+    )
     return tables

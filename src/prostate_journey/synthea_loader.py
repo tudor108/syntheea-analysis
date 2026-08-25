@@ -14,6 +14,38 @@ from .market import market_profiles, scaled_market_counts
 LOGGER = logging.getLogger(__name__)
 
 
+def calendar_year_age(
+    birth_date: pd.Timestamp | str, reference_date: pd.Timestamp | str
+) -> int | None:
+    """Return completed calendar years at a reference date.
+
+    A day-count divided by 365 is not a valid age calculation around birthdays
+    or leap years. February 29 birthdays advance on March 1 in non-leap years.
+    """
+    birth = pd.Timestamp(birth_date)
+    reference = pd.Timestamp(reference_date)
+    if pd.isna(birth) or pd.isna(reference):
+        return None
+    birthday_not_reached = (reference.month, reference.day) < (birth.month, birth.day)
+    return int(reference.year - birth.year - birthday_not_reached)
+
+
+def _birth_dates_for_exact_ages(
+    index_dates: pd.DatetimeIndex,
+    ages: np.ndarray,
+    rng: np.random.Generator,
+) -> pd.DatetimeIndex:
+    """Sample birth dates whose completed calendar ages equal ``ages`` exactly."""
+    births: list[pd.Timestamp] = []
+    for index_date, age in zip(index_dates, ages, strict=True):
+        most_recent_birthday = index_date - pd.DateOffset(years=int(age))
+        prior_birthday = index_date - pd.DateOffset(years=int(age) + 1)
+        exact_age_window_days = (most_recent_birthday - prior_birthday).days
+        offset = int(rng.integers(0, exact_age_window_days))
+        births.append(most_recent_birthday - pd.Timedelta(days=offset))
+    return pd.DatetimeIndex(births)
+
+
 def load_synthea_csv(input_dir: str | Path) -> dict[str, pd.DataFrame]:
     """Load every readable Synthea CSV keyed by lower-case stem."""
     root = Path(input_dir)
@@ -33,9 +65,7 @@ def make_base_patients(size: int, seed: int, minimum_age: int, maximum_age: int)
     index_dates = pd.to_datetime("2021-01-01") + pd.to_timedelta(
         rng.integers(0, 730, size), unit="D"
     )
-    births = index_dates - pd.to_timedelta(
-        (ages * 365 + rng.integers(0, 365, size)).astype(int), unit="D"
-    )
+    births = _birth_dates_for_exact_ages(index_dates, ages, rng)
     return pd.DataFrame(
         {
             "Id": [f"fallback-{i:08d}" for i in range(size)],
@@ -76,7 +106,11 @@ def _eligible_raw_patients(
     ].copy()
     birth_col = "BIRTHDATE" if "BIRTHDATE" in raw else "birthdate"
     births = pd.to_datetime(raw[birth_col], errors="coerce")
-    age = ((pd.Timestamp("2022-01-01") - births).dt.days // 365).astype("Int64")
+    age = pd.Series(
+        [calendar_year_age(birth, "2022-01-01") for birth in births],
+        index=raw.index,
+        dtype="Int64",
+    )
     id_col = "Id" if "Id" in raw else "id"
     return (
         raw.loc[age.between(minimum_age, maximum_age)]
@@ -125,9 +159,7 @@ def make_multimarket_base(tables: dict[str, pd.DataFrame], config: dict[str, Any
             config["maximum_age"],
         ).astype(int)
         index_dates = diagnosis_start + pd.to_timedelta(rng.integers(0, date_span, count), unit="D")
-        births = index_dates - pd.to_timedelta(
-            (ages * 365 + rng.integers(0, 365, count)).astype(int), unit="D"
-        )
+        births = _birth_dates_for_exact_ages(index_dates, ages, rng)
         races = profile["race_distribution"]
         insurance = profile["insurance_distribution"]
         rows = pd.DataFrame(
@@ -172,10 +204,10 @@ def make_multimarket_base(tables: dict[str, pd.DataFrame], config: dict[str, Any
                 target_index
                 for target_index in available_us_indices
                 if config["minimum_age"]
-                <= (
-                    pd.Timestamp(base.loc[target_index, "synthetic_index_date"]) - source_birth
-                ).days
-                // 365
+                <= calendar_year_age(
+                    source_birth,
+                    pd.Timestamp(base.loc[target_index, "synthetic_index_date"]),
+                )
                 <= config["maximum_age"]
             ]
             if not compatible:

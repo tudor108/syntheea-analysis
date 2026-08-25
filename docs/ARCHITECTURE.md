@@ -25,3 +25,8 @@ The observation/censor table is generated before pathway, treatment, or outcome 
 Feature timing metadata marks downstream and outcome variables as forbidden for earlier prediction tasks. Patient splits use a stable seed/market/archetype hash, which prevents patient or archetype overlap across train, validation, and test.
 
 For a full profile, `run-all` generates all tables twice with the same seed and requires exact DataFrame equality before recording reproducibility as verified. Critical DQ, readiness, or independently recalculated adversarial failures stop export.
+
+The stricter `final-release` path then reloads the exact exported files, verifies CSV/Parquet values
+and DuckDB row counts, independently reconciles ten mart concepts, runs task-cutoff leakage and
+synthetic-realism diagnostics, requires all 11 final scorecard dimensions to be 100, reruns the
+test/lint suite, and seals separate analytical and QA archives with complete hash manifests.

@@ -1,4 +1,4 @@
-version: "CLINICAL-RULES-v1.0"
+version: "CLINICAL-RULES-v2.1"
 
 clinical_rules:
   clinical_state_model:

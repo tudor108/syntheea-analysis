@@ -8,6 +8,53 @@ import pandas as pd
 from .diagnosis_generator import derive_mhspc
 
 
+def regimen_state_at_treatment_start(
+    components: pd.DataFrame,
+    treatment_start_date: pd.Timestamp,
+    episode_reason: str,
+) -> dict[str, object]:
+    """Reconstruct only the regimen state observable at the treatment-start instant."""
+    started = components.loc[
+        pd.to_datetime(components.component_start_date).le(pd.Timestamp(treatment_start_date))
+    ]
+    if started.empty:
+        return {
+            "regimen_at_treatment_start": pd.NA,
+            "regimen_type_at_treatment_start": pd.NA,
+            "combination_strategy_at_treatment_start": pd.NA,
+            "intensification_at_treatment_start_flag": False,
+            "regimen_component_count_at_treatment_start": 0,
+        }
+
+    classes = set(started.drug_class)
+    if "procedure" in classes:
+        regimen_name = f"localized_{started.iloc[0].drug_name}"
+    elif {"ADT", "ARPI", "chemotherapy"}.issubset(classes):
+        regimen_name = "adt_arpi_chemotherapy_triplet"
+    elif {"ADT", "ARPI"}.issubset(classes):
+        regimen_name = "adt_arpi_doublet"
+    elif {"ADT", "chemotherapy"}.issubset(classes):
+        regimen_name = "adt_chemotherapy_doublet"
+    else:
+        regimen_name = "adt_monotherapy"
+
+    component_count = int(len(started))
+    regimen_type = (
+        "triplet" if component_count >= 3 else "doublet" if component_count == 2 else "monotherapy"
+    )
+    return {
+        "regimen_at_treatment_start": regimen_name,
+        "regimen_type_at_treatment_start": regimen_type,
+        "combination_strategy_at_treatment_start": (
+            "planned_combination" if component_count > 1 else "monotherapy"
+        ),
+        "intensification_at_treatment_start_flag": bool(
+            episode_reason == "mhspc_eligible" and bool(classes & {"ARPI", "chemotherapy"})
+        ),
+        "regimen_component_count_at_treatment_start": component_count,
+    }
+
+
 def build_eligibility(
     patient: pd.DataFrame,
     diagnosis: pd.DataFrame,
@@ -265,6 +312,21 @@ def build_patient_journey(
         )
         max_gap = int(tracking_events.refill_gap_days.max()) if not tracking_events.empty else 0
         start = pd.Timestamp(first_episode.treatment_start_date) if treatment_initiated else pd.NaT
+        regimen_at_start = (
+            regimen_state_at_treatment_start(
+                first_components,
+                start,
+                str(first_episode.episode_reason),
+            )
+            if treatment_initiated
+            else {
+                "regimen_at_treatment_start": pd.NA,
+                "regimen_type_at_treatment_start": pd.NA,
+                "combination_strategy_at_treatment_start": pd.NA,
+                "intensification_at_treatment_start_flag": False,
+                "regimen_component_count_at_treatment_start": 0,
+            }
+        )
         censor = pd.Timestamp(obs.censor_date)
         discontinuation_date = first_episode.discontinuation_date if treatment_initiated else pd.NaT
         switch_date = first_episode.switch_date if treatment_initiated else pd.NaT
@@ -432,6 +494,7 @@ def build_patient_journey(
                 first_regimen is not None and first_regimen.intensification_flag
             ),
             "regimen_component_count": len(first_components),
+            **regimen_at_start,
             "prescription_event_count": len(tracking_events),
             "max_refill_gap_days": max_gap,
             "event_coverage_until_date": coverage_until,

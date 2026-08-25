@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import json
 import platform
 import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -91,7 +93,12 @@ def sha256(path: Path) -> str:
 
 
 def write_run_metadata(
-    project_root: Path, config: dict, cohort_size: int, gold_dir: Path, report_dir: Path
+    project_root: Path,
+    config: dict,
+    cohort_size: int,
+    gold_dir: Path,
+    report_dir: Path,
+    generation_started_at: str | None = None,
 ) -> None:
     """Record environment, source version, scenario and gold checksums."""
 
@@ -104,19 +111,42 @@ def write_run_metadata(
             return None
 
     synthea_root = project_root / "external" / "synthea"
-    outputs = {p.name: sha256(p) for p in sorted(gold_dir.glob("*.parquet"))}
+    outputs = {
+        p.name: {"bytes": p.stat().st_size, "sha256": sha256(p)}
+        for p in sorted(gold_dir.iterdir())
+        if p.is_file()
+    }
+    dependency_names = ["pandas", "numpy", "pyarrow", "duckdb", "PyYAML", "pydantic", "typer"]
+    dependencies: dict[str, str | None] = {}
+    for dependency in dependency_names:
+        try:
+            dependencies[dependency] = importlib.metadata.version(dependency)
+        except importlib.metadata.PackageNotFoundError:
+            dependencies[dependency] = None
+    tracked_diff = git_value(["status", "--porcelain", "--untracked-files=no"], project_root)
+    config_snapshot = report_dir / "config_snapshot.yaml"
     metadata = {
         "disclaimer": DISCLAIMER,
-        "generation_timestamp": datetime.now(UTC).isoformat(),
+        "generation_started_at": generation_started_at,
+        "generation_completed_at": datetime.now(UTC).isoformat(),
         "git_commit": git_value(["rev-parse", "HEAD"], project_root),
+        "git_branch": git_value(["branch", "--show-current"], project_root),
+        "git_tracked_source_clean": tracked_diff == "",
+        "generator_version": config.get("generator_version", "unknown"),
         "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "python_executable": sys.executable,
         "platform": platform.platform(),
+        "dependencies": dependencies,
         "synthea_commit": git_value(["rev-parse", "HEAD"], synthea_root)
         if synthea_root.exists()
         else None,
         "random_seed": config["random_seed"],
         "cohort_size": cohort_size,
         "scenario_version": config["scenario_version"],
+        "market_configuration_version": config["market_configuration"]["version"],
+        "clinical_rules_version": config["clinical_rule_configuration"]["version"],
+        "config_snapshot_sha256": sha256(config_snapshot) if config_snapshot.exists() else None,
         "output_file_hashes": outputs,
     }
     (report_dir / "run_metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")

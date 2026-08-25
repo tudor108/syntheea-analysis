@@ -533,7 +533,10 @@ def generate_treatment_model(
         transition_choice = "none"
         available_duration = (planned_end - start).days
         if episode_reason == "mhspc_eligible" and available_duration > 210:
-            switch_p = treatment_config["switch_probability"]
+            # A true switch requires an existing ARPI to stop and a different ARPI to start.
+            # ADT-only/ADT+chemotherapy escalation is intensification, not a switch.
+            has_arpi_to_replace = any(spec["drug_class"] == "ARPI" for spec in component_specs)
+            switch_p = treatment_config["switch_probability"] if has_arpi_to_replace else 0.0
             restart_p = treatment_config["restart_probability"]
             discontinue_p = treatment_config["discontinuation_probability"]
             transition_choice = str(

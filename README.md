@@ -30,6 +30,9 @@ python -m prostate_journey.cli run-all --config configs/prostate_scenario_quick.
 # Full 10,000-patient analytical profile and exact same-seed verification
 python -m prostate_journey.cli run-all --config configs/prostate_scenario.yaml
 
+# Fresh final certification; refuses dirty source, reused folders, partial scores, or mismatches
+python -m prostate_journey.cli final-release --config configs/prostate_scenario.yaml
+
 # Tests and static checks
 python -m pytest -q
 python -m ruff check src tests
@@ -48,6 +51,11 @@ Synthea CSV input in `data/raw/synthea` is optional. Eligible raw patient rows a
 - schema, missingness, market, KPI, and cohort summaries;
 - configuration snapshot, run metadata, SHA-256 file hashes, and table fingerprints;
 - a self-contained HTML dashboard.
+
+`final-release` creates a uniquely named folder under `data/releases`. It reloads and reconciles
+the exported CSV, Parquet, and DuckDB artifacts; reruns Ruff and pytest; writes a field-level data
+dictionary, market/uncertainty/leakage/realism/reconciliation evidence and the strict 11-dimension
+scorecard; then creates separate immutable analytical and QA ZIP archives with SHA-256 manifests.
 
 See [architecture](docs/ARCHITECTURE.md), [data dictionary](docs/DATA_DICTIONARY.md), [business rules](docs/BUSINESS_RULES.md), [data quality](docs/DATA_QUALITY.md), [synthetic assumptions](docs/SYNTHETIC_ASSUMPTIONS.md), and [runbook](docs/RUNBOOK.md).
 

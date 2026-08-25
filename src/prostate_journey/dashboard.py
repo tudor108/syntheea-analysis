@@ -45,26 +45,55 @@ def _counts(journey: pd.DataFrame, column: str) -> tuple[list[str], list[float]]
     return [str(index).replace("_", " ") for index in values.index], values.astype(float).tolist()
 
 
+def eligible_cohort_funnel_counts(journey: pd.DataFrame) -> dict[str, int]:
+    """Return strictly nested counts for the eligible treatment-opportunity chain."""
+    eligible = journey.eligibility_flag.fillna(False).astype(bool)
+    initiated_90d = eligible & journey.initiated_within_90d.fillna(False).astype(bool)
+    persistence_status = journey.persistence_12m_status
+    evaluable_12m = initiated_90d & persistence_status.isin(
+        ["PERSISTENT", "DISCONTINUED", "SWITCHED"]
+    )
+    treatment_gap = eligible & journey.eligible_not_initiated_90d.fillna(False).astype(bool)
+    initiation_censored = eligible & journey.initiation_90d_status.eq("CENSORED_NOT_EVALUABLE")
+    return {
+        "eligible": int(eligible.sum()),
+        "initiated_90d": int(initiated_90d.sum()),
+        "treatment_gap_90d": int(treatment_gap.sum()),
+        "initiation_censored_not_evaluable_90d": int(initiation_censored.sum()),
+        "evaluable_12m": int(evaluable_12m.sum()),
+        "persistent_12m": int((initiated_90d & persistence_status.eq("PERSISTENT")).sum()),
+        "censored_12m": int(
+            (initiated_90d & persistence_status.eq("CENSORED_NOT_EVALUABLE")).sum()
+        ),
+    }
+
+
 def _cards(journey: pd.DataFrame) -> str:
+    funnel = eligible_cohort_funnel_counts(journey)
     values = [
         ("Total cohort", len(journey), "patients"),
         ("Markets", int(journey.market_code.nunique()), "deep and scan"),
-        ("Eligible ARPI", int(journey.eligible_for_arpi.sum()), "versioned rule"),
+        ("Eligible ARPI", funnel["eligible"], "versioned rule"),
         (
             "Initiated ≤90d",
-            int(journey.initiation_90d_status.eq("INITIATED_WITHIN_90D").sum()),
+            funnel["initiated_90d"],
             "eligible patients",
         ),
-        ("Treatment gap", int(journey.eligible_not_initiated_90d.sum()), "eligible not started"),
+        ("Treatment gap", funnel["treatment_gap_90d"], "eligible not started ≤90d"),
+        (
+            "Initiation not evaluable",
+            funnel["initiation_censored_not_evaluable_90d"],
+            "censored before day 90",
+        ),
         (
             "Persistent 12m",
-            int(journey.persistence_12m_status.eq("PERSISTENT").sum()),
-            "evaluable patients",
+            funnel["persistent_12m"],
+            "eligible initiators ≤90d",
         ),
         (
             "Censored 12m",
-            int(journey.persistence_12m_status.eq("CENSORED_NOT_EVALUABLE").sum()),
-            "not misclassified",
+            funnel["censored_12m"],
+            "eligible initiators ≤90d",
         ),
         (
             "Active surveillance",
@@ -101,6 +130,10 @@ def write_dashboard(journey: pd.DataFrame, report_dir: str | Path) -> Path:
     """Write a self-contained HTML cohort dashboard."""
     root = Path(report_dir)
     root.mkdir(parents=True, exist_ok=True)
+    funnel = eligible_cohort_funnel_counts(journey)
+    eligible_initiated_90d = journey.loc[
+        journey.eligibility_flag.fillna(False) & journey.initiated_within_90d.fillna(False)
+    ]
     setting = (
         journey.groupby("initial_care_setting", dropna=False)
         .agg(
@@ -114,12 +147,11 @@ def write_dashboard(journey: pd.DataFrame, report_dir: str | Path) -> Path:
     charts = [
         _bar_chart(
             "Cohort funnel",
-            ["mHSPC", "eligible", "initiated ≤90d", "persistent 12m"],
+            ["eligible", "initiated ≤90d", "persistent 12m"],
             [
-                journey.mhspc_flag.sum(),
-                journey.eligible_for_arpi.sum(),
-                journey.initiation_90d_status.eq("INITIATED_WITHIN_90D").sum(),
-                journey.persistence_12m_status.eq("PERSISTENT").sum(),
+                funnel["eligible"],
+                funnel["initiated_90d"],
+                funnel["persistent_12m"],
             ],
         ),
         _bar_chart("Patients by market", *_counts(journey, "market_code")),
@@ -139,12 +171,15 @@ def write_dashboard(journey: pd.DataFrame, report_dir: str | Path) -> Path:
             "Persistent at landmark",
             ["3 months", "6 months", "12 months"],
             [
-                journey.persistence_3m_status.eq("PERSISTENT").sum(),
-                journey.persistence_6m_status.eq("PERSISTENT").sum(),
-                journey.persistence_12m_status.eq("PERSISTENT").sum(),
+                eligible_initiated_90d.persistence_3m_status.eq("PERSISTENT").sum(),
+                eligible_initiated_90d.persistence_6m_status.eq("PERSISTENT").sum(),
+                eligible_initiated_90d.persistence_12m_status.eq("PERSISTENT").sum(),
             ],
         ),
-        _bar_chart("12-month persistence status", *_counts(journey, "persistence_12m_status")),
+        _bar_chart(
+            "12-month persistence status",
+            *_counts(eligible_initiated_90d, "persistence_12m_status"),
+        ),
         _bar_chart("Final outcomes", *_counts(journey, "final_outcome_status")),
         _bar_chart("Initial regimen", *_counts(journey, "initial_regimen")),
         _segment_table(journey),

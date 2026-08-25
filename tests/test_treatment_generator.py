@@ -41,6 +41,7 @@ def test_dispensing_has_realistic_supply_refill_and_effective_coverage(generated
 def test_switch_restart_add_on_and_discontinuation_are_distinct(transition_tables):
     episode = transition_tables["treatment_episode"]
     regimen = transition_tables["treatment_regimen"]
+    component = transition_tables["treatment_regimen_component"]
     event = transition_tables["prescription_event"]
     assert {"switch", "restart"}.issubset(set(episode.transition_type))
     assert {"planned_combination", "add_on"}.issubset(set(regimen.combination_strategy))
@@ -55,6 +56,57 @@ def test_switch_restart_add_on_and_discontinuation_are_distinct(transition_table
     assert (
         old_events.service_date <= old_events.treatment_episode_id.map(lookup.treatment_end_date)
     ).all()
+    assert (
+        old_events.covered_until_date
+        <= old_events.treatment_episode_id.map(lookup.treatment_end_date)
+    ).all()
+    for switched in linked.loc[linked.transition_type.eq("switch")].itertuples():
+        old_arpi = set(
+            component.loc[
+                component.treatment_episode_id.eq(switched.previous_episode_id)
+                & component.drug_class.eq("ARPI"),
+                "drug_name",
+            ]
+        )
+        new_arpi = set(
+            component.loc[
+                component.treatment_episode_id.eq(switched.treatment_episode_id)
+                & component.drug_class.eq("ARPI"),
+                "drug_name",
+            ]
+        )
+        assert old_arpi
+        assert new_arpi
+        assert old_arpi.isdisjoint(new_arpi)
+
+
+def test_delayed_add_on_is_not_exposed_as_a_treatment_start_predictor(transition_tables):
+    episode = transition_tables["treatment_episode"]
+    regimen = transition_tables["treatment_regimen"]
+    component = transition_tables["treatment_regimen_component"]
+    journey = transition_tables["patient_journey"].set_index("patient_id")
+
+    initial = episode.loc[episode.treatment_line.eq(1)].set_index("treatment_episode_id")
+    delayed = regimen.loc[
+        regimen.combination_strategy.eq("add_on") & regimen.treatment_episode_id.isin(initial.index)
+    ]
+    assert not delayed.empty
+    delayed_components = component.loc[component.regimen_id.isin(delayed.regimen_id)]
+    episode_start = delayed_components.treatment_episode_id.map(initial.treatment_start_date)
+    delayed_arpi = delayed_components.loc[delayed_components.drug_class.eq("ARPI")]
+    assert delayed_arpi.component_start_date.gt(
+        delayed_arpi.treatment_episode_id.map(initial.treatment_start_date)
+    ).all()
+
+    mart = journey.loc[delayed.patient_id]
+    assert mart.regimen_at_treatment_start.eq("adt_monotherapy").all()
+    assert mart.regimen_type_at_treatment_start.eq("monotherapy").all()
+    assert mart.combination_strategy_at_treatment_start.eq("monotherapy").all()
+    assert not mart.intensification_at_treatment_start_flag.any()
+    assert mart.regimen_component_count_at_treatment_start.eq(1).all()
+    assert mart.combination_strategy.eq("add_on").all()
+    assert mart.intensification_flag.all()
+    assert episode_start.notna().all()
 
 
 def test_persistence_sensitivity_is_nullable_and_monotonic(generated_tables):

@@ -3,6 +3,18 @@ import pandas as pd
 REQUIRED_MARKETS = {"US", "DE", "JP", "FR", "CN", "AU", "CA"}
 
 
+def _calendar_age(birth: pd.Series, reference: pd.Series) -> pd.Series:
+    birth_dates = pd.to_datetime(birth)
+    reference_dates = pd.to_datetime(reference)
+    before_birthday = (reference_dates.dt.month < birth_dates.dt.month) | (
+        reference_dates.dt.month.eq(birth_dates.dt.month)
+        & reference_dates.dt.day.lt(birth_dates.dt.day)
+    )
+    return (reference_dates.dt.year - birth_dates.dt.year - before_birthday.astype("int64")).astype(
+        "int64"
+    )
+
+
 def test_population_has_independent_archetypes_and_all_markets(generated_tables):
     patient = generated_tables["patient"]
     assert set(patient.market_code) == REQUIRED_MARKETS
@@ -18,9 +30,7 @@ def test_population_has_independent_archetypes_and_all_markets(generated_tables)
 
 def test_age_is_derived_from_dates_and_has_variation(generated_tables):
     patient = generated_tables["patient"]
-    expected = (
-        pd.to_datetime(patient.index_date) - pd.to_datetime(patient.birth_date)
-    ).dt.days // 365
+    expected = _calendar_age(patient.birth_date, patient.index_date)
     pd.testing.assert_series_equal(patient.age_at_index, expected, check_names=False)
     assert patient.age_at_index.nunique() >= 30
     assert patient.age_at_index.between(50, 90).all()

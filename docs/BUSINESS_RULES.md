@@ -26,7 +26,9 @@ Treatment is normalized into episode → regimen → component → prescription 
 
 - Planned combination components start together.
 - Add-on is a later component within the same regimen.
-- True switch closes line 1, starts a linked line 2 afterward, and prevents later old-line fills.
+- True switch is allowed only when line 1 contains an ARPI: it closes line 1, caps old-drug
+  coverage at the switch date, and starts a linked line 2 with a different ARPI afterward.
+  Escalation from a regimen without an ARPI is not labelled as a switch.
 - Restart closes the first episode, observes a gap, and creates a linked later episode only if restart occurs before censor.
 - Discontinuation is a stop without pretending death or LTFU is non-adherence.
 
@@ -42,4 +44,8 @@ At 3, 6, and 12 months, status precedence is switch, discontinuation, insufficie
 
 Progression, hospitalization, mortality, LTFU, and adverse events are stochastic. Their probabilities depend imperfectly on upstream stage, PSA, complexity/comorbidity, access, and treatment components. No association is deterministic and none is causal evidence.
 
-Future refill count, final coverage, discontinuation, switch, progression, and final outcome are marked `allowed_use_cases=none` for earlier predictive tasks. Splits are at independent archetype level and market-stratified by stable hash.
+Future refill count, final coverage, full-episode regimen composition, discontinuation,
+switch, progression, and final outcome are marked descriptive/target-only with
+`predictor_allowed_flag=false` for earlier prediction cutoffs. Treatment-start models use only
+the separate regimen snapshot observable at that instant. Splits are at independent archetype
+level and market-stratified by stable hash.

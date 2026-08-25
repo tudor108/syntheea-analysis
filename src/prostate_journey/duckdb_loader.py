@@ -70,19 +70,69 @@ def load_duckdb(gold_dir: str | Path) -> Path:
         CASE WHEN age_at_index < 65 THEN '<65'
              WHEN age_at_index < 75 THEN '65-74' ELSE '75+' END AS age_group,
         count(*) FILTER (WHERE eligibility_flag) AS eligible,
-        count(*) FILTER (WHERE initiated_within_90d) AS initiated_90d,
-        count(*) FILTER (WHERE eligible_not_initiated_90d) AS treatment_gap
+        count(*) FILTER (
+            WHERE eligibility_flag AND initiated_within_90d
+        ) AS initiated_90d,
+        count(*) FILTER (WHERE eligible_not_initiated_90d) AS treatment_gap_90d,
+        count(*) FILTER (
+            WHERE eligibility_flag AND initiation_90d_status = 'CENSORED_NOT_EVALUABLE'
+        ) AS initiation_censored_not_evaluable_90d
         FROM patient_journey GROUP BY ALL"""
     )
     con.execute(
         """CREATE OR REPLACE VIEW vw_market_opportunity AS
-        SELECT market_code, market_depth, count(*) AS patients,
-        count(*) FILTER (WHERE eligibility_flag) AS eligible,
-        count(*) FILTER (WHERE treatment_initiated) AS initiated,
-        count(*) FILTER (WHERE eligible_not_initiated_90d) AS treatment_gap,
-        count(*) FILTER (WHERE persistence_12m_status = 'PERSISTENT') AS persistent_12m,
-        count(*) FILTER (WHERE persistence_12m_status = 'CENSORED_NOT_EVALUABLE') AS censored_12m
-        FROM patient_journey GROUP BY ALL"""
+        WITH opportunity AS (
+            SELECT
+                market_code,
+                market_depth,
+                count(*) AS patients,
+                count(*) FILTER (WHERE eligibility_flag) AS eligible,
+                count(*) FILTER (
+                    WHERE eligibility_flag AND initiated_within_90d
+                ) AS initiated_90d,
+                count(*) FILTER (
+                    WHERE eligible_not_initiated_90d
+                ) AS treatment_gap_90d,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiation_90d_status = 'CENSORED_NOT_EVALUABLE'
+                ) AS initiation_censored_not_evaluable_90d,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status IN ('PERSISTENT', 'DISCONTINUED', 'SWITCHED')
+                ) AS evaluable_12m,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status = 'PERSISTENT'
+                ) AS persistent_12m,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status IN ('DISCONTINUED', 'SWITCHED')
+                ) AS discontinued_or_switched_12m,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status = 'CENSORED_NOT_EVALUABLE'
+                ) AS censored_12m
+            FROM patient_journey
+            GROUP BY ALL
+        )
+        SELECT *,
+            eligible - initiation_censored_not_evaluable_90d AS initiation_evaluable_90d,
+            initiated_90d::DOUBLE / NULLIF(eligible, 0) AS initiation_rate_90d_all_eligible,
+            initiated_90d::DOUBLE
+                / NULLIF(eligible - initiation_censored_not_evaluable_90d, 0)
+                AS initiation_rate_90d_evaluable,
+            treatment_gap_90d::DOUBLE / NULLIF(eligible, 0)
+                AS treatment_gap_rate_90d_all_eligible,
+            treatment_gap_90d::DOUBLE
+                / NULLIF(eligible - initiation_censored_not_evaluable_90d, 0)
+                AS treatment_gap_rate_90d_evaluable,
+            persistent_12m::DOUBLE / NULLIF(evaluable_12m, 0) AS persistence_rate_12m
+        FROM opportunity"""
     )
     con.close()
     return db_path

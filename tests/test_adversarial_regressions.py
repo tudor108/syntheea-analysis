@@ -3,14 +3,32 @@ import math
 import pandas as pd
 
 from prostate_journey.adversarial_audit import audit_tables_independently
+from prostate_journey.data_quality import validate_tables
+from prostate_journey.feature_engineering import discontinuation_features
 from prostate_journey.journey_builder import derive_persistence_status
-from prostate_journey.synthea_loader import make_base_patients, make_multimarket_base
+from prostate_journey.synthea_loader import (
+    calendar_year_age,
+    make_base_patients,
+    make_multimarket_base,
+)
 
 
 def _events(*rows):
     return pd.DataFrame(
         rows,
         columns=["prescription_event_id", "service_date", "covered_until_date"],
+    )
+
+
+def _calendar_ages(birth: pd.Series, reference: pd.Series) -> pd.Series:
+    birth_dates = pd.to_datetime(birth)
+    reference_dates = pd.to_datetime(reference)
+    before_birthday = (reference_dates.dt.month < birth_dates.dt.month) | (
+        reference_dates.dt.month.eq(birth_dates.dt.month)
+        & reference_dates.dt.day.lt(birth_dates.dt.day)
+    )
+    return (reference_dates.dt.year - birth_dates.dt.year - before_birthday.astype("int64")).astype(
+        "int64"
     )
 
 
@@ -91,9 +109,7 @@ def test_raw_synthea_overlay_cannot_break_configured_age_bounds(small_config):
         )
     }
     base = make_multimarket_base(raw, small_config)
-    age = (
-        pd.to_datetime(base.synthetic_index_date) - pd.to_datetime(base.BIRTHDATE)
-    ).dt.days // 365
+    age = _calendar_ages(base.BIRTHDATE, base.synthetic_index_date)
     assert age.between(small_config["minimum_age"], small_config["maximum_age"]).all()
     used = base.loc[base.source_record_type.eq("synthea_unique"), "source_patient_id"]
     assert used.is_unique
@@ -101,11 +117,34 @@ def test_raw_synthea_overlay_cannot_break_configured_age_bounds(small_config):
 
 def test_generated_birth_dates_keep_exact_minimum_and_maximum_age_contract():
     base = make_base_patients(25_000, seed=191, minimum_age=50, maximum_age=90)
-    age = (
-        pd.to_datetime(base.synthetic_index_date) - pd.to_datetime(base.BIRTHDATE)
-    ).dt.days // 365
+    age = _calendar_ages(base.BIRTHDATE, base.synthetic_index_date)
     assert age.between(50, 90).all()
     assert {50, 90}.issubset(set(age))
+
+
+def test_calendar_age_waits_for_birthday_and_handles_february_29():
+    assert calendar_year_age("1970-01-07", "2020-01-01") == 49
+    assert calendar_year_age("1970-01-07", "2020-01-07") == 50
+    assert calendar_year_age("1972-02-29", "2022-02-28") == 49
+    assert calendar_year_age("1972-02-29", "2022-03-01") == 50
+
+
+def test_dq_and_independent_audit_reject_day_count_age_false_positive(
+    generated_tables, small_config
+):
+    altered = {name: frame for name, frame in generated_tables.items()}
+    altered["patient"] = generated_tables["patient"].copy()
+    row = altered["patient"].index[0]
+    altered["patient"].loc[row, "birth_date"] = pd.Timestamp("1970-01-07")
+    altered["patient"].loc[row, "index_date"] = pd.Timestamp("2020-01-01")
+    altered["patient"].loc[row, "age_at_index"] = 50
+
+    dq = {result["rule"]: result for result in validate_tables(altered)}
+    assert dq["age_derived"]["failure_count"] == 1
+
+    scorecard, _, _ = audit_tables_independently(altered, small_config)
+    clinical_state = scorecard.loc[scorecard.check_id.eq(14)].iloc[0]
+    assert clinical_state.status == "FAIL"
 
 
 def test_provider_capacity_and_treatment_specialties_follow_market_rules(
@@ -215,6 +254,29 @@ def test_mart_care_outcome_and_feature_timing_are_reconstructable(generated_tabl
     assert referral_features.availability_condition.eq(
         "referral_or_completion_date_le_prediction_index"
     ).all()
+    timing_by_feature = timing.set_index("feature_name")
+    full_episode_fields = [
+        "initial_regimen",
+        "initial_regimen_type",
+        "combination_strategy",
+        "intensification_flag",
+        "regimen_component_count",
+    ]
+    start_snapshot_fields = [
+        "regimen_at_treatment_start",
+        "regimen_type_at_treatment_start",
+        "combination_strategy_at_treatment_start",
+        "intensification_at_treatment_start_flag",
+        "regimen_component_count_at_treatment_start",
+    ]
+    assert timing_by_feature.loc[full_episode_fields].future_information_flag.all()
+    assert not timing_by_feature.loc[full_episode_fields].predictor_allowed_flag.any()
+    assert not timing_by_feature.loc[start_snapshot_fields].future_information_flag.any()
+    assert timing_by_feature.loc[start_snapshot_fields].predictor_allowed_flag.all()
+    assert not timing_by_feature.loc["treatment_episode_id", "predictor_allowed_flag"]
+    discontinuation_frame = discontinuation_features(journey.reset_index())
+    assert set(start_snapshot_fields).issubset(discontinuation_frame.columns)
+    assert not set(full_episode_fields).intersection(discontinuation_frame.columns)
 
 
 def test_independent_hostile_audit_passes_actual_records(generated_tables, small_config):

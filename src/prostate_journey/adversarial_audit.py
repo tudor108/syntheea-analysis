@@ -78,6 +78,19 @@ def _expected_isup(diagnosis: pd.DataFrame) -> pd.Series:
     return expected
 
 
+def _independent_calendar_age(birth: pd.Series, reference: pd.Series) -> pd.Series:
+    """Rebuild completed age without consuming the generator's age helper."""
+    birth_dates = pd.to_datetime(birth)
+    reference_dates = pd.to_datetime(reference)
+    before_birthday = (reference_dates.dt.month < birth_dates.dt.month) | (
+        reference_dates.dt.month.eq(birth_dates.dt.month)
+        & reference_dates.dt.day.lt(birth_dates.dt.day)
+    )
+    return (reference_dates.dt.year - birth_dates.dt.year - before_birthday.astype("int64")).astype(
+        "int64"
+    )
+
+
 def _count_temporal_violations(tables: dict[str, pd.DataFrame]) -> int:
     censor = tables["observation"].set_index("patient_id").censor_date
     domains = {
@@ -379,10 +392,61 @@ def audit_tables_independently(
     regimen_by_episode = regimen.set_index("treatment_episode_id")
     initial_regimen_id = initial_episode.treatment_episode_id.map(regimen_by_episode.regimen_id)
     initial_component_count = initial_regimen_id.map(component_count_by_regimen)
+    start_snapshot_failures = 0
+    for patient_id, treatment in initial_episode.iterrows():
+        started = component.loc[
+            component.treatment_episode_id.eq(treatment.treatment_episode_id)
+            & component.component_start_date.le(treatment.treatment_start_date)
+        ]
+        classes = set(started.drug_class)
+        if "procedure" in classes:
+            expected_name = f"localized_{started.iloc[0].drug_name}"
+        elif {"ADT", "ARPI", "chemotherapy"}.issubset(classes):
+            expected_name = "adt_arpi_chemotherapy_triplet"
+        elif {"ADT", "ARPI"}.issubset(classes):
+            expected_name = "adt_arpi_doublet"
+        elif {"ADT", "chemotherapy"}.issubset(classes):
+            expected_name = "adt_chemotherapy_doublet"
+        else:
+            expected_name = "adt_monotherapy"
+        expected_count = len(started)
+        expected_type = (
+            "triplet"
+            if expected_count >= 3
+            else "doublet"
+            if expected_count == 2
+            else "monotherapy"
+        )
+        expected_strategy = "planned_combination" if expected_count > 1 else "monotherapy"
+        expected_intensified = bool(
+            treatment.episode_reason == "mhspc_eligible"
+            and classes.intersection({"ARPI", "chemotherapy"})
+        )
+        mart = journey_by_patient.loc[patient_id]
+        start_snapshot_failures += int(mart.regimen_at_treatment_start != expected_name)
+        start_snapshot_failures += int(mart.regimen_type_at_treatment_start != expected_type)
+        start_snapshot_failures += int(
+            mart.combination_strategy_at_treatment_start != expected_strategy
+        )
+        start_snapshot_failures += int(
+            bool(mart.intensification_at_treatment_start_flag) != expected_intensified
+        )
+        start_snapshot_failures += int(
+            int(mart.regimen_component_count_at_treatment_start) != expected_count
+        )
+    untreated = journey_by_patient.loc[~treated]
+    start_snapshot_failures += int(
+        untreated.regimen_at_treatment_start.notna().sum()
+        + untreated.regimen_type_at_treatment_start.notna().sum()
+        + untreated.combination_strategy_at_treatment_start.notna().sum()
+        + untreated.intensification_at_treatment_start_flag.astype(bool).sum()
+        + untreated.regimen_component_count_at_treatment_start.ne(0).sum()
+    )
     hierarchy_failures = int(
         regimen.regimen_type.ne(expected_regimen_type).sum()
         + regimen.intensification_flag.ne(actual_intensified).sum()
         + first_treatment_failures
+        + start_snapshot_failures
         + journey_by_patient.loc[treated, "regimen_component_count"]
         .astype(int)
         .ne(initial_component_count.reindex(journey_by_patient.index[treated]).astype(int))
@@ -394,7 +458,8 @@ def audit_tables_independently(
         "P0",
         hierarchy_failures == 0,
         f"episodes={len(episode)}; regimens={len(regimen)}; components={len(component)}; "
-        f"reconstruction failures={hierarchy_failures}",
+        f"reconstruction failures={hierarchy_failures}; treatment-start snapshot failures="
+        f"{start_snapshot_failures}",
     )
 
     incompatible_regimens = 0
@@ -488,7 +553,27 @@ def audit_tables_independently(
             old_refills.service_date
             > old_refills.treatment_episode_id.map(episode_lookup.treatment_end_date)
         ).sum()
+        + (
+            old_refills.covered_until_date
+            > old_refills.treatment_episode_id.map(episode_lookup.treatment_end_date)
+        ).sum()
     )
+    for switched in valid_linked.loc[valid_linked.transition_type.eq("switch")].itertuples():
+        old_arpi = set(
+            component.loc[
+                component.treatment_episode_id.eq(switched.previous_episode_id)
+                & component.drug_class.eq("ARPI"),
+                "drug_name",
+            ]
+        )
+        new_arpi = set(
+            component.loc[
+                component.treatment_episode_id.eq(switched.treatment_episode_id)
+                & component.drug_class.eq("ARPI"),
+                "drug_name",
+            ]
+        )
+        link_failures += int(not old_arpi or not new_arpi or bool(old_arpi & new_arpi))
     restart_links = valid_linked[valid_linked.transition_type.eq("restart")]
     link_failures += int(
         restart_links.previous_episode_id.map(episode_lookup.treatment_status)
@@ -572,6 +657,29 @@ def audit_tables_independently(
         ~referral.referral_status.eq("completed"), referral.destination_specialty
     )
     provider_failures += int(referral.decision_owner_specialty.ne(expected_owner).sum())
+    completed_referral_rows = referral.loc[referral.referral_status.eq("completed")]
+    destination_encounter_latest = encounter.groupby(
+        ["patient_id", "provider_id"]
+    ).encounter_date.max()
+    destination_treatment_latest = episode.groupby(
+        ["patient_id", "prescribing_provider_id"]
+    ).treatment_start_date.max()
+    for completed_referral in completed_referral_rows.itertuples():
+        key = (
+            completed_referral.patient_id,
+            completed_referral.destination_provider_id,
+        )
+        evidence = [
+            pd.Timestamp(value)
+            for value in (
+                destination_encounter_latest.get(key, pd.NaT),
+                destination_treatment_latest.get(key, pd.NaT),
+            )
+            if pd.notna(value)
+        ]
+        provider_failures += int(
+            not evidence or max(evidence) < pd.Timestamp(completed_referral.completion_date)
+        )
     component_specialty = component.treatment_episode_id.map(
         episode_lookup.prescribing_provider_id
     ).map(provider_lookup.provider_specialty)
@@ -621,9 +729,7 @@ def audit_tables_independently(
         f"provider/referral/treatment incompatibilities={provider_failures}",
     )
 
-    derived_age = (
-        pd.to_datetime(patient.index_date) - pd.to_datetime(patient.birth_date)
-    ).dt.days // 365
+    derived_age = _independent_calendar_age(patient.birth_date, patient.index_date)
     state_order = states.sort_values(["patient_id", "state_date", "disease_state_event_id"])
     prior_date = state_order.groupby("patient_id").state_date.shift()
     transitions = states[states.previous_state.notna()]
@@ -717,6 +823,22 @@ def audit_tables_independently(
     referral_timing = timing_by_feature.loc[
         ["referral_status", "referral_completed_flag", "referral_delay_days"]
     ].availability_condition.eq("referral_or_completion_date_le_prediction_index")
+    full_episode_regimen_fields = timing_by_feature.loc[
+        [
+            "initial_regimen",
+            "initial_regimen_type",
+            "combination_strategy",
+            "intensification_flag",
+            "regimen_component_count",
+        ]
+    ]
+    full_episode_regimen_blocked = (
+        full_episode_regimen_fields.future_information_flag
+        & ~full_episode_regimen_fields.predictor_allowed_flag
+    ).all()
+    treatment_start_id_blocked = not bool(
+        timing_by_feature.loc["treatment_episode_id", "predictor_allowed_flag"]
+    )
     add(
         17,
         "Feature timing blocks target, outcome and pathway leakage",
@@ -724,10 +846,13 @@ def audit_tables_independently(
         not missing_timing
         and not forbidden.any()
         and not target_predictors.any()
-        and referral_timing.all(),
+        and referral_timing.all()
+        and full_episode_regimen_blocked
+        and treatment_start_id_blocked,
         f"unclassified mart fields={len(missing_timing)}; future predictors={forbidden.sum()}; "
         f"target predictors={target_predictors.sum()}; conditional referrals="
-        f"{referral_timing.sum()}/3",
+        f"{referral_timing.sum()}/3; full-episode regimen blocked="
+        f"{full_episode_regimen_blocked}; treatment ID blocked={treatment_start_id_blocked}",
     )
 
     continuous_support = {
@@ -788,17 +913,50 @@ def audit_tables_independently(
     eligible_ids = set(eligibility.loc[expected_eligible.values, "patient_id"])
     treated_ids = set(initial_episode.index) & eligible_ids
     untreated_ids = eligible_ids - treated_ids
-    initiated_90 = int(
-        (
-            journey_by_patient.index.isin(eligible_ids)
-            & journey_by_patient.days_to_initiation.le(90)
-        ).sum()
+    expected_initiation_status = pd.Series(
+        "NOT_ELIGIBLE", index=journey_by_patient.index, dtype="string"
     )
-    gap_90 = int(
-        (
-            journey_by_patient.index.isin(eligible_ids) & ~journey_by_patient.initiated_within_90d
+    expected_days_to_initiation = pd.Series(pd.NA, index=journey_by_patient.index, dtype="Int64")
+    for patient_id in eligible_ids:
+        eligibility_date = pd.Timestamp(eligibility_by_patient.loc[patient_id, "eligibility_date"])
+        target_date = eligibility_date + pd.Timedelta(days=90)
+        patient_censor = pd.Timestamp(observation_by_patient.loc[patient_id, "censor_date"])
+        if patient_id in initial_episode.index:
+            treatment_start = pd.Timestamp(initial_episode.loc[patient_id, "treatment_start_date"])
+            delay = int((treatment_start - eligibility_date).days)
+            expected_days_to_initiation.loc[patient_id] = delay
+            if delay <= 90:
+                expected_initiation_status.loc[patient_id] = "INITIATED_WITHIN_90D"
+                continue
+        expected_initiation_status.loc[patient_id] = (
+            "CENSORED_NOT_EVALUABLE" if patient_censor < target_date else "NOT_INITIATED_WITHIN_90D"
+        )
+
+    initiation_reconciliation_failures = int(
+        journey_by_patient.initiation_90d_status.ne(expected_initiation_status).sum()
+        + journey_by_patient.initiated_within_30d.ne(
+            expected_days_to_initiation.le(30).fillna(False)
         ).sum()
+        + journey_by_patient.initiated_within_60d.ne(
+            expected_days_to_initiation.le(60).fillna(False)
+        ).sum()
+        + journey_by_patient.initiated_within_90d.ne(
+            expected_initiation_status.eq("INITIATED_WITHIN_90D")
+        ).sum()
+        + journey_by_patient.eligible_not_initiated_90d.ne(
+            expected_initiation_status.eq("NOT_INITIATED_WITHIN_90D")
+        ).sum()
+        + journey_by_patient.days_to_initiation.astype("Int64")
+        .ne(expected_days_to_initiation)
+        .fillna(False)
+        .sum()
+        + journey_by_patient.days_to_initiation.notna()
+        .ne(expected_days_to_initiation.notna())
+        .sum()
     )
+    initiated_90 = int(expected_initiation_status.eq("INITIATED_WITHIN_90D").sum())
+    gap_90 = int(expected_initiation_status.eq("NOT_INITIATED_WITHIN_90D").sum())
+    censored_90 = int(expected_initiation_status.eq("CENSORED_NOT_EVALUABLE").sum())
     evaluable_12 = journey_by_patient.persistence_12m_status.isin(
         ["PERSISTENT", "DISCONTINUED", "SWITCHED"]
     )
@@ -811,6 +969,8 @@ def audit_tables_independently(
             "untreated_eligible": len(untreated_ids),
             "initiated_within_90_days": initiated_90,
             "eligible_treatment_gap_90_days": gap_90,
+            "initiation_90d_censored_not_evaluable": censored_90,
+            "initiation_reconciliation_failures": initiation_reconciliation_failures,
             "persistence_12m_evaluable": int(evaluable_12.sum()),
             "discontinued_or_switched_by_12m": discontinued_12,
             "market_treatment_gap": journey_by_patient.groupby("market_code")
@@ -829,7 +989,8 @@ def audit_tables_independently(
     )
     deliverable_consistency = (
         len(eligible_ids) == len(treated_ids) + len(untreated_ids)
-        and initiated_90 + gap_90 == len(eligible_ids)
+        and initiated_90 + gap_90 + censored_90 == len(eligible_ids)
+        and initiation_reconciliation_failures == 0
         and evaluable_12.any()
     )
     add(
@@ -839,7 +1000,8 @@ def audit_tables_independently(
         deliverable_consistency,
         f"eligible={len(eligible_ids)}; treated={len(treated_ids)}; untreated="
         f"{len(untreated_ids)}; initiated90={initiated_90}; gap90={gap_90}; "
-        f"12m evaluable={evaluable_12.sum()}",
+        f"censored90={censored_90}; initiation mismatches="
+        f"{initiation_reconciliation_failures}; 12m evaluable={evaluable_12.sum()}",
     )
 
     mart_eligibility_failures = int(
