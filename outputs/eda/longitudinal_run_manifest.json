@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-08-28T17:19:44.270596+00:00",
+  "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "source_data_modified": false,
+  "inputs": {
+    "data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset\\treatment_episode.parquet": "885202dc409bfa352469479b67253bc92ae38e513c0b9f3ca5179f86b438f3fb",
+    "data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset\\treatment_regimen.parquet": "d4c3faf373fd8e3f264d541b6ddd27ae9365ebe8dccd227d16bb978b274f8a8a",
+    "data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset\\treatment_regimen_component.parquet": "fb03b80176007e3d77ef0da4315879c9b70f0462e051a1e4ed7973aaeca957ed",
+    "data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset\\prescription_event.parquet": "4ab599f66e9293a55dfd50715fb711a175c0343104822b92d9961ab52da2fd59",
+    "data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset\\observation.parquet": "c8c7ec6ec1238410d4d5a2c977795dc99bb59887cbf42588b8f0f35de603c7c1",
+    "data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset\\patient_journey.parquet": "3db9ced43def488601f12ac41e1e72c45e609c89586652be39795001fced2912",
+    "outputs\\eda\\cohort_patient_flags.parquet": "97b48b0154c69b644077ac8d27a92906b5ea72ba01a5e14cc0badc73d7e1bd16"
+  },
+  "scripts": {
+    "eda\\05_time_to_initiation_and_persistence.py": "b0688515a5ab4aeab2dd1829d8373af77fc0642148fd6150953079980e483e15",
+    "eda\\04_treatment_episode_builder.py": "01853fb6c97e697c642cb55eca32225807b24e5380eb3d3acc8e5056a4a20e39",
+    "eda\\longitudinal_config.py": "ad7223628165408f2e26edfa5af39ee10d251f4c269733f9f7a6c5490023d6f1",
+    "eda\\longitudinal_charts.py": "a58572da2a335390b4d946625af6f9b2fc6afe31cc95992d2127953b1408af54"
+  },
+  "outputs": {
+    "outputs\\eda\\treatment_episodes.parquet": "6d5cd4443f255c2b975fa4f9781da41530ab5fadc1f7a91eee0fd3e967a37844",
+    "outputs\\eda\\time_to_initiation_event_data.parquet": "bc698e54acfa11b06c149518c9f42b13372ccdafe9d40040f8a9ff0fa0f81d91",
+    "outputs\\eda\\persistence_event_data.parquet": "723ee596c660e0bfb23b4a6897c7846f2cbb33a531904f3dd9cc9c9fe1e8af99",
+    "outputs\\eda\\time_to_initiation_summary.csv": "7298c7034d88d21cc0d9b2df6047faada8684729e3a967319eba5b1a2af6c50e",
+    "outputs\\eda\\time_to_initiation_km.csv": "1c6ef50ea2cbae93c3e3d12f29250981c74512f5149f98822702b7b152fd208b",
+    "outputs\\eda\\persistence_summary.csv": "d9db805ba5b50a8fd0be7f618f74a2dc48e6ccb4c819e43277568112d533ae51",
+    "outputs\\eda\\discontinuation_sensitivity.csv": "a9aca496041ebccadb8a7bc8d26cdbee3c4a8de172162ba8ae38e823f4cf444c",
+    "outputs\\eda\\switch_restart_summary.csv": "dde74de91fef41a223de4f5a2090abda91942b7387487aea4691613698a2a52e",
+    "outputs\\eda\\censoring_summary.csv": "5e457040b73a5595a0802bc876b6cb9de0ffcebf1797ead58c7f210a309a2a2f",
+    "outputs\\eda\\longitudinal_robustness.csv": "5e6ff7864eb762acb919e5ea519efc46d49014d9eeffac0211fec81ae97468f0",
+    "outputs\\eda\\persistence_mart_reconciliation.csv": "4de24c52c37f8c08fe764d6d4bb90688194ce86872ce3c436c7a11cd96a36b6a",
+    "outputs\\eda\\figures\\time_to_initiation_ecdf.png": "8e3e9722854cefa16afa46fb4ee61c2a61271585f8e5eb980f05283ae50b1119",
+    "outputs\\eda\\figures\\time_to_initiation_survival.png": "2d15096e27b7a1be681e00d8b5b9863a6c00265dd9dc17055beed89e05700ddd",
+    "outputs\\eda\\figures\\persistence_kaplan_meier.png": "d5cf23660de1855d33778c8ff89eb955a241b8dab32a8d0a7dd5c5c47b87173e",
+    "outputs\\eda\\figures\\treatment_sequence_sankey.html": "4cbc51bb497cded0b81b6525e138dd29574afe84a1271da43ceda1ed570991dd",
+    "outputs\\eda\\figures\\cumulative_event_types.png": "67d49f8e434968d2cd0ce7504c5260767598461b3d84c0d7177baf7bf570f451",
+    "outputs\\eda\\figures\\time_to_initiation_boxplots_by_segment.png": "53fa7f3fc316a667cc2c362540e6ba1a722410c2e2142dfecfc224b3ded21622",
+    "outputs\\eda\\figures\\persistence_by_market.png": "7b0b75d69f29a996e06bb0428518997871043d81a7fb94347f9ff05741b1d53b",
+    "outputs\\eda\\figures\\persistence_by_care_setting.png": "ee023153084cae852704fb937897a2ef711a09fe78c711778524275c155347b8",
+    "outputs\\eda\\figures\\gap_sensitivity_small_multiples.png": "904da886b6dea9e2e4a804aec6ec003d485ff0e38de096c7c2d72f04043e341d",
+    "outputs\\eda\\longitudinal_assumptions.md": "192c34641506bccd304e23207be07995af60db0e8483466d75afb4f654e62a06"
+  },
+  "assumptions": {
+    "initiation_windows_days": [
+      30,
+      60,
+      90
+    ],
+    "gap_thresholds_days": [
+      30,
+      60,
+      90
+    ],
+    "persistence_landmarks_days": [
+      90,
+      180,
+      365
+    ],
+    "baseline_requirements_days": [
+      180,
+      365
+    ],
+    "missing_supply_scenarios_days": [
+      30,
+      60,
+      90
+    ]
+  }
+}

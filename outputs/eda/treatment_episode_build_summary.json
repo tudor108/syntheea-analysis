@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-08-28T17:19:28.372547+00:00",
+  "analytical_dataset": "C:\\Endava\\EndevLocal\\zzzzzzzzzzdate\\prostate-patient-journey-synthetic\\data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset",
+  "selection_method": "newest certified release",
+  "episode_count": 2369,
+  "patient_count": 2092,
+  "classification_counts": {
+    "UNKNOWN": 1119,
+    "ADMINISTRATIVE_CENSORING": 439,
+    "DISCONTINUED": 292,
+    "SWITCHED": 145,
+    "DEATH": 142,
+    "TEMPORARY_GAP_RESTARTED": 132,
+    "LOST_TO_FOLLOW_UP": 62,
+    "ADD_ON": 38
+  },
+  "switch_out_count": 145,
+  "restart_out_count": 132,
+  "add_on_count": 46,
+  "documented_stop_count": 301,
+  "episode_overlap_count": 0,
+  "days_supply_missing_episode_count": 341,
+  "source_data_modified": false
+}

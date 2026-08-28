@@ -1,0 +1,41 @@
+pathway,pathway_label,step_number,funnel_step,step_kind,comparison_step,patient_count,percentage_of_previous,percentage_of_original,exclusion_count,exclusion_reason,missingness_burden,confidence,conclusion_type
+mhspc_mcspc,mHSPC/mCSPC advanced disease,1,All unique patients,sequential,1,10000,1.0,1.0,0,none,0.12718333333333331,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,2,Prostate cancer patients,sequential,1,10000,1.0,1.0,0,prostate_cancer_flag is false/missing,0.12718333333333331,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,3,Valid disease-state evidence,sequential,2,10000,1.0,1.0,0,missing or ungoverned disease-state evidence,0.12718333333333331,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,4,Relevant pathway,sequential,3,2369,0.2369,0.2369,7631,not a member of this separate pathway,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,5,Valid index date,sequential,4,2369,1.0,0.2369,0,missing index or index after censor,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,6,Required baseline observation,sequential,5,2369,1.0,0.2369,0,observation does not cover configured baseline,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,7,Observable through 90 days,sequential,6,2369,1.0,0.2369,0,censoring before the 90-day landmark,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,8,Eligible patients,sequential,7,2281,0.9628535246939637,0.2281,88,explicit/proxy ineligibility or uncertainty,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,9,Initiated pathway within 90 days,sequential,8,1700,0.7452871547566856,0.17,581,no qualifying initiation within 90 days,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mhspc_mcspc,mHSPC/mCSPC advanced disease,10,Non-initiated or non-intensified branch,outcome_branch,8,960,0.4208680403331872,0.096,1321,outcome branch: no initiation or mHSPC non-intensification,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+nmcrpc,nmCRPC,1,All unique patients,sequential,1,10000,1.0,1.0,0,none,0.16666666666666669,HIGH_SYNTHETIC,DESCRIPTIVE
+nmcrpc,nmCRPC,2,Prostate cancer patients,sequential,1,10000,1.0,1.0,0,prostate_cancer_flag is false/missing,0.16666666666666669,HIGH_SYNTHETIC,DESCRIPTIVE
+nmcrpc,nmCRPC,3,Valid disease-state evidence,sequential,2,10000,1.0,1.0,0,missing or ungoverned disease-state evidence,0.16666666666666669,HIGH_SYNTHETIC,DESCRIPTIVE
+nmcrpc,nmCRPC,4,Relevant pathway,sequential,3,0,0.0,0.0,10000,not a member of this separate pathway,,NOT COMPUTABLE,NOT COMPUTABLE
+nmcrpc,nmCRPC,5,Valid index date,sequential,4,0,,0.0,0,missing index or index after censor,,NOT COMPUTABLE,NOT COMPUTABLE
+nmcrpc,nmCRPC,6,Required baseline observation,sequential,5,0,,0.0,0,observation does not cover configured baseline,,NOT COMPUTABLE,NOT COMPUTABLE
+nmcrpc,nmCRPC,7,Observable through 90 days,sequential,6,0,,0.0,0,censoring before the 90-day landmark,,NOT COMPUTABLE,NOT COMPUTABLE
+nmcrpc,nmCRPC,8,Eligible patients,sequential,7,0,,0.0,0,explicit/proxy ineligibility or uncertainty,,NOT COMPUTABLE,NOT COMPUTABLE
+nmcrpc,nmCRPC,9,Initiated pathway within 90 days,sequential,8,0,,0.0,0,no qualifying initiation within 90 days,,NOT COMPUTABLE,NOT COMPUTABLE
+nmcrpc,nmCRPC,10,Non-initiated or non-intensified branch,outcome_branch,8,0,,0.0,0,outcome branch: no initiation or mHSPC non-intensification,,NOT COMPUTABLE,NOT COMPUTABLE
+mcrpc,mCRPC,1,All unique patients,sequential,1,10000,1.0,1.0,0,none,0.16063333333333335,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,2,Prostate cancer patients,sequential,1,10000,1.0,1.0,0,prostate_cancer_flag is false/missing,0.16063333333333335,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,3,Valid disease-state evidence,sequential,2,10000,1.0,1.0,0,missing or ungoverned disease-state evidence,0.16063333333333335,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,4,Relevant pathway,sequential,3,362,0.0362,0.0362,9638,not a member of this separate pathway,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,5,Valid index date,sequential,4,362,1.0,0.0362,0,missing index or index after censor,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,6,Required baseline observation,sequential,5,362,1.0,0.0362,0,observation does not cover configured baseline,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,7,Observable through 90 days,sequential,6,347,0.9585635359116023,0.0347,15,censoring before the 90-day landmark,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+mcrpc,mCRPC,8,Eligible patients,sequential,7,332,0.9567723342939481,0.0332,15,explicit/proxy ineligibility or uncertainty,0.0,LOW,PROXY-BASED
+mcrpc,mCRPC,9,Initiated pathway within 90 days,sequential,8,3,0.009036144578313253,0.0003,329,no qualifying initiation within 90 days,0.0,LOW,PROXY-BASED
+mcrpc,mCRPC,10,Non-initiated or non-intensified branch,outcome_branch,8,329,0.9909638554216867,0.0329,3,outcome branch: no initiation or mHSPC non-intensification,0.0,LOW,PROXY-BASED
+active_surveillance,Active surveillance,1,All unique patients,sequential,1,10000,1.0,1.0,0,none,0.08241666666666667,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,2,Prostate cancer patients,sequential,1,10000,1.0,1.0,0,prostate_cancer_flag is false/missing,0.08241666666666667,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,3,Valid disease-state evidence,sequential,2,10000,1.0,1.0,0,missing or ungoverned disease-state evidence,0.08241666666666667,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,4,Relevant pathway,sequential,3,5055,0.5055,0.5055,4945,not a member of this separate pathway,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,5,Valid index date,sequential,4,5055,1.0,0.5055,0,missing index or index after censor,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,6,Required baseline observation,sequential,5,5055,1.0,0.5055,0,observation does not cover configured baseline,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,7,Observable through 90 days,sequential,6,5055,1.0,0.5055,0,censoring before the 90-day landmark,0.0,HIGH_SYNTHETIC,DESCRIPTIVE
+active_surveillance,Active surveillance,8,Eligible patients,sequential,7,3367,0.6660731948565777,0.3367,1688,explicit/proxy ineligibility or uncertainty,0.0,MEDIUM,PROXY-BASED
+active_surveillance,Active surveillance,9,Initiated pathway within 90 days,sequential,8,1738,0.5161865161865162,0.1738,1629,no qualifying initiation within 90 days,0.0,MEDIUM,PROXY-BASED
+active_surveillance,Active surveillance,10,Non-initiated or non-intensified branch,outcome_branch,8,1629,0.4838134838134838,0.1629,1738,outcome branch: no initiation or mHSPC non-intensification,0.0,MEDIUM,PROXY-BASED
