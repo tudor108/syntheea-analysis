@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-08-28T17:44:49.166884+00:00",
+  "source_data_modified": false,
+  "shap_status": "NOT_GENERATED: SHAP unavailable and no justified tree challenger",
+  "inputs": {
+    "outputs\\eda\\cohort_patient_flags.parquet": "97b48b0154c69b644077ac8d27a92906b5ea72ba01a5e14cc0badc73d7e1bd16",
+    "outputs\\eda\\persistence_event_data.parquet": "723ee596c660e0bfb23b4a6897c7846f2cbb33a531904f3dd9cc9c9fe1e8af99",
+    "outputs\\eda\\driver_association_table.csv": "804bb86c32dd23a2ca1f1753b77669bbbaaff89104d27c33e8a9980d70bc0fca",
+    "outputs\\eda\\model_metrics.csv": "1611e27cb6569b1b69e3ff5b18037bfa1826c32de1dcd341a0b43d8f15cd2191",
+    "outputs\\eda\\subgroup_metrics.csv": "0babd79f9bf7d9e3c3cb114d400e3dd3fff0783ea53222aa878e24b52f95c196",
+    "outputs\\eda\\feature_dictionary_for_models.csv": "3a30145264f5d1a2990ded7e145950200f31b18438936e68c44dfe9eed2b0037",
+    "outputs\\eda\\driver_tree.csv": "d06adb5527cb7257bd8e79029dcec76b95d2348c86d2ac17f194081a888687cf"
+  },
+  "scripts": {
+    "eda\\06_driver_analysis.py": "2e44c19d5aaaa89fa36a384723754129375e28c8fd20e6a5216690e85913638f",
+    "eda\\07_intervention_backlog.py": "3f5381ee8b8de22ec67bd50760342f3bf6b9596a18747a347426f4e40ef40bff"
+  },
+  "outputs": {
+    "outputs\\eda\\intervention_backlog.csv": "17d53912fc7fbdc471c4aec6ce8d399b9da4c3bddc0c2fc4bd566baaba273dc7",
+    "outputs\\eda\\model_card.md": "61ee6b1f8ac1d63eaeeabf26f4a1ffe53629f78364fb5a3af0fd35db8211a47c",
+    "outputs\\eda\\figures\\calibration_plot.png": "83660104d386874456cdb7efe297fa52b5c32cde5ab2c73851a1a4da9bd30872",
+    "outputs\\eda\\figures\\feature_importance.png": "19817c0d148a1f392d30dc90e612dbc2a4e6c0768cb62d169aa8a742c7f48237",
+    "outputs\\eda\\target_audit.csv": "fbb7b3a301d71a06a61e2c918cc3d152a6eb248ca7b8a8d14ea410bc9bc4649b",
+    "outputs\\eda\\permutation_importance.csv": "b260330ea3c4b7e7e1597bdd7ce40959c2d6c3b0312a009ed525245d535270d9",
+    "outputs\\eda\\calibration_data.csv": "1e959f74caee19a631587b9c915b986912c499badc30ac8b8a9b9d80faa247e2"
+  }
+}
