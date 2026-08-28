@@ -1,0 +1,23 @@
+reconciliation_concept,compared_records,mismatch_count,mismatch_rate,status,aggregate_evidence
+patient_presence_normalized_vs_mart,10000,0,0.0,PASS,patient=10000; mart=10000
+market_code,10000,0,0.0,PASS,patient.market_code vs patient_journey.market_code
+index_date_vs_diagnosis_date,10000,0,0.0,PASS,normalized patient.index_date vs diagnosis.diagnosis_date
+eligibility_eligibility_flag,10000,0,0.0,PASS,mart vs eligibility.eligibility_flag
+eligibility_eligibility_date,10000,0,0.0,PASS,mart vs eligibility.eligibility_date
+eligibility_eligibility_reason,10000,0,0.0,PASS,mart vs eligibility.eligibility_reason
+eligibility_ineligibility_reason,10000,0,0.0,PASS,mart vs eligibility.ineligibility_reason
+treatment_patient_membership,10000,0,0.0,PASS,episode patients=2092; mart treated=2092
+first_treatment_treatment_episode_id,10000,0,0.0,PASS,mart vs first episode among all patients
+first_treatment_treatment_start_date,10000,0,0.0,PASS,mart vs first episode among all patients
+first_treatment_discontinuation_flag,2092,0,0.0,PASS,mart vs first episode among treated patients
+first_treatment_switch_flag,2092,0,0.0,PASS,mart vs first episode among treated patients
+first_treatment_restart_flag,2092,0,0.0,PASS,mart vs first episode among treated patients
+outcome_progression_event,10000,0,0.0,PASS,mart vs outcome.progression_event
+outcome_progression_date,10000,0,0.0,PASS,mart vs outcome.progression_date
+outcome_hospitalisation_flag,10000,0,0.0,PASS,mart vs outcome.hospitalisation_flag
+outcome_first_hospitalisation_date,10000,0,0.0,PASS,mart vs outcome.first_hospitalisation_date
+outcome_adverse_event_flag,10000,0,0.0,PASS,mart vs outcome.adverse_event_flag
+outcome_death_flag,10000,0,0.0,PASS,mart vs outcome.death_flag
+outcome_lost_to_follow_up_flag,10000,0,0.0,PASS,mart vs outcome.lost_to_follow_up_flag
+outcome_censor_date,10000,0,0.0,PASS,mart vs outcome.censor_date
+outcome_censor_reason,10000,0,0.0,PASS,mart vs outcome.censor_reason

@@ -35,7 +35,7 @@ python -m prostate_journey.cli final-release --config configs/prostate_scenario.
 
 # Tests and static checks
 python -m pytest -q
-python -m ruff check src tests
+python -m ruff check src tests eda
 ```
 
 Synthea CSV input in `data/raw/synthea` is optional. Eligible raw patient rows are used at most once; any shortfall is filled with newly generated independent archetypes, never by cloning. With no raw input, the generator is fully offline and records `source_record_type=generated_archetype`.
@@ -52,12 +52,47 @@ Synthea CSV input in `data/raw/synthea` is optional. Eligible raw patient rows a
 - configuration snapshot, run metadata, SHA-256 file hashes, and table fingerprints;
 - a self-contained HTML dashboard.
 
+`run-all` and `report` also create healthcare analysis extracts: a censor-aware 30/60/90-day
+initiation funnel, 12-month persistence sensitivity, referral delay summary, and market-level
+missingness profile. See [healthcare data analysis](docs/HEALTHCARE_DATA_ANALYSIS.md) for the
+recommended tactics and guardrails.
+
 `final-release` creates a uniquely named folder under `data/releases`. It reloads and reconciles
 the exported CSV, Parquet, and DuckDB artifacts; reruns Ruff and pytest; writes a field-level data
 dictionary, market/uncertainty/leakage/realism/reconciliation evidence and the strict 11-dimension
 scorecard; then creates separate immutable analytical and QA ZIP archives with SHA-256 manifests.
 
 See [architecture](docs/ARCHITECTURE.md), [data dictionary](docs/DATA_DICTIONARY.md), [business rules](docs/BUSINESS_RULES.md), [data quality](docs/DATA_QUALITY.md), [synthetic assumptions](docs/SYNTHETIC_ASSUMPTIONS.md), and [runbook](docs/RUNBOOK.md).
+
+## Exploratory data analysis foundation
+
+The repository includes a reproducible, aggregate-only EDA foundation that inventories repository
+data, profiles the certified analytical schema, validates longitudinal healthcare rules, analyzes
+missingness across market/pathway/outcome dimensions, reconciles normalized tables with the
+patient-journey mart, and produces privacy-safe SVG figures.
+
+```powershell
+# Uses the newest complete certified release by default
+python eda/00_inventory_and_data_contract.py
+python eda/01_data_quality_profile.py
+
+# Optional explicit complete 19-table analytical dataset
+$env:EDA_DATASET_DIR = "C:\path\to\analytical_dataset"
+```
+
+The latest committed run profiled 1,735 repository data/reference files and 639 fields, executed
+296 data-quality checks, and found zero P0/P1 issues and zero normalized-to-mart mismatches across
+10,000 synthetic patients. Exact disease states such as `mHSPC` and `mCRPC` remain distinct, while
+active surveillance is handled as a separate pathway. Missing values are not imputed, dataset end
+is treated as censoring rather than discontinuation, and no row-level patient identifiers are
+published.
+
+Key outputs are written under `outputs/eda/`:
+
+- [EDA report](outputs/eda/eda_report.md), assumptions, top issues and downstream readiness;
+- data inventory, field dictionary, temporal coverage and aggregate missingness profiles;
+- normalized-to-mart reconciliation and a hash-based reproducibility manifest;
+- nine aggregate figures under [outputs/eda/figures](outputs/eda/figures/).
 
 ## Limitations
 

@@ -1,0 +1,12 @@
+variable,missing_n,missing_rate
+event_coverage_until_date,8249,0.8249
+initial_regimen,7908,0.7908
+progression_date,7467,0.7467
+referral_delay_days,6016,0.6016
+psa_value,488,0.0488
+ethnicity,436,0.0436
+gleason_score,412,0.0412
+isup_grade_group,412,0.0412
+race,291,0.0291
+insurance_type,277,0.0277
+decision_owner_specialty,0,0.0

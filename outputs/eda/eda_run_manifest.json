@@ -1,0 +1,692 @@
+{
+  "run_id": "EDA-20260828T105302Z",
+  "status": "PASS",
+  "started_at_utc": "2026-08-28T10:53:02.402030+00:00",
+  "completed_at_utc": "2026-08-28T10:53:05.972790+00:00",
+  "analysis_disclaimer": "Synthetic demonstrational data only; not clinical guidance, diagnosis, causal evidence, real Bayer data, or a real-world market-size estimate.",
+  "project_root": "C:\\Endava\\EndevLocal\\zzzzzzzzzzdate\\prostate-patient-journey-synthetic",
+  "analytical_data_dir": "C:\\Endava\\EndevLocal\\zzzzzzzzzzdate\\prostate-patient-journey-synthetic\\data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\analytical_dataset",
+  "dataset_selection": {
+    "dataset_version": "BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z",
+    "created_at": "2026-08-25T11:36:09.396860+00:00",
+    "decision": "CERTIFIED \u2014 READY FOR BAYER ANALYSIS",
+    "overall_readiness": 100,
+    "p0_blockers": 0,
+    "p1_issues": 0,
+    "external_definition_blockers": 0,
+    "git": {
+      "git_commit": "f71bf03a4acaed56ed64d88201e28a6b8b26638c",
+      "git_branch": "dev",
+      "source_clean": true
+    },
+    "run_metadata": {
+      "disclaimer": "SYNTHETIC DEMO DATA \u2013 NOT REAL BAYER OR CLINICAL DATA",
+      "generation_started_at": "2026-08-25T11:26:27.703952+00:00",
+      "generation_completed_at": "2026-08-25T11:33:11.634213+00:00",
+      "git_commit": "f71bf03a4acaed56ed64d88201e28a6b8b26638c",
+      "git_branch": "dev",
+      "git_tracked_source_clean": true,
+      "generator_version": "2.1.0",
+      "python_version": "3.13.15",
+      "python_implementation": "CPython",
+      "python_executable": "C:\\Endava\\EndevLocal\\zzzzzzzzzzdate\\prostate-patient-journey-synthetic\\.release-venv\\Scripts\\python.exe",
+      "platform": "Windows-11-10.0.26100-SP0",
+      "dependencies": {
+        "pandas": "3.0.5",
+        "numpy": "2.5.2",
+        "pyarrow": "25.0.1",
+        "duckdb": "1.5.5",
+        "PyYAML": "6.0.3",
+        "pydantic": "2.13.4",
+        "typer": "0.27.1"
+      },
+      "synthea_commit": "7e08387c68a7f0e21d13076609a159fd473fc902",
+      "random_seed": 42,
+      "cohort_size": 10000,
+      "scenario_version": "diagnostic-v2.1-release",
+      "market_configuration_version": "MARKET-PROFILE-v1.0",
+      "clinical_rules_version": "CLINICAL-RULES-v2.1",
+      "config_snapshot_sha256": "eb7983bfdf778043bf1453b3741fd20465d52ce312b99263b7c4a5b64149b6e4",
+      "output_file_hashes": {
+        "active_surveillance.csv": {
+          "bytes": 709287,
+          "sha256": "d93256f3043e994a7466fbdd1fabcc3c5171d7caa465bb665ba9b81090899e91"
+        },
+        "active_surveillance.parquet": {
+          "bytes": 106866,
+          "sha256": "c85324a9b8031c273b1d4f4487c2610715bbf0daac7b3a448a452bc76ad1d0bf"
+        },
+        "adverse_event.csv": {
+          "bytes": 46793,
+          "sha256": "4b9fda52bb4854b6238440ca94c4e5ce9359acb2937fd47c8f71f57ebc042888"
+        },
+        "adverse_event.parquet": {
+          "bytes": 18333,
+          "sha256": "a6a37c215ad774de6364be26a41764a352271f4287a5dbde3eda3565378f084a"
+        },
+        "diagnosis.csv": {
+          "bytes": 1822115,
+          "sha256": "c5da278394b8e4fb38a91a71e1c7b571d381a34b89fc444491e721aeaf56b12f"
+        },
+        "diagnosis.parquet": {
+          "bytes": 250548,
+          "sha256": "13c87c8ddb04965efdbc1b76fabf5c7a4be51d04e6891961e7bad92dc0f57a35"
+        },
+        "disease_state_event.csv": {
+          "bytes": 982082,
+          "sha256": "93d35e161ef4c6d0ab678528d63603d8f94f334d16efb22dc4e36f1eacee7f7b"
+        },
+        "disease_state_event.parquet": {
+          "bytes": 172460,
+          "sha256": "7d829d828391036136ebf22d76df5a8d7fe713f63917c9d3cee8463e29cec40c"
+        },
+        "eligibility.csv": {
+          "bytes": 2819933,
+          "sha256": "6cb20699c9c1092e1a8488c88e07347bee28e377662c47285d5bef64709ed0c9"
+        },
+        "eligibility.parquet": {
+          "bytes": 207589,
+          "sha256": "175660055ca3091ada50631fccf49b106e124d0c3f267521761cff53ae650958"
+        },
+        "encounter.csv": {
+          "bytes": 9711007,
+          "sha256": "66765b5331d6e3f20ac391c39f93a1a29d5dfe9811b809e5a1489987db836d27"
+        },
+        "encounter.parquet": {
+          "bytes": 862695,
+          "sha256": "f7c08334d05df8cc5b7a9463da3cb0053249b8e4e175faa6ff38f6dd1fc07324"
+        },
+        "feature_timing.csv": {
+          "bytes": 13298,
+          "sha256": "9a999971796a0fa4d52cf8fab30e7e92c821bdce0acd14a9277b9fa51939f4e5"
+        },
+        "feature_timing.parquet": {
+          "bytes": 8922,
+          "sha256": "cef8f730fa2bf863d437f21076a4b294a705c4f8bd078aa1b701b0f7c95f3db6"
+        },
+        "observation.csv": {
+          "bytes": 1251868,
+          "sha256": "08f9c15351278260d07ec04d8f91e6caa9e44eb07e04380087463f018ee41f9b"
+        },
+        "observation.parquet": {
+          "bytes": 234867,
+          "sha256": "c8c7ec6ec1238410d4d5a2c977795dc99bb59887cbf42588b8f0f35de603c7c1"
+        },
+        "organization.csv": {
+          "bytes": 3680,
+          "sha256": "50a2732dc4eb378270ccae5f1b267e492362f02f757792d2e36c2611d45d243d"
+        },
+        "organization.parquet": {
+          "bytes": 5783,
+          "sha256": "0b777daf69bae108ca3f54c6f1a3eb47621ffc200beae6bce393bbd1318527cc"
+        },
+        "outcome.csv": {
+          "bytes": 1602347,
+          "sha256": "ad097fd09501d1b8938075a449b69f650876fbaa6ca2efafd38c18ad359e848c"
+        },
+        "outcome.parquet": {
+          "bytes": 220049,
+          "sha256": "fb9543f253091c83a1774734652aa80f216d4e9c3c66027207f9d98b09c17ef5"
+        },
+        "patient.csv": {
+          "bytes": 2111300,
+          "sha256": "e9b5b951f00910ce6fbc94eb9fcc51cebcb745391ad97769a0b0af222a5cc1bd"
+        },
+        "patient.parquet": {
+          "bytes": 338116,
+          "sha256": "2f355bd61784a8cc076655489dce7ef90bebe7eee339249d7254370ae8e1f65e"
+        },
+        "patient_journey.csv": {
+          "bytes": 7702540,
+          "sha256": "250f59c73ed7b8c0a8ee27e05d58e54c2525f4f638b5c12472cc284a049c1ba1"
+        },
+        "patient_journey.parquet": {
+          "bytes": 624738,
+          "sha256": "3db9ced43def488601f12ac41e1e72c45e609c89586652be39795001fced2912"
+        },
+        "patient_split.csv": {
+          "bytes": 875761,
+          "sha256": "96d6073816bc72aab83909ed0337babcd350deefee370a0704e4984a510564c3"
+        },
+        "patient_split.parquet": {
+          "bytes": 195426,
+          "sha256": "c854f1670f5e5cd6d4c38b27a5d3d428230e946cee8d61519a0e4e0d1fe2834d"
+        },
+        "prescription_event.csv": {
+          "bytes": 5120238,
+          "sha256": "f56210692d2148b780d0e762ef8d50a2e38efdc496dbec9d8efed79739924343"
+        },
+        "prescription_event.parquet": {
+          "bytes": 536532,
+          "sha256": "4ab599f66e9293a55dfd50715fb711a175c0343104822b92d9961ab52da2fd59"
+        },
+        "prostate_journey.duckdb": {
+          "bytes": 12070912,
+          "sha256": "4dc18e10d9a662652f2d94b9787bc815e53bec72b34bc9dbb55fcbafca74d177"
+        },
+        "provider.csv": {
+          "bytes": 5672,
+          "sha256": "f16ff4da0e7a5ae3e7ab665c71aad1d46b5f79e967d636943088bffb2bcef814"
+        },
+        "provider.parquet": {
+          "bytes": 7701,
+          "sha256": "4514806cb2835f7a164ed55253413ae0052c8425b2cf7ba9e104e451cb5c6de2"
+        },
+        "referral.csv": {
+          "bytes": 1045612,
+          "sha256": "89acdffa0e9393a0e5cd9f8c00d54b03a2a88cf8c577701dced7d1a36f3b6eae"
+        },
+        "referral.parquet": {
+          "bytes": 133587,
+          "sha256": "c9deab018fbfcb7ed68abb51c5144d5a602eb71a02b0473b366085789a1d04df"
+        },
+        "treatment_episode.csv": {
+          "bytes": 436513,
+          "sha256": "9de04a1e160493cf0e7b9feffe5cbd41215e0607a95ad5c692feb95be906754d"
+        },
+        "treatment_episode.parquet": {
+          "bytes": 102022,
+          "sha256": "885202dc409bfa352469479b67253bc92ae38e513c0b9f3ca5179f86b438f3fb"
+        },
+        "treatment_regimen.csv": {
+          "bytes": 428269,
+          "sha256": "2dbe941b02763b031114b1def9dd9d4307a177b40615328f1668cf271424ea9f"
+        },
+        "treatment_regimen.parquet": {
+          "bytes": 81251,
+          "sha256": "d4c3faf373fd8e3f264d541b6ddd27ae9365ebe8dccd227d16bb978b274f8a8a"
+        },
+        "treatment_regimen_component.csv": {
+          "bytes": 641233,
+          "sha256": "e39a6d2e92920f597d11deaa712b65400c61c3b6f6fec595a65ce3b6a3398a29"
+        },
+        "treatment_regimen_component.parquet": {
+          "bytes": 129386,
+          "sha256": "fb03b80176007e3d77ef0da4315879c9b70f0462e051a1e4ed7973aaeca957ed"
+        }
+      }
+    },
+    "gate_summary": {
+      "overall_readiness_score": 100,
+      "independent_audit_score": 100,
+      "p0_blockers": 0,
+      "p1_issues": 0,
+      "hard_failures": 0,
+      "reports": {
+        "data_quality": "data_quality_summary.json",
+        "readiness": "readiness_audit.json",
+        "adversarial": "adversarial_audit.json"
+      },
+      "final_scorecard": {
+        "overall_score": 100,
+        "passed": true,
+        "dimensions": 11,
+        "scorecard_path": "C:\\Endava\\EndevLocal\\zzzzzzzzzzdate\\prostate-patient-journey-synthetic\\data\\releases\\BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z\\qa_evidence\\final_scorecard.csv",
+        "scorecard_sha256": "3a27c5b6fe41539214445375154907c96804304bff6e320a494a5846f378de0d"
+      }
+    },
+    "artifact_parity": {
+      "tables": {
+        "patient": {
+          "rows": 10000,
+          "columns": 27,
+          "csv_sha256": "e9b5b951f00910ce6fbc94eb9fcc51cebcb745391ad97769a0b0af222a5cc1bd",
+          "parquet_sha256": "2f355bd61784a8cc076655489dce7ef90bebe7eee339249d7254370ae8e1f65e",
+          "duckdb_rows": 10000
+        },
+        "diagnosis": {
+          "rows": 10000,
+          "columns": 24,
+          "csv_sha256": "c5da278394b8e4fb38a91a71e1c7b571d381a34b89fc444491e721aeaf56b12f",
+          "parquet_sha256": "13c87c8ddb04965efdbc1b76fabf5c7a4be51d04e6891961e7bad92dc0f57a35",
+          "duckdb_rows": 10000
+        },
+        "disease_state_event": {
+          "rows": 10177,
+          "columns": 9,
+          "csv_sha256": "93d35e161ef4c6d0ab678528d63603d8f94f334d16efb22dc4e36f1eacee7f7b",
+          "parquet_sha256": "7d829d828391036136ebf22d76df5a8d7fe713f63917c9d3cee8463e29cec40c",
+          "duckdb_rows": 10177
+        },
+        "eligibility": {
+          "rows": 10000,
+          "columns": 20,
+          "csv_sha256": "6cb20699c9c1092e1a8488c88e07347bee28e377662c47285d5bef64709ed0c9",
+          "parquet_sha256": "175660055ca3091ada50631fccf49b106e124d0c3f267521761cff53ae650958",
+          "duckdb_rows": 10000
+        },
+        "organization": {
+          "rows": 48,
+          "columns": 8,
+          "csv_sha256": "50a2732dc4eb378270ccae5f1b267e492362f02f757792d2e36c2611d45d243d",
+          "parquet_sha256": "0b777daf69bae108ca3f54c6f1a3eb47621ffc200beae6bce393bbd1318527cc",
+          "duckdb_rows": 48
+        },
+        "provider": {
+          "rows": 64,
+          "columns": 10,
+          "csv_sha256": "f16ff4da0e7a5ae3e7ab665c71aad1d46b5f79e967d636943088bffb2bcef814",
+          "parquet_sha256": "4514806cb2835f7a164ed55253413ae0052c8425b2cf7ba9e104e451cb5c6de2",
+          "duckdb_rows": 64
+        },
+        "encounter": {
+          "rows": 76819,
+          "columns": 12,
+          "csv_sha256": "66765b5331d6e3f20ac391c39f93a1a29d5dfe9811b809e5a1489987db836d27",
+          "parquet_sha256": "f7c08334d05df8cc5b7a9463da3cb0053249b8e4e175faa6ff38f6dd1fc07324",
+          "duckdb_rows": 76819
+        },
+        "referral": {
+          "rows": 5419,
+          "columns": 16,
+          "csv_sha256": "89acdffa0e9393a0e5cd9f8c00d54b03a2a88cf8c577701dced7d1a36f3b6eae",
+          "parquet_sha256": "c9deab018fbfcb7ed68abb51c5144d5a602eb71a02b0473b366085789a1d04df",
+          "duckdb_rows": 5419
+        },
+        "active_surveillance": {
+          "rows": 5055,
+          "columns": 18,
+          "csv_sha256": "d93256f3043e994a7466fbdd1fabcc3c5171d7caa465bb665ba9b81090899e91",
+          "parquet_sha256": "c85324a9b8031c273b1d4f4487c2610715bbf0daac7b3a448a452bc76ad1d0bf",
+          "duckdb_rows": 5055
+        },
+        "observation": {
+          "rows": 10000,
+          "columns": 13,
+          "csv_sha256": "08f9c15351278260d07ec04d8f91e6caa9e44eb07e04380087463f018ee41f9b",
+          "parquet_sha256": "c8c7ec6ec1238410d4d5a2c977795dc99bb59887cbf42588b8f0f35de603c7c1",
+          "duckdb_rows": 10000
+        },
+        "treatment_episode": {
+          "rows": 2369,
+          "columns": 24,
+          "csv_sha256": "9de04a1e160493cf0e7b9feffe5cbd41215e0607a95ad5c692feb95be906754d",
+          "parquet_sha256": "885202dc409bfa352469479b67253bc92ae38e513c0b9f3ca5179f86b438f3fb",
+          "duckdb_rows": 2369
+        },
+        "treatment_regimen": {
+          "rows": 2369,
+          "columns": 14,
+          "csv_sha256": "2dbe941b02763b031114b1def9dd9d4307a177b40615328f1668cf271424ea9f",
+          "parquet_sha256": "d4c3faf373fd8e3f264d541b6ddd27ae9365ebe8dccd227d16bb978b274f8a8a",
+          "duckdb_rows": 2369
+        },
+        "treatment_regimen_component": {
+          "rows": 4230,
+          "columns": 17,
+          "csv_sha256": "e39a6d2e92920f597d11deaa712b65400c61c3b6f6fec595a65ce3b6a3398a29",
+          "parquet_sha256": "fb03b80176007e3d77ef0da4315879c9b70f0462e051a1e4ed7973aaeca957ed",
+          "duckdb_rows": 4230
+        },
+        "prescription_event": {
+          "rows": 26306,
+          "columns": 20,
+          "csv_sha256": "f56210692d2148b780d0e762ef8d50a2e38efdc496dbec9d8efed79739924343",
+          "parquet_sha256": "4ab599f66e9293a55dfd50715fb711a175c0343104822b92d9961ab52da2fd59",
+          "duckdb_rows": 26306
+        },
+        "adverse_event": {
+          "rows": 439,
+          "columns": 10,
+          "csv_sha256": "4b9fda52bb4854b6238440ca94c4e5ce9359acb2937fd47c8f71f57ebc042888",
+          "parquet_sha256": "a6a37c215ad774de6364be26a41764a352271f4287a5dbde3eda3565378f084a",
+          "duckdb_rows": 439
+        },
+        "outcome": {
+          "rows": 10000,
+          "columns": 21,
+          "csv_sha256": "ad097fd09501d1b8938075a449b69f650876fbaa6ca2efafd38c18ad359e848c",
+          "parquet_sha256": "fb9543f253091c83a1774734652aa80f216d4e9c3c66027207f9d98b09c17ef5",
+          "duckdb_rows": 10000
+        },
+        "patient_split": {
+          "rows": 10000,
+          "columns": 6,
+          "csv_sha256": "96d6073816bc72aab83909ed0337babcd350deefee370a0704e4984a510564c3",
+          "parquet_sha256": "c854f1670f5e5cd6d4c38b27a5d3d428230e946cee8d61519a0e4e0d1fe2834d",
+          "duckdb_rows": 10000
+        },
+        "feature_timing": {
+          "rows": 105,
+          "columns": 9,
+          "csv_sha256": "9a999971796a0fa4d52cf8fab30e7e92c821bdce0acd14a9277b9fa51939f4e5",
+          "parquet_sha256": "cef8f730fa2bf863d437f21076a4b294a705c4f8bd078aa1b701b0f7c95f3db6",
+          "duckdb_rows": 105
+        },
+        "patient_journey": {
+          "rows": 10000,
+          "columns": 105,
+          "csv_sha256": "250f59c73ed7b8c0a8ee27e05d58e54c2525f4f638b5c12472cc284a049c1ba1",
+          "parquet_sha256": "3db9ced43def488601f12ac41e1e72c45e609c89586652be39795001fced2912",
+          "duckdb_rows": 10000
+        }
+      },
+      "verified_at": "2026-08-25T11:33:12.346788+00:00",
+      "duckdb_sha256": "4dc18e10d9a662652f2d94b9787bc815e53bec72b34bc9dbb55fcbafca74d177",
+      "verified_table_count": 19
+    },
+    "test_summary": {
+      "passed": true,
+      "junit": {
+        "tests": 48,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "time_seconds": 68.504
+      },
+      "commands": {
+        "ruff": {
+          "exit_code": 0,
+          "duration_seconds": 0.373522
+        },
+        "pytest": {
+          "exit_code": 0,
+          "duration_seconds": 73.343943
+        }
+      }
+    },
+    "archives": {
+      "analytical": {
+        "path": "archives/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z-analytical.zip",
+        "bytes": 8184929,
+        "sha256": "948772e0c597110f1373c175f73ced2e39734f2d116adc6ea967684efb1653b1"
+      },
+      "qa_evidence": {
+        "path": "archives/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z-qa-evidence.zip",
+        "bytes": 112514,
+        "sha256": "1dd7fc670b227fabf379544f0ad37e3b64792307cefddd13df14dbf72930b7c2"
+      }
+    },
+    "analytical_dataset_directory": "analytical_dataset",
+    "qa_evidence_directory": "qa_evidence",
+    "immutable": true,
+    "selection_method": "newest certified release"
+  },
+  "source_release": {
+    "dataset_version": "BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z",
+    "decision": "CERTIFIED \u2014 READY FOR BAYER ANALYSIS",
+    "git_commit": "f71bf03a4acaed56ed64d88201e28a6b8b26638c",
+    "random_seed": 42,
+    "generator_version": "2.1.0"
+  },
+  "runtime": {
+    "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26100-SP0",
+    "executable": "C:\\Endava\\EndevLocal\\zzzzzzzzzzdate\\prostate-patient-journey-synthetic\\.release-venv\\Scripts\\python.exe",
+    "dependencies": {
+      "pandas": "3.0.5",
+      "numpy": "2.5.2",
+      "pyarrow": "25.0.1",
+      "duckdb": "1.5.5"
+    }
+  },
+  "repository": {
+    "git_commit": "f71bf03a4acaed56ed64d88201e28a6b8b26638c",
+    "git_branch": "dev",
+    "worktree_clean": false,
+    "worktree_change_count": 44
+  },
+  "quality_summary": {
+    "inventory_files": 1735,
+    "profiled_columns": 639,
+    "dq_checks": 296,
+    "p0_issues": 0,
+    "p1_issues": 0,
+    "reconciliation_mismatches": 0
+  },
+  "input_file_hashes": {
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/active_surveillance.parquet": {
+      "bytes": 106866,
+      "sha256": "c85324a9b8031c273b1d4f4487c2610715bbf0daac7b3a448a452bc76ad1d0bf"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/adverse_event.parquet": {
+      "bytes": 18333,
+      "sha256": "a6a37c215ad774de6364be26a41764a352271f4287a5dbde3eda3565378f084a"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/diagnosis.parquet": {
+      "bytes": 250548,
+      "sha256": "13c87c8ddb04965efdbc1b76fabf5c7a4be51d04e6891961e7bad92dc0f57a35"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/disease_state_event.parquet": {
+      "bytes": 172460,
+      "sha256": "7d829d828391036136ebf22d76df5a8d7fe713f63917c9d3cee8463e29cec40c"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/eligibility.parquet": {
+      "bytes": 207589,
+      "sha256": "175660055ca3091ada50631fccf49b106e124d0c3f267521761cff53ae650958"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/encounter.parquet": {
+      "bytes": 862695,
+      "sha256": "f7c08334d05df8cc5b7a9463da3cb0053249b8e4e175faa6ff38f6dd1fc07324"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/feature_timing.parquet": {
+      "bytes": 8922,
+      "sha256": "cef8f730fa2bf863d437f21076a4b294a705c4f8bd078aa1b701b0f7c95f3db6"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/observation.parquet": {
+      "bytes": 234867,
+      "sha256": "c8c7ec6ec1238410d4d5a2c977795dc99bb59887cbf42588b8f0f35de603c7c1"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/organization.parquet": {
+      "bytes": 5783,
+      "sha256": "0b777daf69bae108ca3f54c6f1a3eb47621ffc200beae6bce393bbd1318527cc"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/outcome.parquet": {
+      "bytes": 220049,
+      "sha256": "fb9543f253091c83a1774734652aa80f216d4e9c3c66027207f9d98b09c17ef5"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/patient.parquet": {
+      "bytes": 338116,
+      "sha256": "2f355bd61784a8cc076655489dce7ef90bebe7eee339249d7254370ae8e1f65e"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/patient_journey.parquet": {
+      "bytes": 624738,
+      "sha256": "3db9ced43def488601f12ac41e1e72c45e609c89586652be39795001fced2912"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/patient_split.parquet": {
+      "bytes": 195426,
+      "sha256": "c854f1670f5e5cd6d4c38b27a5d3d428230e946cee8d61519a0e4e0d1fe2834d"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/prescription_event.parquet": {
+      "bytes": 536532,
+      "sha256": "4ab599f66e9293a55dfd50715fb711a175c0343104822b92d9961ab52da2fd59"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/provider.parquet": {
+      "bytes": 7701,
+      "sha256": "4514806cb2835f7a164ed55253413ae0052c8425b2cf7ba9e104e451cb5c6de2"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/referral.parquet": {
+      "bytes": 133587,
+      "sha256": "c9deab018fbfcb7ed68abb51c5144d5a602eb71a02b0473b366085789a1d04df"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/treatment_episode.parquet": {
+      "bytes": 102022,
+      "sha256": "885202dc409bfa352469479b67253bc92ae38e513c0b9f3ca5179f86b438f3fb"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/treatment_regimen.parquet": {
+      "bytes": 81251,
+      "sha256": "d4c3faf373fd8e3f264d541b6ddd27ae9365ebe8dccd227d16bb978b274f8a8a"
+    },
+    "data/releases/BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z/analytical_dataset/treatment_regimen_component.parquet": {
+      "bytes": 129386,
+      "sha256": "fb03b80176007e3d77ef0da4315879c9b70f0462e051a1e4ed7973aaeca957ed"
+    },
+    "data/raw/synthea/allergies.csv": {
+      "bytes": 3641,
+      "sha256": "8eb1217607b82f48392c3abdf7751e614e66d3ff7b02d5585f297be2e368cbcb"
+    },
+    "data/raw/synthea/careplans.csv": {
+      "bytes": 23050,
+      "sha256": "a9748530d4c1cb8cecac84e8c16457a2c84abde65e5612d06e9ce78e0dcdf8b5"
+    },
+    "data/raw/synthea/claims.csv": {
+      "bytes": 1627658,
+      "sha256": "6e3c2c8c498f9bd2a3bc824ae5b14ea9fc9bcc277c2e02e7ebc41f8efd28e1ba"
+    },
+    "data/raw/synthea/claims_transactions.csv": {
+      "bytes": 13701883,
+      "sha256": "a9801a7c6cb59cadb18c42c7e8fe12b6f447b78e009e7435e6103e8496b162bf"
+    },
+    "data/raw/synthea/conditions.csv": {
+      "bytes": 186946,
+      "sha256": "7615ce70980006feb14e21e11ee2fe16f3bf9d9b61ed219f439b776a86364d19"
+    },
+    "data/raw/synthea/devices.csv": {
+      "bytes": 53470,
+      "sha256": "47a04e395e169675b9febc47f015699b7cf3bd0ddd8290d066fdc803385c975c"
+    },
+    "data/raw/synthea/encounters.csv": {
+      "bytes": 760108,
+      "sha256": "7fb97fa4b526f57055236fd75ffce2aa5b9f18590d4458f78706bffd697419a4"
+    },
+    "data/raw/synthea/imaging_studies.csv": {
+      "bytes": 54957,
+      "sha256": "c92fc0fc8d4b6c06252922cc217d55c07f34d83148570159243c12be66584414"
+    },
+    "data/raw/synthea/immunizations.csv": {
+      "bytes": 62728,
+      "sha256": "952654b1442bbe141eb2572f353dc4314e517ac4de0959cb80c03af8738a0315"
+    },
+    "data/raw/synthea/medications.csv": {
+      "bytes": 504497,
+      "sha256": "08a5cf1130a0af8e5ba76b2fbd0c035f516326e5bfb804b3672ba244628ceac0"
+    },
+    "data/raw/synthea/observations.csv": {
+      "bytes": 5082114,
+      "sha256": "8ba50c5fe85ed5f10fe317ed64ac7be9529ad74e3dc014664d571ced9a54652a"
+    },
+    "data/raw/synthea/organizations.csv": {
+      "bytes": 16075,
+      "sha256": "b0af720f9a1a7bbe3886e60041c81928b0c1a626afce539686e56c8921997e57"
+    },
+    "data/raw/synthea/patients.csv": {
+      "bytes": 9630,
+      "sha256": "919d60a44c2cc763835063a5f852bd1c11cd1eae74d672e3a6b7880d8a83b498"
+    },
+    "data/raw/synthea/payer_transitions.csv": {
+      "bytes": 204528,
+      "sha256": "af6815d1528e7b1978f190efab8856e5927b01f7dc236d2c85950ad1a2aedb55"
+    },
+    "data/raw/synthea/payers.csv": {
+      "bytes": 1730,
+      "sha256": "ce279c4777c287fc1dd3ce94af8c805622aa1ccd782a865fc0162857fbbfae31"
+    },
+    "data/raw/synthea/procedures.csv": {
+      "bytes": 1186229,
+      "sha256": "62c04ff18f992754fd4f3b911f734e08abdbf3dcdf3e938578f98c502b215fde"
+    },
+    "data/raw/synthea/providers.csv": {
+      "bytes": 19236,
+      "sha256": "83f9f9101e90c9551234f94bb544b303c81f1f015825dd72ecf662bfbb19058d"
+    },
+    "data/raw/synthea/supplies.csv": {
+      "bytes": 160900,
+      "sha256": "bfdcb18cc24de7c1b46d291a7d3a5733f42d1ded1b505c19bc1d4d05d0365fd8"
+    }
+  },
+  "script_hashes": {
+    "eda/config.py": "9cf771b1997803ed3e0e5efba6a820a638cad185c4f0e22b3d5642793d5dfb61",
+    "eda/svg_charts.py": "f5ed9ac6b02c28802d9f7a326935abe2e9c5cb0ff4cbdd3267eba0f9d22ebac6",
+    "eda/00_inventory_and_data_contract.py": "33e03c341bdde7c536551dbf99a238d147a710b1308bf94ace7793580c3ebf5c",
+    "eda/01_data_quality_profile.py": "74429970aea3168c2b0eed0cde1efeef5b5930b2170f5f5f4092123c22eea8ea"
+  },
+  "output_file_hashes": {
+    "assumptions_and_limitations.md": {
+      "bytes": 4011,
+      "sha256": "9638f211ee632ab2ace644670f3f433f897dc9e85399bc06539cc3fa009d80da"
+    },
+    "data_dictionary.csv": {
+      "bytes": 226052,
+      "sha256": "de670bdc2371c31f3e6372f88858322481266ed4d58e58c9f0ccfcfefe9ee13b"
+    },
+    "data_inventory.csv": {
+      "bytes": 747147,
+      "sha256": "c6b4ee96954f24be75c2723a662941e7573545d6193855cdb297f322b3efeb95"
+    },
+    "data_quality_summary.csv": {
+      "bytes": 69963,
+      "sha256": "b918bcd356a3f94a22542e8d05f945c81b0dd3cf352bde518332671d6b321e6f"
+    },
+    "downstream_readiness.csv": {
+      "bytes": 1537,
+      "sha256": "5ef902e5faaaf507f214e210f1f59114431a772d5c69f414d68daf5acad865a1"
+    },
+    "eda_report.md": {
+      "bytes": 9554,
+      "sha256": "684b74dacf78f47caa7c0944b24ab23bb4dc37271d446ae25078b5c7083517ad"
+    },
+    "figures/data_quality_issue_severity.svg": {
+      "bytes": 1552,
+      "sha256": "da05a92670f1bd8102fa4780fa68e90b00c2f033a961d2884845e1aaba42235d"
+    },
+    "figures/disease_state_composition.svg": {
+      "bytes": 2167,
+      "sha256": "0a4c486c3facdca9d96465e39ce65671f6705d1c9b1c6c47630fa84db26ba212"
+    },
+    "figures/duplicate_invalid_record_summary.svg": {
+      "bytes": 986,
+      "sha256": "ed264f31386ecaf5f97f850570ab9258f55095d035863e1f3dd3dff455102d89"
+    },
+    "figures/follow_up_duration_distribution.svg": {
+      "bytes": 2915,
+      "sha256": "6307a18d4e94ad2405f246bc30afa8f8b5a4d835d2119e246c904e42ce639c23"
+    },
+    "figures/market_setting_composition.svg": {
+      "bytes": 4182,
+      "sha256": "eed8636a5c359d7e83d4d5b3704622ed217acc588017653b6f4155e7d6ff4de4"
+    },
+    "figures/missingness_bar.svg": {
+      "bytes": 3112,
+      "sha256": "65f4e5c828d1d93d290e4f7a4a3cce99595a6562f0c68546e9ba681751dd5ff3"
+    },
+    "figures/missingness_heatmap.svg": {
+      "bytes": 14518,
+      "sha256": "5638115e36c3b5a6e4b80dbecfab77230f7142a1dfe5121613aaca4077f5245c"
+    },
+    "figures/patient_event_counts_over_time.svg": {
+      "bytes": 4591,
+      "sha256": "52a0bfb910ff73a127c3ffb25d30c61baf2b557b0c59f06da02f2a5dba582135"
+    },
+    "figures/treatment_event_distribution.svg": {
+      "bytes": 1971,
+      "sha256": "7af590a97eb51a19a2097317199e80ec522acafd0a270e74675f3c909f65f4b7"
+    },
+    "follow_up_distribution_summary.csv": {
+      "bytes": 549,
+      "sha256": "51671087bc4d07103b0447c36c8ec0bb79def8ebaf47651ec1fce7d8e0998aab"
+    },
+    "important_variable_missingness.csv": {
+      "bytes": 339,
+      "sha256": "72982c36184e34c2836e54a6548c27a57be30215752dc4cf2415534776b374b4"
+    },
+    "inventory_run_summary.json": {
+      "bytes": 16680,
+      "sha256": "337a5001a4155551c692420d082dd482ed3d0c6b6a78866e21be6009cdedb16b"
+    },
+    "missingness_by_market_setting.csv": {
+      "bytes": 92592,
+      "sha256": "378798b2f172feeecbedcab3295b878682aa0bb8e6d8ae5c3496db90b73eb3fd"
+    },
+    "monthly_counts.csv": {
+      "bytes": 220619,
+      "sha256": "7a51291710569db7882bee29260f9533a322464ec240e932d4146f11ee724173"
+    },
+    "patient_level_reconciliation.csv": {
+      "bytes": 1972,
+      "sha256": "6838706fcd51b258907ce9c0a771d5ba1ebf181c94de812e6f5d365c7236282b"
+    },
+    "temporal_coverage.csv": {
+      "bytes": 7983,
+      "sha256": "e5f230045ca9340e6a189a45a26578b3aad371afa1413e85dfb3499505507b08"
+    },
+    "top_10_data_quality_issues.csv": {
+      "bytes": 2712,
+      "sha256": "b5f59d368e4a480bbed05fa2e587338c982394e0a4583a21312e6dbc443e18c3"
+    }
+  },
+  "privacy": {
+    "row_level_patient_outputs": false,
+    "identifier_examples_masked": true,
+    "figures_are_aggregate_only": true
+  }
+}
