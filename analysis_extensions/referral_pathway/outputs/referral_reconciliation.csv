@@ -1,0 +1,11 @@
+check_name,status,violation_count,details,hard_failure
+referral_not_before_index,PASS,0,referral_date >= cohort_index_date,True
+completed_referral_not_before_creation,PASS,0,completion_date >= referral_date,True
+referral_not_after_censor,PASS,0,all relevant referral_date values <= censor_date,True
+treatment_before_completed_referral,PASS,0,treatment does not precede completed referral,True
+intensification_before_completed_referral,PASS,0,intensification does not precede completed referral,True
+governed_eda_treatment_initiation_reconciliation,PASS,0,governed=1700; existing_eda=1700,True
+stage2_intensification_reconciliation,PASS,0,component_derived=1026; stage2=1026,True
+relevant_referral_definition_discrepancy,PASS,0,eligible referrals not matching the specified reason and destination,False
+valid_treated_without_completed_referral,FAIL,386,valid synthetic exception; report only,False
+valid_intensified_without_completed_referral,FAIL,206,valid synthetic exception; report only,False

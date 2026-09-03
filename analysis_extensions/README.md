@@ -40,23 +40,33 @@ The analysis separates `UNTREATED`, `TREATED_NOT_INTENSIFIED`, and `INTENSIFIED`
 
 At 90 days, 74.5% had initiated any treatment, 45.0% were intensified, 29.5% were treated but not intensified, and 25.5% remained untreated. Timing, category identity, monotonicity, component/regimen, and governed-EDA reconciliation checks passed. The analysis remains synthetic, descriptive, exploratory, and non-causal; detailed results remain in `treatment_intensification/`.
 
+## Referral / Handoff Pathway Analysis
+
+**IMPLEMENTED AND VALIDATED** in `referral_pathway/` after a LIMITED_GO feasibility assessment. The extension was intentionally limited to a descriptive 90-day pathway from governed eligible mHSPC through relevant referral creation, referral completion, any treatment initiation, and scenario-supported intensification.
+
+In the 2,281-patient evaluable denominator, 2,281 referrals were created, 1,713 were completed by 90 days, 1,700 patients initiated treatment, and 1,026 were intensified. The main referral-to-completion timing was a 30-day median with an 18-43 day IQR. All chronology, governed-EDA, Stage 2, and source-definition reconciliation checks passed.
+
+Referral completion is structurally coupled in the synthetic generator to treatment initiation probability, treatment start timing, provider selection, and chemotherapy availability. Results are therefore descriptive synthetic process findings only, not causal or real-world referral-effect evidence. Detailed results remain in `referral_pathway/`.
+
 ## Planned Analysis Extensions
 
 The following areas remain **PLANNED / NOT YET IMPLEMENTED** in this branch.
 
-### B. Referral / Handoff Pathway Analysis
+### A. Referral / Handoff Follow-up Analysis
 
 - Analyze the pathway from eligibility to referral, referral completion, treatment, and intensification.
 - Treat referral as a post-eligibility process metric, rather than a baseline predictor when it would create leakage.
 
-### C. ARPI-Specific Persistence Analysis
+### B. ARPI-Specific Persistence Analysis
 
 - Analyze persistence specifically for ARPI exposure where the data support it.
 - Preserve censoring and 30/60/90-day sensitivity logic.
 
-### D. Robustness / Sensitivity Analysis
+### C. Robustness / Sensitivity Analysis
 
 - Verify whether conclusions remain stable across reasonable definitions, thresholds, and segments.
+
+Stage 4 persistence work remains **NOT YET IMPLEMENTED / CONDITIONAL**.
 
 ## Analytical Guardrails
 
