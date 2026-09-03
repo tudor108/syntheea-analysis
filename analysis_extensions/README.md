@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This folder contains additional analytical work built on top of the current `dev` branch. It is intentionally isolated so a colleague can review the work and selectively merge only the parts that are useful.
+This folder contains analytical extensions that complement the existing governed `eda/` workflow.
 
 ## Current Analysis Baseline
 
@@ -48,25 +48,9 @@ In the 2,281-patient evaluable denominator, 2,281 referrals were created, 1,713 
 
 Referral completion is structurally coupled in the synthetic generator to treatment initiation probability, treatment start timing, provider selection, and chemotherapy availability. Results are therefore descriptive synthetic process findings only, not causal or real-world referral-effect evidence. Detailed results remain in `referral_pathway/`.
 
-## Planned Analysis Extensions
+## Current Coverage and Future Gaps
 
-The following areas remain **PLANNED / NOT YET IMPLEMENTED** in this branch.
-
-### A. Referral / Handoff Follow-up Analysis
-
-- Analyze the pathway from eligibility to referral, referral completion, treatment, and intensification.
-- Treat referral as a post-eligibility process metric, rather than a baseline predictor when it would create leakage.
-
-### B. ARPI-Specific Persistence Analysis
-
-- Analyze persistence specifically for ARPI exposure where the data support it.
-- Preserve censoring and 30/60/90-day sensitivity logic.
-
-### C. Robustness / Sensitivity Analysis
-
-- Verify whether conclusions remain stable across reasonable definitions, thresholds, and segments.
-
-Stage 4 persistence work remains **NOT YET IMPLEMENTED / CONDITIONAL**.
+The existing governed persistence workflow already covers persistence, switch, discontinuation, restart, censoring, and refill-gap sensitivity. No additional persistence extension is currently required unless a future analytical gap is identified. ARPI-specific persistence and robustness/sensitivity analysis remain **PLANNED / CONDITIONAL** only if such a gap is established.
 
 ## Analytical Guardrails
 
@@ -76,7 +60,3 @@ Stage 4 persistence work remains **NOT YET IMPLEMENTED / CONDITIONAL**.
 - No real-world market-size claims.
 - No financial impact should be invented.
 - Results must remain aligned with governed cohort definitions and censoring rules.
-
-## Review / Merge Intent
-
-This folder is designed so a colleague can compare each analysis extension against `dev`, review and validate it before merge, and selectively merge only validated and useful components.
