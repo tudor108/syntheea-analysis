@@ -2,7 +2,7 @@
 
 ## Status and Purpose
 
-**Status: PROPOSED CONTRACT ONLY. NOT YET IMPLEMENTED.**
+**Status: IMPLEMENTED AND VALIDATED.**
 
 This contract defines a rigorous, descriptive analysis of synthetic mHSPC treatment intensification. It is an isolated extension built on the governed EDA workflow on `dev`. It does not change cohort definitions, treatment logic, generation logic, or existing analytical outputs.
 
@@ -114,16 +114,16 @@ Do not introduce a large subgroup catalogue before the core contract reconciles 
 - Use `synthetic intensification` or `scenario-supported intensification` where needed; do not present this rule as authoritative clinical guidance.
 - Keep results aligned with governed cohort definitions, existing initiation fields, and censoring rules.
 
-## Proposed Implementation and Output Structure
+## Implementation and Output Structure
 
-The later implementation is expected to use this structure:
+The implementation uses this structure:
 
 ```text
 analysis_extensions/treatment_intensification/
     ANALYSIS_CONTRACT.md
-    README.md                                  # later
-    treatment_intensification_analysis.py     # later
-    outputs/                                  # later generated outputs
+    README.md
+    treatment_intensification_analysis.py
+    outputs/                                  # generated outputs
 ```
 
-At this contract stage, only `ANALYSIS_CONTRACT.md` is created. No analysis code or generated outputs are included.
+The implementation and generated aggregate outputs are maintained under this directory. The analytical definitions and guardrails above remain the governing contract.
