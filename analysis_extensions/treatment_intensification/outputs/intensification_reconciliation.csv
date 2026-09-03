@@ -1,0 +1,14 @@
+check_name,status,violation_count,details,hard_failure
+intensification_not_before_index,PASS,0,first_intensification_date >= cohort_index_date,True
+intensification_not_before_episode_start,PASS,0,component start >= corresponding episode start,True
+intensification_not_after_censor,PASS,0,component start <= censor_date,True
+intensified_without_treatment_30d,PASS,0,INTENSIFIED patients must also be initiated,True
+category_total_mismatch_30d,PASS,0,landmark category totals must equal evaluable denominator,True
+any_treatment_reconciliation_30d,FAIL,323,governed initiation flag must match independently checked episode timing,False
+intensified_without_treatment_60d,PASS,0,INTENSIFIED patients must also be initiated,True
+category_total_mismatch_60d,PASS,0,landmark category totals must equal evaluable denominator,True
+any_treatment_reconciliation_60d,FAIL,694,governed initiation flag must match independently checked episode timing,False
+intensified_without_treatment_90d,PASS,0,INTENSIFIED patients must also be initiated,True
+category_total_mismatch_90d,PASS,0,landmark category totals must equal evaluable denominator,True
+any_treatment_reconciliation_90d,FAIL,663,governed initiation flag must match independently checked episode timing,False
+component_vs_regimen_intensification_mismatch,PASS,0,report component-derived status versus regimen-level intensification_flag,False

@@ -32,14 +32,17 @@ Together, this workflow covers:
 - leakage-safe exploratory driver analysis;
 - intervention-validation backlog.
 
+## Treatment Intensification Analysis
+
+**IMPLEMENTED AND VALIDATED** in `treatment_intensification/`.
+
+The analysis separates `UNTREATED`, `TREATED_NOT_INTENSIFIED`, and `INTENSIFIED` because any treatment initiation is not equivalent to scenario-supported treatment intensification. It reuses the governed mHSPC cohort and existing censor-aware 30/60/90-day denominators rather than redefining eligibility. Intensification timing is derived from qualifying ARPI/chemotherapy component start dates, so delayed add-on intensification can be represented.
+
+At 90 days, 74.5% had initiated any treatment, 45.0% were intensified, 29.5% were treated but not intensified, and 25.5% remained untreated. Timing, category identity, monotonicity, component/regimen, and governed-EDA reconciliation checks passed. The analysis remains synthetic, descriptive, exploratory, and non-causal; detailed results remain in `treatment_intensification/`.
+
 ## Planned Analysis Extensions
 
-The following areas are **PLANNED / NOT YET IMPLEMENTED** in this branch.
-
-### A. Treatment Intensification Analysis
-
-- Distinguish any treatment initiation from intensified treatment.
-- Make intensification more explicit as a primary business KPI.
+The following areas remain **PLANNED / NOT YET IMPLEMENTED** in this branch.
 
 ### B. Referral / Handoff Pathway Analysis
 
