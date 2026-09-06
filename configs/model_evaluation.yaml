@@ -1,0 +1,128 @@
+version: MODEL-EVALUATION-SYN-v1.0
+status: ENGINEERING DEFINITION
+synthetic_data_only: true
+principal_validation: repeated_rolling_temporal
+random_row_split_allowed_as_principal_evidence: false
+random_seed: 20260905
+
+features:
+  numeric:
+    - age_at_index
+    - comorbidity_score
+    - frailty_proxy
+    - access_index
+    - prior_healthcare_utilization_180d
+    - prior_treatment_count
+    - time_since_diagnosis_days
+    - time_since_metastasis_days
+  categorical:
+    - prior_treatment_status
+    - disease_state
+    - metastatic_site
+    - market_code
+    - care_setting
+    - provider_specialty
+    - provider_volume_band
+    - referral_proxy
+    - prior_hospitalization
+    - insurance_type
+    - calendar_period
+  simplified:
+    - age_at_index
+    - comorbidity_score
+    - frailty_proxy
+    - access_index
+  prohibited:
+    - patient_id
+    - provider_id
+    - treatment_start_date
+    - days_to_initiation
+    - initiated_within_30d
+    - initiated_within_60d
+    - initiated_within_90d
+    - eligible_not_initiated_90d
+    - initiation_90d_status
+    - discontinuation_flag
+    - discontinuation_date
+    - switch_flag
+    - switch_date
+    - restart_flag
+    - restart_date
+    - persistence_12m_status
+    - persistent_12m
+    - censor_reason
+    - final_outcome_status
+    - progression_event
+    - hospitalisation_flag
+    - death_flag
+
+validation:
+  final_temporal_holdout_fraction: 0.20
+  inner_calibration_fraction: 0.20
+  rolling_repeats: 2
+  rolling_origins_per_repeat: 3
+  rolling_initial_training_fraction: 0.45
+  rolling_validation_fraction: 0.14
+  minimum_training_n: 80
+  minimum_validation_n: 30
+  minimum_events_per_validation: 5
+  leave_one_market_out_period: development_only
+  bootstrap_repeats: 200
+  calibration_curve_points: 15
+  l2_penalty: 1.0
+  calibration_method: nested_temporal_platt
+  feature_selection: none
+
+subgroups:
+  dimensions: [market_code, disease_state, age_band, care_setting, missingness_pattern]
+  minimum_n: 80
+  minimum_events: 15
+  minimum_non_events: 15
+  rank_groups: false
+
+robustness:
+  initiation_windows_days: [30, 60, 90]
+  persistence_gap_days: [30, 60, 90]
+  added_feature_missingness_rates: [0.10, 0.20]
+  feature_removal_sets:
+    access_and_market: [access_index, market_code, insurance_type]
+  prevalence_odds_multipliers: [0.5, 1.5]
+  include_simplified_model: true
+
+disposition_policy:
+  status: ENGINEERING DEFINITION — REQUIRES MODEL-RISK AND CLINICAL APPROVAL
+  minimum_analysis_events: 100
+  minimum_final_holdout_events: 20
+  minimum_final_holdout_non_events: 20
+  reject_below_roc_auc: 0.60
+  maximum_automatic_disposition: RESEARCH ONLY
+  candidate_or_approved_requires_manual_evidence: true
+
+prior_reported_claims:
+  source_release: BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z
+  evidence_document: docs/PROJECT_STATUS_AND_ROADMAP.md
+  values:
+    non_initiated_within_90_days:
+      analysis_n: 2281
+      prevalence: 0.2547
+      roc_auc: 0.668
+      pr_auc: 0.394
+      assessment: moderate exploratory signal
+    discontinued_within_12_months:
+      analysis_n: 1557
+      prevalence: 0.3770
+      roc_auc: 0.472
+      pr_auc: 0.368
+      assessment: no useful discrimination demonstrated
+    switched_treatment:
+      analysis_n: 1074
+      prevalence: 0.0968
+      roc_auc: 0.573
+      pr_auc: 0.156
+      assessment: weak signal
+    restarted_after_gap:
+      analysis_n: 587
+      prevalence: 0.3697
+      roc_auc: 0.525
+      pr_auc: 0.393
+      assessment: near-random signal

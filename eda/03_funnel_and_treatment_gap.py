@@ -31,6 +31,7 @@ from config import (
     REQUIRED_MARKETS,
     ensure_output_directories,
     resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
 )
 from png_charts import Canvas, contrasting_text, gap_color
 
@@ -160,9 +161,7 @@ def aggregate_metrics(
         else None
     )
     non_intensified_rate = (
-        non_intensified_n / initiated_n
-        if pathway == "mhspc_mcspc" and initiated_n
-        else None
+        non_intensified_n / initiated_n if pathway == "mhspc_mcspc" and initiated_n else None
     )
     confidence = _data_confidence(
         pathway,
@@ -827,6 +826,7 @@ def main() -> None:
         heatmap,
         candidates,
     )
+    write_eda_artifact_manifest(analytical_dir, selection_metadata)
     print(
         f"Funnel/gap analysis complete: {len(segment_metrics):,} segment-window rows, "
         f"{len(candidates):,} ranked candidates, figures=2 PNG; "

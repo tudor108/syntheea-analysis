@@ -1,0 +1,74 @@
+version: EVENT-HIERARCHY-SYN-v1.0
+status: PROPOSED CLINICAL DEFINITION
+synthetic_data_only: true
+timestamp_resolution: calendar_day
+tie_breaking:
+  rule: earliest timestamp, then ascending configured priority, then lexical event name
+  rationale: >-
+    Date-only synthetic records cannot recover within-day clinical ordering. Death receives the
+    highest priority to prevent a same-day event from being interpreted as occurring after death.
+  requires_sme_review: true
+
+events:
+  death: {date_column: death_date, priority: 10, terminal: true}
+  progression: {date_column: progression_date, priority: 20, terminal: false}
+  hospitalization: {date_column: first_hospitalisation_date, priority: 30, terminal: false}
+  initiation: {date_column: treatment_start_date, priority: 40, terminal: false}
+  switch: {date_column: switch_date, priority: 50, terminal: false}
+  discontinuation: {date_column: discontinuation_date, priority: 60, terminal: false}
+  restart: {date_column: restart_date, priority: 70, terminal: false, availability: derived_only}
+  loss_to_follow_up: {date_column: loss_to_follow_up_date, priority: 80, terminal: true}
+  administrative_data_end: {date_column: observation_end_date, priority: 90, terminal: true}
+  analysis_horizon: {date_column: derived_horizon_date, priority: 100, terminal: true}
+
+endpoints:
+  initiation:
+    analysis_id: time_to_initiation
+    population_flag: eligibility_flag
+    population_definition: eligibility_flag = true with a valid eligibility_date
+    time_zero_column: eligibility_date
+    target_event: initiation
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end, analysis_horizon]
+    horizon_days: 365
+    assumptions:
+      - Death prevents a later observed initiation and is a competing event.
+      - Loss to follow-up and administrative end are non-informative censoring assumptions for KM only.
+    limitation: Synthetic event times and censoring are configured; no clinical or real-world risk is estimated.
+  discontinuation:
+    analysis_id: time_to_discontinuation
+    population_flag: treatment_initiated
+    population_definition: treatment_initiated = true with a valid treatment_start_date
+    time_zero_column: treatment_start_date
+    target_event: discontinuation
+    competing_events: [switch, death]
+    censoring_events: [loss_to_follow_up, administrative_data_end, analysis_horizon]
+    horizon_days: 365
+    assumptions:
+      - Switch and death prevent observation of the current-regimen discontinuation estimand.
+      - The refill-gap definition is an operational proxy and does not prove medication use.
+    limitation: The endpoint is an engineering definition requiring oncology/RWE/biostatistics approval.
+  progression:
+    analysis_id: time_to_progression
+    population_flag: all
+    population_definition: all generated prostate-cancer records with a valid observation_start_date
+    time_zero_column: observation_start_date
+    target_event: progression
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end, analysis_horizon]
+    horizon_days: 730
+    assumptions:
+      - Death prevents later progression observation and is a competing event.
+    limitation: Generated progression is not a validated clinical endpoint or treatment-effect outcome.
+  hospitalization:
+    analysis_id: time_to_first_hospitalization
+    population_flag: all
+    population_definition: all generated prostate-cancer records with a valid observation_start_date
+    time_zero_column: observation_start_date
+    target_event: hospitalization
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end, analysis_horizon]
+    horizon_days: 365
+    assumptions:
+      - Death prevents later hospitalization and is a competing event.
+    limitation: Generated hospitalization is a scenario artifact, not observed utilization.

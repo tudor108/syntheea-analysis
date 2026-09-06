@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
+
+from prostate_journey import __version__
+from prostate_journey.dataset_resolver import resolve_analytical_dataset
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = PROJECT_ROOT / "outputs" / "eda"
@@ -328,44 +333,65 @@ OUTCOME_OR_FUTURE_TOKENS = {
 
 
 def resolve_analytical_data_dir() -> tuple[Path, dict[str, object]]:
-    """Resolve an explicit override or the newest valid certified release."""
+    """Resolve only a certified release unless working gold is explicitly allowed."""
     override = os.environ.get("EDA_DATASET_DIR")
-    if override:
-        candidate = Path(override).expanduser().resolve()
-        metadata: dict[str, object] = {"selection_method": "EDA_DATASET_DIR override"}
-    else:
-        releases = PROJECT_ROOT / "data" / "releases"
-        candidates: list[tuple[str, Path, dict[str, object]]] = []
-        if releases.is_dir():
-            for manifest_path in releases.glob("*/release_manifest.json"):
-                try:
-                    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-                except (OSError, json.JSONDecodeError):
-                    continue
-                if payload.get("decision") != "CERTIFIED — READY FOR BAYER ANALYSIS":
-                    continue
-                analytical = manifest_path.parent / str(
-                    payload.get("analytical_dataset_directory", "analytical_dataset")
-                )
-                candidates.append((str(payload.get("created_at", "")), analytical, payload))
-        if candidates:
-            _, candidate, metadata = max(candidates, key=lambda item: item[0])
-            metadata = {**metadata, "selection_method": "newest certified release"}
-        else:
-            candidate = PROJECT_ROOT / "data" / "gold"
-            metadata = {"selection_method": "complete data/gold fallback"}
+    allow_working_gold = os.environ.get("EDA_ALLOW_WORKING_GOLD") == "1"
+    selected = resolve_analytical_dataset(
+        PROJECT_ROOT,
+        TABLE_CONTRACTS,
+        override,
+        allow_gold_fallback=allow_working_gold,
+        require_certified=not allow_working_gold,
+    )
+    manifest = selected.release_manifest
+    run = manifest.get("run_metadata", {})
+    metadata: dict[str, object] = {
+        "dataset_version": selected.dataset_version,
+        "selection_method": selected.selection_method,
+        "created_at": manifest.get("created_at"),
+        "decision": manifest.get("decision"),
+        "overall_readiness": manifest.get("overall_readiness"),
+        "source_commit": manifest.get("git", {}).get("git_commit"),
+        "configuration_hash": run.get("config_snapshot_sha256"),
+        "generator_version": run.get("generator_version"),
+        "scenario_version": run.get("scenario_version"),
+        "clinical_rules_version": run.get("clinical_rules_version"),
+        "market_configuration_version": run.get("market_configuration_version"),
+        "active_analytical_definition": {
+            "eligibility": "eligibility_rule_version",
+            "initiation": "INITIATION-WINDOW-SYN-v1.0 (primary 90 days)",
+            "persistence": "persistence_rule_version (primary 60-day permissible gap)",
+            "censoring": "explicit right-censoring at each landmark",
+        },
+        "working_gold_non_release": selected.release_dir is None,
+    }
+    return selected.analytical_dir, metadata
 
-    missing = [
-        f"{table}.parquet"
-        for table in TABLE_CONTRACTS
-        if not (candidate / f"{table}.parquet").is_file()
-    ]
-    if missing:
-        raise FileNotFoundError(
-            "No usable complete analytical dataset was found. Missing files under "
-            f"{candidate}: {', '.join(missing)}"
-        )
-    return candidate.resolve(), metadata
+
+def write_eda_artifact_manifest(
+    analytical_dir: Path, selection_metadata: dict[str, object]
+) -> Path:
+    """Map every current EDA output to one source release and definition set."""
+    manifest_path = OUTPUT_DIR / "eda_artifact_manifest.json"
+    artifacts: dict[str, dict[str, object]] = {}
+    for path in sorted(OUTPUT_DIR.rglob("*")):
+        if not path.is_file() or path == manifest_path:
+            continue
+        artifacts[path.relative_to(OUTPUT_DIR).as_posix()] = {
+            "bytes": path.stat().st_size,
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+    payload = {
+        "manifest_version": "2.2.0",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "synthetic_data_only": True,
+        "analytical_data_dir": str(analytical_dir),
+        "provenance": selection_metadata,
+        "code_version": __version__,
+        "artifacts": artifacts,
+    }
+    manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return manifest_path
 
 
 def ensure_output_directories() -> None:

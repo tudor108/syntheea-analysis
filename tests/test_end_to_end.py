@@ -57,6 +57,11 @@ def test_end_to_end_exports_contract_database_and_reports(small_config, tmp_path
         "market_summary.csv",
         "schema_summary.csv",
         "missingness_summary.csv",
+        "healthcare_analysis_report.md",
+        "healthcare_initiation_funnel.csv",
+        "healthcare_persistence_summary.csv",
+        "healthcare_referral_summary.csv",
+        "healthcare_missingness_by_market.csv",
         "cohort_dashboard.html",
         "config_snapshot.yaml",
     ]:

@@ -1,0 +1,358 @@
+registry_version: 2.2.0
+title: Synthetic prostate patient-journey analysis and estimand registry
+synthetic_data_only: true
+formal_estimand_claim: false
+status_vocabulary:
+  - ENGINEERING DEFINITION
+  - PROPOSED CLINICAL DEFINITION
+  - SME REVIEWED
+  - SOURCE VALIDATED
+  - NOT YET VALIDATED
+prohibited_interpretations:
+  - causal effect
+  - comparative effectiveness
+  - treatment recommendation
+  - real treatment gap or persistence rate
+  - Bayer, market, or population estimate
+
+defaults: &defaults
+  assumptions:
+    - The generated records follow the versioned synthetic scenario and data contract.
+    - Descriptive associations are not causal effects.
+  sensitivity_analyses: []
+  synthetic_interpretation_boundary: >-
+    Synthetic engineering evidence only; not a real patient, Bayer, clinical, causal,
+    comparative-effectiveness, market, or population finding.
+  reviewer_status: NOT YET VALIDATED
+
+analyses:
+  - <<: *defaults
+    analysis_id: cohort_definition
+    research_question: Which generated records enter each current analytical population?
+    analysis_type: descriptive
+    target_population: Generated prostate-cancer archetypes in the configured market scenarios.
+    study_population: Records satisfying the named pathway and versioned eligibility criteria.
+    numerator: Number retained at each cohort step.
+    denominator: Number entering the immediately preceding cohort step.
+    eligibility: Versioned pathway-specific rules in cohort_definitions and eligibility tables.
+    time_zero: Diagnosis/index date or pathway-specific cohort index date.
+    outcome_event: Inclusion, exclusion, and attrition state.
+    observation_window: From source eligibility assessment through the relevant landmark.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Counts, proportions, and a strictly nested attrition chain.
+    sensitivity_analyses: [alternate initiation landmarks, alternate pathway definitions]
+    required_source_variables:
+      - patient.patient_id
+      - diagnosis.diagnosis_date
+      - eligibility.eligibility_flag
+      - eligibility.eligibility_date
+      - observation.censor_date
+    reviewer_status: ENGINEERING DEFINITION
+
+  - <<: *defaults
+    analysis_id: initiation_funnel
+    research_question: What fraction of eligible generated records initiates treatment by each landmark?
+    analysis_type: longitudinal
+    target_population: Generated patients eligible under ARPI-ELIG-SYN-v2.0.
+    study_population: Eligible records observable from eligibility to event, censor, or horizon.
+    numerator: Eligible records with a valid treatment start on or before the landmark.
+    denominator: Eligible records, with early censoring reported separately rather than as failure.
+    eligibility: eligibility_flag = true and eligibility_date is observed.
+    time_zero: eligibility_date
+    outcome_event: first treatment_start_date
+    observation_window: 30, 60, and 90 days after eligibility.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Censor-aware counts/proportions, Kaplan-Meier net event-free survival, and Aalen-Johansen cumulative incidence.
+    sensitivity_analyses: [30_day_landmark, 60_day_landmark, 90_day_landmark]
+    required_source_variables:
+      - eligibility.eligibility_flag
+      - eligibility.eligibility_date
+      - treatment_episode.treatment_start_date
+      - observation.death_date
+      - observation.loss_to_follow_up_date
+      - observation.observation_end_date
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+
+  - <<: *defaults
+    analysis_id: censoring_audit
+    research_question: How much follow-up ends before each analytical landmark and for what reason?
+    analysis_type: longitudinal
+    target_population: Every generated record entering a longitudinal analysis.
+    study_population: Records with a valid time zero and governed observation boundary.
+    numerator: Records ending follow-up by each explicitly classified reason.
+    denominator: Records entering the corresponding longitudinal analysis.
+    eligibility: Valid time zero not after censor_date.
+    time_zero: Analysis-specific index date.
+    outcome_event: Censoring or competing-event classification.
+    observation_window: Analysis-specific horizon, up to 365 days for current primary outputs.
+    competing_events: [death, switch]
+    censoring_events: [loss_to_follow_up, administrative_data_end, analysis_horizon]
+    estimator: Counts, proportions, and risk-set reconciliation.
+    required_source_variables:
+      - observation.censor_date
+      - observation.censor_reason
+      - observation.death_date
+      - observation.loss_to_follow_up_date
+      - observation.observation_end_date
+    reviewer_status: ENGINEERING DEFINITION
+
+  - <<: *defaults
+    analysis_id: persistence_landmark
+    research_question: What fraction of evaluable generated initiators meets the operational persistence rule at 12 months?
+    analysis_type: longitudinal
+    target_population: Generated records initiating a regimen for which persistence is applicable.
+    study_population: Eligible 90-day initiators observable through 12 months or with an earlier classified event.
+    numerator: Evaluable records classified PERSISTENT at 12 months.
+    denominator: Evaluable eligible 90-day initiators; censored and NOT_APPLICABLE records are excluded and reported.
+    eligibility: initiation_90d_status = INITIATED_WITHIN_90D and persistence status is evaluable.
+    time_zero: treatment_start_date
+    outcome_event: First non-restarted discontinuation under the configured permissible refill gap.
+    observation_window: 365 days after treatment initiation.
+    competing_events: [switch, death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Landmark proportion plus time-to-discontinuation Kaplan-Meier and Aalen-Johansen outputs.
+    sensitivity_analyses: [30_day_permissible_gap, 60_day_permissible_gap, 90_day_permissible_gap]
+    required_source_variables:
+      - treatment_episode.treatment_start_date
+      - prescription_event.service_date
+      - prescription_event.days_supply
+      - patient_journey.discontinuation_date
+      - patient_journey.switch_date
+      - patient_journey.persistence_12m_status
+      - observation.censor_date
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+
+  - <<: *defaults
+    analysis_id: time_to_initiation
+    research_question: How long after synthetic eligibility does observed treatment initiation occur?
+    analysis_type: longitudinal
+    target_population: Generated eligible treatment candidates.
+    study_population: Eligible records with valid eligibility and observation dates.
+    numerator: Cumulative observed initiations through each event time.
+    denominator: Risk set immediately before that time.
+    eligibility: eligibility_flag = true.
+    time_zero: eligibility_date
+    outcome_event: treatment_start_date
+    observation_window: 365 days after eligibility, with 30/60/90-day views.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end, analysis_horizon]
+    estimator: Kaplan-Meier with Greenwood log-log bands and Aalen-Johansen cumulative incidence.
+    sensitivity_analyses: [landmark_windows, competing_risk_absolute_probability]
+    required_source_variables:
+      - patient_journey.eligibility_date
+      - patient_journey.treatment_start_date
+      - patient_journey.death_date
+      - patient_journey.loss_to_follow_up_date
+      - patient_journey.observation_end_date
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+
+  - <<: *defaults
+    analysis_id: referral_pathway
+    research_question: How often are generated referrals completed and how long do they take?
+    analysis_type: descriptive
+    target_population: Generated patients with an observed referral.
+    study_population: Referral rows with valid referral dates.
+    numerator: Completed referrals or referrals within a delay band.
+    denominator: Generated referrals entering the corresponding summary.
+    eligibility: referral_date is observed and does not follow censor_date.
+    time_zero: referral_date
+    outcome_event: completion_date with referral_status = completed.
+    observation_window: Referral date to completion or governed censoring boundary.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Completion proportion and empirical delay distribution.
+    sensitivity_analyses: [status_definition, delay_bands]
+    required_source_variables:
+      - referral.referral_date
+      - referral.completion_date
+      - referral.referral_status
+      - observation.censor_date
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+
+  - <<: *defaults
+    analysis_id: segmented_treatment_gap
+    research_question: How do synthetic initiation summaries vary across configured segments?
+    analysis_type: exploratory association
+    target_population: Generated eligible treatment candidates.
+    study_population: Same governed initiation cohort, stratified without changing its definition.
+    numerator: Evaluable eligible records not initiated by day 90 within each segment.
+    denominator: Evaluable eligible records within the same segment.
+    eligibility: initiation_funnel eligibility and evaluability criteria.
+    time_zero: eligibility_date
+    outcome_event: no initiation by day 90 among observable records.
+    observation_window: 90 days.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Stratum-specific descriptive proportions; no adjusted causal contrast.
+    sensitivity_analyses: [market, care_setting, disease_state, age_band]
+    required_source_variables:
+      - patient_journey.market_code
+      - patient_journey.initial_care_setting
+      - patient_journey.eligibility_flag
+      - patient_journey.initiation_90d_status
+    reviewer_status: ENGINEERING DEFINITION
+
+  - <<: *defaults
+    analysis_id: missingness_profile_and_truth_recovery
+    research_question: How do configured missingness mechanisms distort an estimate whose synthetic truth is known?
+    analysis_type: descriptive
+    target_population: Complete generated pre-missingness feature records.
+    study_population: Records after each configured MCAR, MAR, MNAR, or existing stress-test mask.
+    numerator: Observed or weighted sum of the synthetic PSA feature.
+    denominator: Observed records, weighted effective sample, or all generated truth records as specified.
+    eligibility: Finite complete synthetic truth value.
+    time_zero: NOT_APPLICABLE
+    outcome_event: Missingness indicator and recovered mean estimate.
+    observation_window: Cross-sectional at generated diagnosis.
+    competing_events: []
+    censoring_events: []
+    estimator: Complete-case mean; oracle inverse-probability weighted example for known synthetic MAR probabilities; MNAR delta adjustment.
+    assumptions:
+      - Missingness mechanisms are engineering stress tests, not inferred from real data.
+      - Oracle weighting uses known generation probabilities and does not establish MAR in practice.
+    sensitivity_analyses: [MCAR, MAR, MNAR, configured_existing, delta_adjustment, tipping_point]
+    required_source_variables:
+      - diagnosis.psa_value
+      - patient.market_code
+      - patient.access_index
+      - patient.comorbidity_score
+    reviewer_status: ENGINEERING DEFINITION
+
+  - <<: *defaults
+    analysis_id: active_surveillance_pathway
+    research_question: Are generated localized active-surveillance pathways kept separate from advanced-treatment populations?
+    analysis_type: longitudinal
+    target_population: Generated localized low/intermediate-risk records.
+    study_population: Records satisfying the synthetic active-surveillance eligibility rule.
+    numerator: Starts, exits, reclassifications, or treatment transitions.
+    denominator: Active-surveillance eligible or started records, as labelled.
+    eligibility: active_surveillance_eligible_flag = true.
+    time_zero: active_surveillance_start_date
+    outcome_event: exit, reclassification, or post-exit treatment.
+    observation_window: Start to event or governed censor date.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: State-transition counts and empirical time distributions.
+    sensitivity_analyses: [risk_group_eligibility, minimum_monitoring_days]
+    required_source_variables:
+      - active_surveillance.as_start_date
+      - active_surveillance.as_exit_date
+      - active_surveillance.as_reclassification_date
+      - treatment_episode.treatment_start_date
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+
+  - <<: *defaults
+    analysis_id: provenance_and_reproducibility
+    research_question: Can each generated result be traced to one code/configuration/data identity and reproduced?
+    analysis_type: descriptive
+    target_population: Generated release and analytical artifacts.
+    study_population: Files declared in release, EDA, simulation, scientific, and presentation manifests.
+    numerator: Artifacts with matching identity, size, and SHA-256.
+    denominator: All artifacts declared by the applicable manifest.
+    eligibility: Artifact is declared as part of the governed candidate workflow.
+    time_zero: generation_timestamp
+    outcome_event: Hash/identity consistency pass or failure.
+    observation_window: One immutable build execution.
+    competing_events: []
+    censoring_events: []
+    estimator: Exact equality and cryptographic hash reconciliation.
+    sensitivity_analyses: [clean_clone_reproduction, supported_python_matrix]
+    required_source_variables:
+      - release_manifest.json
+      - run_metadata.json
+      - artifact manifests
+    reviewer_status: ENGINEERING DEFINITION
+
+  - <<: *defaults
+    analysis_id: predict_non_initiation_90d
+    research_question: Can baseline information rank generated eligible records by non-initiation within 90 days?
+    analysis_type: predictive
+    target_population: Generated eligible records at eligibility time zero.
+    study_population: Evaluable records assigned to leakage-safe train/validation/test splits.
+    numerator: Evaluable records not initiated within 90 days.
+    denominator: Evaluable eligible records in the relevant split.
+    eligibility: eligibility_flag = true and initiation_90d_status is not censored.
+    time_zero: eligibility_date
+    outcome_event: NOT_INITIATED_WITHIN_90D.
+    observation_window: 90 days.
+    competing_events: [death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Penalized logistic baseline with discrimination, calibration, Brier score, and subgroup diagnostics.
+    sensitivity_analyses: [bootstrap_performance, subgroup_stability, temporal_or_market_holdout]
+    required_source_variables:
+      - patient_journey baseline predictor allow-list
+      - patient_split.split
+      - feature_timing.predictor_allowed_flag
+      - patient_journey.initiation_90d_status
+    reviewer_status: NOT YET VALIDATED
+
+  - <<: *defaults
+    analysis_id: predict_discontinuation_12m
+    research_question: Can baseline information rank generated initiators by operational discontinuation within 12 months?
+    analysis_type: predictive
+    target_population: Generated treatment initiators for whom persistence is applicable.
+    study_population: Evaluable initiators in leakage-safe splits.
+    numerator: Records classified DISCONTINUED within 12 months.
+    denominator: Evaluable applicable initiators in the relevant split.
+    eligibility: Valid treatment_start_date and evaluable 12-month persistence status.
+    time_zero: treatment_start_date
+    outcome_event: Non-restarted operational discontinuation.
+    observation_window: 365 days.
+    competing_events: [switch, death]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Penalized logistic baseline; time-to-event model remains proposed.
+    sensitivity_analyses: [30_60_90_day_gap_rules, bootstrap_performance, competing_risk_output]
+    required_source_variables:
+      - patient_journey baseline-at-treatment predictor allow-list
+      - patient_journey.persistence_12m_status
+      - patient_split.split
+      - feature_timing.predictor_allowed_flag
+    reviewer_status: NOT YET VALIDATED
+
+  - <<: *defaults
+    analysis_id: predict_treatment_switch
+    research_question: Can permitted baseline information rank generated initiators by later treatment switch?
+    analysis_type: predictive
+    target_population: Generated treatment initiators.
+    study_population: Initiators with determinable switch status in leakage-safe splits.
+    numerator: Records with an observed switch after treatment start and before censoring.
+    denominator: Evaluable generated initiators in the relevant split.
+    eligibility: treatment_initiated = true.
+    time_zero: treatment_start_date
+    outcome_event: switch_date
+    observation_window: Treatment start to 365 days or governed boundary.
+    competing_events: [death, discontinuation]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Penalized logistic exploratory prediction baseline.
+    sensitivity_analyses: [event_priority, horizon, subgroup_stability]
+    required_source_variables:
+      - patient_journey baseline-at-treatment predictor allow-list
+      - patient_journey.switch_date
+      - patient_split.split
+    reviewer_status: NOT YET VALIDATED
+
+  - <<: *defaults
+    analysis_id: predict_restart_after_gap
+    research_question: Can permitted pre-gap information rank generated discontinuers by later restart?
+    analysis_type: predictive
+    target_population: Generated records with an operational treatment gap/discontinuation.
+    study_population: Evaluable discontinuers with a leakage-safe prediction index.
+    numerator: Records with a restart after the qualifying gap.
+    denominator: Evaluable generated discontinuers in the relevant split.
+    eligibility: Qualifying discontinuation/gap occurs before the prediction index and censoring.
+    time_zero: qualifying gap or discontinuation date
+    outcome_event: restart after gap.
+    observation_window: Prediction index to 365 days or governed boundary.
+    competing_events: [death, switch]
+    censoring_events: [loss_to_follow_up, administrative_data_end]
+    estimator: Penalized logistic exploratory prediction baseline.
+    sensitivity_analyses: [gap_definition, prediction_index, horizon]
+    required_source_variables:
+      - patient_journey restart_flag
+      - patient_journey discontinuation_date
+      - patient_journey switch_date
+      - patient_split.split
+      - feature_timing.predictor_allowed_flag
+    reviewer_status: NOT YET VALIDATED

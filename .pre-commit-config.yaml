@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff analytical source
+        entry: uv run ruff check src tests eda
+        language: system
+        pass_filenames: false
+      - id: ruff-format
+        name: Ruff format check
+        entry: uv run ruff format --check src tests eda
+        language: system
+        pass_filenames: false
+      - id: mypy
+        name: mypy analytical source
+        entry: uv run python -m mypy src
+        language: system
+        pass_filenames: false
+      - id: repository-baseline
+        name: repository baseline checks
+        entry: uv run python -m prostate_journey.cli industry-check --allow-missing-release
+        language: system
+        pass_filenames: false

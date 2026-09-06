@@ -81,6 +81,9 @@ Describe whether synthetic referral completion and delay are associated with tre
 
 **Base population**
 - `treatment_initiated = true`
+- `persistence_12m_status != NOT_APPLICABLE` for the ARPI-persistence denominator;
+  localized treatment episodes observed after active-surveillance exit are retained as
+  `NOT_APPLICABLE` and are not persistence failures.
 
 **Comparison groups**
 - Persistent: `persistent_12m = true`

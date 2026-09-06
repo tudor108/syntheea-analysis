@@ -169,7 +169,7 @@ def test_final_scorecard_requires_all_11_dimensions_to_be_perfect(tmp_path):
 
 def test_manifests_separate_archives_and_final_checksums(tmp_path):
     project = tmp_path / "project"
-    for directory in ("src", "tests", "scripts", "configs", "docs"):
+    for directory in ("src", "tests", "scripts", "configs", "docs", "contracts"):
         (project / directory).mkdir(parents=True)
         (project / directory / "evidence.txt").write_text(directory, encoding="utf-8")
     for filename in ("pyproject.toml", "requirements.txt", "README.md", "Makefile"):
@@ -244,7 +244,11 @@ def test_manifests_separate_archives_and_final_checksums(tmp_path):
         test_report=test_report,
         archive_hashes=archives,
     )
-    assert manifest["decision"] == "CERTIFIED — READY FOR BAYER ANALYSIS"
+    assert manifest["decision"] == "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED"
+    assert manifest["formal_compliance_claim"] is False
+    assert manifest["overall_readiness_scope"] == "legacy internal synthetic release contract only"
+    assert manifest["scientific_stage4_external_approvals_required"] is True
+    assert "NOT PILOT OR PRODUCTION READY" in manifest["scientific_stage4_status"]
     assert not (release / ".release-in-progress").exists()
     persisted_manifest = json.loads((release / "release_manifest.json").read_text(encoding="utf-8"))
     assert persisted_manifest == manifest
@@ -260,7 +264,7 @@ def test_package_orchestration_passes_reconciliation_into_evidence(tmp_path, mon
 
     monkeypatch.setattr(pipeline, "TABLES", ("patient", "outcome"))
     project = tmp_path / "project"
-    for directory in ("src", "tests", "scripts", "configs", "docs"):
+    for directory in ("src", "tests", "scripts", "configs", "docs", "contracts"):
         (project / directory).mkdir(parents=True)
         (project / directory / "tracked.txt").write_text(directory, encoding="utf-8")
     for filename in ("pyproject.toml", "requirements.txt", "README.md", "Makefile"):
@@ -403,7 +407,7 @@ def test_package_orchestration_passes_reconciliation_into_evidence(tmp_path, mon
         test_runner=test_runner,
         git_runner=git_runner,
     )
-    assert manifest["decision"] == "CERTIFIED — READY FOR BAYER ANALYSIS"
+    assert manifest["decision"] == "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED"
     assert manifest["gate_summary"]["final_scorecard"]["dimensions"] == 11
     assert (release / "analytical_dataset" / "docs" / "ER_SCHEMA.md").is_file()
     assert (release / "qa_evidence" / "test_report.xml").is_file()

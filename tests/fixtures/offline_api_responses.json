@@ -1,0 +1,20 @@
+{
+  "schema_version": "AI-RECORDED-RESPONSES-v1.0",
+  "valid_evidence": {
+    "direct_answer": "The certified synthetic result is reported with its denominator.",
+    "certified_evidence": ["Use only the deterministic metric attached to this response."],
+    "explanation": ["The denominator is part of the analytical contract."],
+    "limitation": ["Synthetic scenario output is not clinical or real-world evidence."],
+    "proposed_next_analysis": [],
+    "not_found_in_current_artifacts": [],
+    "evidence_source_ids": [],
+    "suggested_tactic_id": null,
+    "evidence_status": "directly evidenced"
+  },
+  "malformed_model_output": "not-json",
+  "partial_stream": [
+    {"type":"response.output_text.delta","delta":"{\"direct_answer\":"},
+    {"type":"response.failed"}
+  ],
+  "file_search_unavailable": {"category":"transient_provider_error","fallback":"local_allowlisted_retrieval"}
+}

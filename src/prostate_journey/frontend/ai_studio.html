@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AI Analysis Studio · Governed synthetic analytics</title>
+  <link rel="stylesheet" href="/assets/ai_studio.css">
+  <script src="/assets/ai_studio.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to analytical workspace</a>
+
+  <div class="trust-bar" role="status" aria-live="polite">
+    <div>
+      <strong>SYNTHETIC SCENARIO — NOT REAL PATIENT, BAYER, CLINICAL, COMMERCIAL, OR POPULATION DATA</strong>
+      <span id="release-context">Resolving certified release…</span>
+    </div>
+    <span id="trust-mode" class="trust-mode">ASK THE EVIDENCE · READ ONLY</span>
+  </div>
+  <div class="interactive-boundary" role="note">
+    <strong>INTERACTIVE SYNTHETIC ANALYSIS — NOT PART OF THE CERTIFIED RELEASE</strong>
+    <span>Certified evidence is read-only. Any re-run or proposed method stays in the isolated experiment namespace.</span>
+  </div>
+
+  <header class="product-header">
+    <div>
+      <p class="eyebrow">Prostate Patient Journey · governed analytical companion</p>
+      <h1>AI Analysis Studio</h1>
+      <p class="lede">Move from certified evidence to isolated, reviewable synthetic analysis without changing the certified product.</p>
+    </div>
+    <div class="header-actions">
+      <a id="analytics-link" class="button secondary" href="http://127.0.0.1:8080/" target="_blank" rel="noreferrer">Open deterministic Analytics</a>
+      <button id="presentation-mode" class="button primary" type="button" aria-pressed="false">Presentation mode</button>
+      <button id="reset-session" class="button secondary" type="button">Reset workspace</button>
+    </div>
+  </header>
+
+  <section id="demo-controls" class="demo-controls" aria-labelledby="demo-step-title" hidden>
+    <div><p class="eyebrow">Five-minute deterministic demonstration</p><h2 id="demo-step-title" tabindex="-1">Step 1 of 10</h2><p id="demo-step-copy"></p></div>
+    <div class="demo-actions"><button id="demo-previous" class="button secondary" type="button">Previous</button><button id="demo-next" class="button primary" type="button">Next</button><button id="demo-reset" class="button secondary" type="button">Reset demo</button><button id="demo-exit" class="button secondary" type="button">Exit presentation</button></div>
+  </section>
+
+  <section class="context-strip" aria-label="Active analytical context">
+    <div><span>Parent release</span><strong id="release-short">Loading…</strong></div>
+    <div><span>Scenario</span><strong id="scenario-value">ALL · certified view</strong></div>
+    <div><span>Routing</span><strong id="model-value">Loading…</strong></div>
+    <div><span>Evidence</span><strong id="evidence-count">Loading…</strong></div>
+    <div class="cost-context"><span>Session cost</span><strong id="session-cost">$0.0000 / $2.0000</strong><button id="open-cost" class="context-action" type="button">Cost & usage</button></div>
+  </section>
+
+  <nav class="mode-nav" aria-label="AI Analysis Studio modes">
+    <div class="mode-tabs" role="tablist" aria-label="Choose a governed mode">
+      <button id="tab-evidence" class="mode-tab active" type="button" role="tab" aria-selected="true" aria-controls="view-evidence" data-view="evidence">Ask the Evidence</button>
+      <button id="tab-tactics" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="view-tactics" data-view="tactics">Explore Tactics</button>
+      <button id="tab-specialist" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="view-specialist" data-view="specialist">Specialist Analysis</button>
+      <button id="tab-history" class="mode-tab" type="button" role="tab" aria-selected="false" aria-controls="view-history" data-view="history">Run History</button>
+    </div>
+    <p id="mode-description">Read-only answers grounded in one certified aggregate evidence release.</p>
+  </nav>
+
+  <main id="main-content">
+    <section id="view-evidence" class="mode-view" role="tabpanel" aria-labelledby="tab-evidence">
+      <div class="workspace">
+        <aside class="tactic-panel" aria-labelledby="ask-tactic-title">
+          <div class="panel-heading">
+            <div><p class="eyebrow">Canonical registry</p><h2 id="ask-tactic-title">Pin a tactic</h2></div>
+            <span id="ask-tactic-count" class="count-badge">0</span>
+          </div>
+          <label class="field-label" for="market-select">Synthetic market scenario</label>
+          <select id="market-select"><option value="ALL">ALL · certified aggregate</option></select>
+          <label class="field-label" for="source-filter">Evidence source</label>
+          <select id="source-filter">
+            <option value="ALL">All approved sources</option>
+            <option value="AGGREGATE">Aggregate results</option>
+            <option value="METHODOLOGY">Methodology and model cards</option>
+            <option value="GOVERNANCE">Governance, QA, and manifests</option>
+          </select>
+          <p class="field-help">The active population and denominator remain visible in every supported answer.</p>
+          <div id="ask-tactic-list" class="tactic-list" aria-live="polite"><p class="loading-state">Loading tactics…</p></div>
+        </aside>
+
+        <section id="conversation" class="conversation-panel" aria-labelledby="conversation-title">
+          <div class="panel-heading conversation-heading">
+            <div><p class="eyebrow">Release-grounded conversation</p><h2 id="conversation-title">Ask a certified analytical question</h2></div>
+            <span id="service-status" class="status-chip waiting">Connecting</span>
+          </div>
+          <div class="guardrail-note"><strong>Permitted:</strong> aggregate synthetic evidence, methods, denominators, limitations, and provenance. <strong>Prohibited:</strong> treatment or patient decisions, causal claims, real-market ranking, Bayer performance, or production use.</div>
+          <div class="starter-group" aria-label="Starter questions">
+            <button type="button" class="starter" data-question="What is the certified 90-day initiation result and its denominator?">90-day initiation</button>
+            <button type="button" class="starter" data-question="Explain 12-month persistence, evaluability, and censoring.">Persistence denominator</button>
+            <button type="button" class="starter" data-question="What does the referral completion tactic show, and what are its limitations?">Referral completion</button>
+            <button type="button" class="starter" data-question="Which model evidence is available and what is its verified disposition?">Model disposition</button>
+          </div>
+          <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false">
+            <article class="message assistant welcome"><div class="message-label">Evidence Studio</div><p>Ask about cohorts, initiation, persistence, referrals, missingness, scenarios, methods, or governance. Supported answers are bound to one certified synthetic release.</p></article>
+          </div>
+          <form id="ask-form" class="composer">
+            <label for="question">Question for the certified evidence</label>
+            <textarea id="question" maxlength="2400" rows="3" placeholder="Why is the persistence denominator smaller than the initiation cohort?" required></textarea>
+            <div class="composer-footer"><span id="active-tactic" class="active-tactic">No tactic pinned</span><span id="character-count">0 / 2400</span><button id="send-question" class="button primary" type="submit">Ask the evidence</button></div>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-tactics" class="mode-view" role="tabpanel" aria-labelledby="tab-tactics" hidden>
+      <div class="section-shell">
+        <div class="section-heading">
+          <div><p class="eyebrow">Tactic Library v2</p><h2>Explore governed analytical tactics</h2><p>Start in plain language, then open method, denominator, evidence, and implementation detail.</p></div>
+          <span id="tactic-count" class="count-badge">0 tactics</span>
+        </div>
+        <div class="filter-bar filter-bar-rich">
+          <label for="tactic-search">Search tactics<input id="tactic-search" type="search" placeholder="Persistence, referral, missingness…"></label>
+          <label for="analysis-type-filter">Analysis type<select id="analysis-type-filter"><option value="ALL">All analysis types</option></select></label>
+          <label for="journey-stage-filter">Journey stage<select id="journey-stage-filter"><option value="ALL">All journey stages</option></select></label>
+          <label for="methodology-filter">Methodology<select id="methodology-filter"><option value="ALL">All methodologies</option></select></label>
+          <label for="market-filter">Market applicability<select id="market-filter"><option value="ALL">All market applicability</option></select></label>
+          <label for="temporal-filter">Study view<select id="temporal-filter"><option value="ALL">Longitudinal and cross-sectional</option></select></label>
+          <label for="evidence-type-filter">Evidence type<select id="evidence-type-filter"><option value="ALL">Descriptive and predictive</option></select></label>
+          <label for="review-filter">SME review<select id="review-filter"><option value="ALL">All reviewer states</option><option value="REQUIRED">SME review required</option><option value="NOT_REQUIRED">No SME review required</option></select></label>
+        </div>
+        <div id="tactic-catalogue" class="catalogue-grid" aria-live="polite"><p class="loading-state">Loading canonical tactic contracts…</p></div>
+      </div>
+    </section>
+
+    <section id="view-specialist" class="mode-view" role="tabpanel" aria-labelledby="tab-specialist" hidden>
+      <div class="specialist-shell">
+        <section class="analysis-builder" aria-labelledby="builder-title">
+          <div class="section-heading compact"><div><p class="eyebrow">Controlled orchestration</p><h2 id="builder-title">Build an isolated analysis</h2></div><span class="badge proposed">EXPLORATORY · SYNTHETIC</span></div>
+          <p class="guardrail-note">The assistant may route and plan. Deterministic local Python performs calculations. A new proposal can run only in the no-code declarative sandbox. Nothing here can overwrite certified evidence.</p>
+          <p id="proposed-method-warning" class="proposed-method-warning" hidden><strong>PROPOSED METHOD — REQUIRES ANALYTICAL REVIEW</strong><span>A methodology proposal is not certified evidence and cannot become operational through this workspace.</span></p>
+          <ol class="guided-steps" aria-label="Specialist analysis workflow">
+            <li>Your question</li><li>Recommended expert lens</li><li>Recommended existing tactics</li><li>Proposed AnalysisSpec</li><li>Parameter changes</li><li>Population and denominator preview</li><li>Assumptions and limitations</li><li>Estimated cost</li><li>Confirm run</li><li>Execution and QA</li><li>Result</li><li>Export or submit for review</li>
+          </ol>
+          <section class="specialist-conversation" aria-labelledby="specialist-conversation-title"><h3 id="specialist-conversation-title">Chat and form synchronization</h3><div id="specialist-transcript" class="specialist-transcript" role="log" aria-live="polite"><p>Describe a permitted analysis in natural language. Detected parameters will be reflected in the controls and the typed AnalysisSpec.</p></div><p id="form-state-summary" class="field-help" role="status">Form state: registered defaults.</p></section>
+          <form id="specialist-form" class="builder-form">
+            <label for="expert-lens">Expert lens<select id="expert-lens" required></select><span id="lens-purpose" class="field-help"></span></label>
+            <label for="specialist-tactic">Registered tactic or proposed method<select id="specialist-tactic"><option value="">Propose a new analysis (unverified)</option></select></label>
+            <label class="span-two" for="analysis-request">Analytical request<textarea id="analysis-request" maxlength="2400" rows="4" placeholder="Example: Re-run initiation at 60 days for US and DE, keeping denominators separate." required></textarea></label>
+            <label for="run-market">Market scenarios<select id="run-market" multiple size="4"><option value="ALL" selected>ALL · combined certified aggregate</option></select><span class="field-help">Use Ctrl/Command or Shift to select multiple configured synthetic markets.</span></label>
+            <label for="initiation-window">Initiation window<select id="initiation-window"><option value="30">30 days</option><option value="60">60 days</option><option value="90" selected>90 days</option></select></label>
+            <label for="persistence-gap">Persistence gap<select id="persistence-gap"><option value="30">30 days</option><option value="60" selected>60 days</option><option value="90">90 days</option></select></label>
+            <label for="segment-mode">Segmentation<select id="segment-mode"><option value="market">Market</option><option value="care_setting">Care setting</option></select></label>
+            <label for="care-setting">Care setting<select id="care-setting"><option value="">All configured settings</option></select></label>
+            <label for="scenario-scope">Scenario assumptions<select id="scenario-scope" disabled><option value="certified_synthetic_scenario">Current certified synthetic scenario only</option></select><span class="field-help">Low/base/high regenerated simulation scenarios are unavailable in the active v2.1 release and are not silently substituted.</span></label>
+            <label class="check-label span-two" for="use-model-router"><input id="use-model-router" type="checkbox" checked> Use gpt-5.6-luna for bounded request classification and parameter extraction. Local validation remains authoritative.</label>
+            <label class="check-label span-two" for="use-model-summary"><input id="use-model-summary" type="checkbox"> Add an optional bounded Luna narrative only after QA passes. Leave off for the deterministic presentation path.</label>
+            <div class="span-two form-actions"><button id="preview-analysis" class="button primary" type="submit">Validate & preview</button><span id="preview-status" class="field-help" aria-live="polite">No analysis has been prepared.</span></div>
+          </form>
+        </section>
+
+        <section id="analysis-preview" class="preview-panel" aria-labelledby="preview-title">
+          <div class="panel-heading"><div><p class="eyebrow">Pre-execution contract</p><h2 id="preview-title">Analysis preview</h2></div><div id="preview-badges" class="badge-row"></div></div>
+          <div id="preview-empty" class="empty-state"><strong>Nothing runs silently.</strong><p>Prepare a request to see the exact specification, parameter diff, denominator, cost, checks, and required confirmation.</p></div>
+          <div id="preview-content" hidden>
+            <div id="workflow-timeline" class="workflow-timeline" aria-label="Analysis workflow"></div>
+            <div id="spec-summary" class="spec-summary"></div>
+            <div id="validation-summary"></div>
+            <h3>Exact parameter diff</h3><div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Certified/default</th><th>Proposed</th><th>Impact</th></tr></thead><tbody id="diff-body"></tbody></table></div>
+            <h3>Denominator preview</h3><div id="denominator-change" class="denominator-alert"></div><div class="table-wrap"><table><thead><tr><th>Market</th><th>Population</th><th>Numerator</th><th>Denominator</th><th>Excluded</th><th>Censored</th><th>Evaluability</th></tr></thead><tbody id="denominator-body"></tbody></table></div>
+            <div id="cost-card" class="cost-card"></div>
+            <details open><summary>Assumptions, limitations, and required review</summary><div id="assumptions-limitations" class="assumption-grid"></div></details>
+            <details><summary>Full AnalysisSpec</summary><pre id="spec-json" class="source-excerpt"></pre></details>
+            <div class="confirmation-zone">
+              <button id="plan-specialist" class="button secondary" type="button" hidden>Approve budget & develop Terra plan</button>
+              <button id="run-analysis" class="button danger" type="button" disabled>RUN THIS ANALYSIS</button>
+              <p id="confirmation-help">Execution stays disabled until validation, cost, parameter diff, denominator preview, and any required method planning pass.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="run-panel" aria-labelledby="result-title">
+          <div class="panel-heading"><div><p class="eyebrow">Isolated aggregate output</p><h2 id="result-title">Run result</h2></div><div id="result-badges" class="badge-row"></div></div>
+          <div id="result-empty" class="empty-state"><p>No interactive run in this session.</p></div>
+          <div id="result-content" hidden></div>
+        </section>
+
+      </div>
+    </section>
+
+    <section id="view-history" class="mode-view" role="tabpanel" aria-labelledby="tab-history" hidden>
+      <div class="section-shell history-shell">
+        <div class="section-heading"><div><p class="eyebrow">Isolated experiment lineage</p><h2 id="history-title">Run history</h2><p>Interactive runs remain outside certified Analytics and expire from further actions after the configured retention window.</p></div><button id="refresh-runs" class="button secondary" type="button">Refresh history</button></div>
+        <label class="history-filter" for="history-filter">Run status<select id="history-filter"><option value="ALL">All run categories</option><option value="successful_interactive_rerun">Successful interactive re-runs</option><option value="proposed_custom_analysis">Proposed custom analyses</option><option value="failed_validation">Failed validation</option><option value="submitted_for_review">Submitted for review</option><option value="expired">Expired runs</option></select></label>
+        <div id="run-history" class="run-history-groups" aria-live="polite"><p class="loading-state">Loading isolated runs…</p></div>
+        <div class="compare-box"><h3>Compare two compatible runs</h3><p class="field-help">Comparison keeps parent release, methods, and denominators visible. It never ranks markets.</p><div class="compare-controls"><label for="left-run">Left run<select id="left-run"></select></label><label for="right-run">Right run<select id="right-run"></select></label><button id="compare-runs" class="button secondary" type="button">Compare runs</button></div><div id="comparison-result" aria-live="polite"></div></div>
+        <details class="operational-states"><summary>Professional empty, loading, and error states</summary><ul><li>Retrieving evidence: “Loading certified aggregate evidence…”</li><li>No evidence: “No certified aggregate evidence supports this question.”</li><li>Unsupported question: “This request is outside the approved analytical scope.”</li><li>Invalid parameters: “One or more parameters are incompatible with the registered method.”</li><li>No denominator: “No evaluable denominator is available under the selected definition.”</li><li>Budget exceeded: “The estimated maximum cost exceeds the remaining session budget.”</li><li>API unavailable: “AI evidence is temporarily unavailable. Certified Analytics remains available.”</li><li>Execution pending: “Execution is waiting for explicit RUN THIS ANALYSIS confirmation.”</li><li>Execution failed: “The isolated analysis did not complete. No certified output changed.”</li><li>QA failed: “Post-run QA failed. Interpretation and export are suppressed.”</li><li>Session expired: “This session expired. Start a new workspace to continue.”</li><li>Run not found: “The requested interactive run could not be found.”</li><li>Run expired: “This interactive run is no longer available for action.”</li></ul></details>
+      </div>
+    </section>
+  </main>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="source-drawer" class="source-panel" role="dialog" aria-modal="true" aria-labelledby="source-title" aria-hidden="true" tabindex="-1">
+    <div class="panel-heading"><div><p class="eyebrow">Traceable context</p><h2 id="source-title">Evidence & provenance</h2></div><button id="close-source" class="icon-button" type="button" aria-label="Close evidence drawer">×</button></div>
+    <div id="source-content"><p>Select a tactic, source, or run manifest to inspect its bounded evidence.</p></div>
+  </aside>
+
+  <aside id="cost-drawer" class="source-panel cost-panel" role="dialog" aria-modal="true" aria-labelledby="cost-title" aria-hidden="true" tabindex="-1">
+    <div class="panel-heading"><div><p class="eyebrow">AI FinOps</p><h2 id="cost-title">Cost, tokens & safeguards</h2></div><button id="close-cost" class="icon-button" type="button" aria-label="Close cost drawer">×</button></div>
+    <p class="guardrail-note">Provider cost is reserved before each request and reconciled from metered token/tool usage. Deterministic local compute is tracked separately.</p>
+    <div id="cost-content"><p class="loading-state">Loading session usage…</p></div>
+  </aside>
+
+  <div id="announcer" class="sr-only" aria-live="assertive"></div>
+</body>
+</html>

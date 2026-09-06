@@ -21,9 +21,7 @@ SMALL_CELL_THRESHOLD = int(os.environ.get("LONGITUDINAL_SMALL_CELL_THRESHOLD", "
 
 # Only used when a selected component genuinely has no observed dispensing/administration
 # duration. Results that use these values must retain scenario_based=True.
-MISSING_SUPPLY_SCENARIOS_DAYS = _integer_tuple(
-    "LONGITUDINAL_MISSING_SUPPLY_SCENARIOS", "30,60,90"
-)
+MISSING_SUPPLY_SCENARIOS_DAYS = _integer_tuple("LONGITUDINAL_MISSING_SUPPLY_SCENARIOS", "30,60,90")
 
 if SMALL_CELL_THRESHOLD < 1:
     raise ValueError("LONGITUDINAL_SMALL_CELL_THRESHOLD must be positive")

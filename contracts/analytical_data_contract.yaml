@@ -1,0 +1,1370 @@
+contract_version: 2.2.0
+status: industry-readiness baseline; not a claim of regulatory or clinical compliance
+synthetic_data_only: true
+schema_source_release: BAYER_PROSTATE_PATIENT_JOURNEY_SYNTHETIC_v2.1.0_20260825T112627Z
+analysis_registry: contracts/analysis_registry.yaml
+event_hierarchy: configs/event_hierarchy.yaml
+simulation_scenarios: configs/simulation_scenarios.yaml
+real_data_evaluation_hooks: contracts/real_data_evaluation_hooks.yaml
+tables:
+  patient:
+    grain: one row per synthetic patient/archetype
+    primary_key: patient_id
+    foreign_keys: []
+    required_columns:
+    - patient_id
+    - source_patient_id
+    - source_archetype_id
+    - source_record_type
+    - birth_date
+    - index_date
+    - birth_year
+    - age_at_index
+    - sex
+    - market_code
+    - country
+    - market_depth
+    - region
+    - postal_code_prefix
+    - race
+    - ethnicity
+    - insurance_type
+    - access_index
+    - comorbidity_score
+    - frailty_proxy
+    - complexity_segment
+    - socioeconomic_proxy
+    - date_of_death
+    - synthetic_oversampling_flag
+    - population_representative_flag
+    - sampling_weight
+    - synthetic_scenario_version
+    non_nullable_fields:
+    - patient_id
+    - source_archetype_id
+    - source_record_type
+    - birth_date
+    - index_date
+    - birth_year
+    - age_at_index
+    - sex
+    - market_code
+    - country
+    - market_depth
+    - region
+    - postal_code_prefix
+    - access_index
+    - comorbidity_score
+    - frailty_proxy
+    - complexity_segment
+    - socioeconomic_proxy
+    - synthetic_oversampling_flag
+    - population_representative_flag
+    - sampling_weight
+    - synthetic_scenario_version
+    nullable_fields:
+    - source_patient_id
+    - race
+    - ethnicity
+    - insurance_type
+    - date_of_death
+    allowed_values:
+      market_code:
+      - AU
+      - CA
+      - CN
+      - DE
+      - FR
+      - JP
+      - US
+      market_depth:
+      - deep
+      - scan
+      sex:
+      - male
+    temporal_invariants:
+    - before_or_equal:
+      - birth_date
+      - index_date
+  diagnosis:
+    grain: one index prostate diagnosis per patient
+    primary_key: diagnosis_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - diagnosis_id
+    - patient_id
+    - market_code
+    - diagnosis_date
+    - prostate_cancer_flag
+    - prostate_stage
+    - localized_flag
+    - locally_advanced_flag
+    - metastatic_flag
+    - metastatic_date
+    - metastatic_site
+    - hormone_sensitive_flag
+    - hormone_sensitive_confirmation_date
+    - castration_resistant_flag
+    - castration_resistant_date
+    - risk_group
+    - psa_value
+    - gleason_primary_pattern
+    - gleason_secondary_pattern
+    - gleason_score
+    - isup_grade_group
+    - diagnosis_source
+    - clinical_state_model_version
+    - data_quality_flag
+    non_nullable_fields:
+    - diagnosis_id
+    - patient_id
+    - market_code
+    - diagnosis_date
+    - prostate_cancer_flag
+    - prostate_stage
+    - localized_flag
+    - locally_advanced_flag
+    - metastatic_flag
+    - metastatic_site
+    - hormone_sensitive_flag
+    - castration_resistant_flag
+    - risk_group
+    - diagnosis_source
+    - clinical_state_model_version
+    - data_quality_flag
+    nullable_fields:
+    - metastatic_date
+    - hormone_sensitive_confirmation_date
+    - castration_resistant_date
+    - psa_value
+    - gleason_primary_pattern
+    - gleason_secondary_pattern
+    - gleason_score
+    - isup_grade_group
+    allowed_values:
+      prostate_stage:
+      - localized
+      - locally_advanced
+      - metastatic
+      - unknown
+    temporal_invariants: []
+  disease_state_event:
+    grain: one dated disease-state event
+    primary_key: disease_state_event_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - disease_state_event_id
+    - patient_id
+    - market_code
+    - state_date
+    - state
+    - previous_state
+    - transition_reason
+    - clinical_state_model_version
+    - synthetic_event_flag
+    non_nullable_fields:
+    - disease_state_event_id
+    - patient_id
+    - market_code
+    - state_date
+    - state
+    - transition_reason
+    - clinical_state_model_version
+    - synthetic_event_flag
+    nullable_fields:
+    - previous_state
+    allowed_values:
+      state:
+      - localized
+      - locally_advanced
+      - mCRPC
+      - mHSPC
+      - metastatic_other
+      - unknown
+    temporal_invariants: []
+  eligibility:
+    grain: one versioned eligibility assessment per patient
+    primary_key: eligibility_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - eligibility_id
+    - patient_id
+    - market_code
+    - mhspc_flag
+    - eligibility_flag
+    - eligible_for_arpi
+    - eligibility_status
+    - eligibility_date
+    - eligibility_reason
+    - ineligibility_reason
+    - clinical_exclusion_reason
+    - contraindication_flag
+    - contraindication_reason
+    - data_sufficiency_flag
+    - possible_followup_days
+    - minimum_followup_required_days
+    - eligibility_rule_version
+    - source_assumption
+    - censor_date_at_generation
+    - synthetic_event_flag
+    non_nullable_fields:
+    - eligibility_id
+    - patient_id
+    - market_code
+    - mhspc_flag
+    - eligibility_flag
+    - eligible_for_arpi
+    - eligibility_status
+    - contraindication_flag
+    - data_sufficiency_flag
+    - possible_followup_days
+    - minimum_followup_required_days
+    - eligibility_rule_version
+    - source_assumption
+    - censor_date_at_generation
+    - synthetic_event_flag
+    nullable_fields:
+    - eligibility_date
+    - eligibility_reason
+    - ineligibility_reason
+    - clinical_exclusion_reason
+    - contraindication_reason
+    allowed_values: {}
+    temporal_invariants: []
+  organization:
+    grain: one synthetic organization
+    primary_key: organization_id
+    foreign_keys: []
+    required_columns:
+    - organization_id
+    - market_code
+    - region
+    - organization_type
+    - care_setting
+    - academic_flag
+    - multidisciplinary_team_flag
+    - synthetic_organization_flag
+    non_nullable_fields:
+    - organization_id
+    - market_code
+    - region
+    - organization_type
+    - care_setting
+    - academic_flag
+    - multidisciplinary_team_flag
+    - synthetic_organization_flag
+    nullable_fields: []
+    allowed_values: {}
+    temporal_invariants: []
+  provider:
+    grain: one stable provider-master row
+    primary_key: provider_id
+    foreign_keys:
+    - field: organization_id
+      target_table: organization
+      target_field: organization_id
+    required_columns:
+    - provider_id
+    - organization_id
+    - market_code
+    - region
+    - provider_specialty
+    - care_setting
+    - academic_flag
+    - annual_prostate_volume
+    - multidisciplinary_team_flag
+    - synthetic_provider_flag
+    non_nullable_fields:
+    - provider_id
+    - organization_id
+    - market_code
+    - region
+    - provider_specialty
+    - care_setting
+    - academic_flag
+    - annual_prostate_volume
+    - multidisciplinary_team_flag
+    - synthetic_provider_flag
+    nullable_fields: []
+    allowed_values:
+      provider_specialty:
+      - medical_oncology
+      - primary_care
+      - radiation_oncology
+      - urology
+      care_setting:
+      - academic_oncology
+      - community_oncology
+      - community_urology
+      - mixed_pathway
+    temporal_invariants: []
+  encounter:
+    grain: one dated patient-provider encounter
+    primary_key: encounter_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: provider_id
+      target_table: provider
+      target_field: provider_id
+    - field: organization_id
+      target_table: organization
+      target_field: organization_id
+    required_columns:
+    - encounter_id
+    - patient_id
+    - market_code
+    - provider_id
+    - organization_id
+    - encounter_date
+    - encounter_type
+    - provider_specialty
+    - care_setting
+    - sequence_number
+    - detail_level
+    - synthetic_event_flag
+    non_nullable_fields:
+    - encounter_id
+    - patient_id
+    - market_code
+    - provider_id
+    - organization_id
+    - encounter_date
+    - encounter_type
+    - provider_specialty
+    - care_setting
+    - sequence_number
+    - detail_level
+    - synthetic_event_flag
+    nullable_fields: []
+    allowed_values:
+      provider_specialty:
+      - medical_oncology
+      - primary_care
+      - radiation_oncology
+      - urology
+      care_setting:
+      - academic_oncology
+      - community_oncology
+      - community_urology
+      - mixed_pathway
+    temporal_invariants: []
+  referral:
+    grain: one provider-to-provider referral
+    primary_key: referral_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: source_provider_id
+      target_table: provider
+      target_field: provider_id
+    - field: destination_provider_id
+      target_table: provider
+      target_field: provider_id
+    - field: source_organization_id
+      target_table: organization
+      target_field: organization_id
+    - field: destination_organization_id
+      target_table: organization
+      target_field: organization_id
+    required_columns:
+    - referral_id
+    - patient_id
+    - market_code
+    - source_provider_id
+    - source_organization_id
+    - source_specialty
+    - destination_provider_id
+    - destination_organization_id
+    - destination_specialty
+    - referral_date
+    - completion_date
+    - referral_status
+    - referral_reason
+    - decision_owner_specialty
+    - detail_level
+    - synthetic_event_flag
+    non_nullable_fields:
+    - referral_id
+    - patient_id
+    - market_code
+    - source_provider_id
+    - source_organization_id
+    - source_specialty
+    - destination_provider_id
+    - destination_organization_id
+    - destination_specialty
+    - referral_date
+    - referral_status
+    - referral_reason
+    - decision_owner_specialty
+    - detail_level
+    - synthetic_event_flag
+    nullable_fields:
+    - completion_date
+    allowed_values:
+      referral_status:
+      - cancelled
+      - completed
+      - not_completed
+      - pending
+      - rejected
+    temporal_invariants:
+    - before_or_equal:
+      - referral_date
+      - completion_date
+  active_surveillance:
+    grain: one active-surveillance assessment/pathway record
+    primary_key: active_surveillance_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - active_surveillance_id
+    - patient_id
+    - market_code
+    - as_eligibility_flag
+    - as_eligibility_reason
+    - as_ineligibility_reason
+    - as_start_date
+    - as_status
+    - as_exit_date
+    - as_exit_reason
+    - as_reclassification_event_flag
+    - as_reclassification_date
+    - transition_to_treatment_flag
+    - planned_treatment_start_date
+    - time_from_as_exit_to_treatment_days
+    - monitoring_event_count
+    - active_surveillance_rule_version
+    - synthetic_event_flag
+    non_nullable_fields:
+    - active_surveillance_id
+    - patient_id
+    - market_code
+    - as_eligibility_flag
+    - as_status
+    - as_reclassification_event_flag
+    - transition_to_treatment_flag
+    - monitoring_event_count
+    - active_surveillance_rule_version
+    - synthetic_event_flag
+    nullable_fields:
+    - as_eligibility_reason
+    - as_ineligibility_reason
+    - as_start_date
+    - as_exit_date
+    - as_exit_reason
+    - as_reclassification_date
+    - planned_treatment_start_date
+    - time_from_as_exit_to_treatment_days
+    allowed_values: {}
+    temporal_invariants:
+    - before_or_equal:
+      - as_start_date
+      - as_exit_date
+    - before_or_equal:
+      - as_exit_date
+      - planned_treatment_start_date
+  observation:
+    grain: one observation/censoring record per patient
+    primary_key: observation_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - observation_id
+    - patient_id
+    - market_code
+    - observation_start_date
+    - observation_end_date
+    - last_observed_date
+    - loss_to_follow_up_date
+    - death_date
+    - censor_date
+    - censor_reason
+    - follow_up_days_from_diagnosis
+    - observation_rule_version
+    - synthetic_event_flag
+    non_nullable_fields:
+    - observation_id
+    - patient_id
+    - market_code
+    - observation_start_date
+    - observation_end_date
+    - last_observed_date
+    - censor_date
+    - censor_reason
+    - follow_up_days_from_diagnosis
+    - observation_rule_version
+    - synthetic_event_flag
+    nullable_fields:
+    - loss_to_follow_up_date
+    - death_date
+    allowed_values: {}
+    temporal_invariants:
+    - before_or_equal:
+      - observation_start_date
+      - last_observed_date
+    - before_or_equal:
+      - last_observed_date
+      - observation_end_date
+  treatment_episode:
+    grain: one longitudinal treatment line/episode
+    primary_key: treatment_episode_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: prescribing_provider_id
+      target_table: provider
+      target_field: provider_id
+    - field: previous_episode_id
+      target_table: treatment_episode
+      target_field: treatment_episode_id
+    required_columns:
+    - treatment_episode_id
+    - patient_id
+    - market_code
+    - treatment_line
+    - treatment_start_date
+    - treatment_end_date
+    - treatment_status
+    - treatment_intent
+    - episode_reason
+    - transition_type
+    - previous_episode_id
+    - prescribing_provider_id
+    - discontinuation_flag
+    - discontinuation_date
+    - discontinuation_reason
+    - switch_flag
+    - switch_date
+    - restart_flag
+    - restart_date
+    - temporary_gap_flag
+    - tracking_component_id
+    - prescription_event_count
+    - max_refill_gap_days
+    - synthetic_event_flag
+    non_nullable_fields:
+    - treatment_episode_id
+    - patient_id
+    - market_code
+    - treatment_line
+    - treatment_start_date
+    - treatment_end_date
+    - treatment_status
+    - treatment_intent
+    - episode_reason
+    - transition_type
+    - prescribing_provider_id
+    - discontinuation_flag
+    - switch_flag
+    - restart_flag
+    - temporary_gap_flag
+    - prescription_event_count
+    - max_refill_gap_days
+    - synthetic_event_flag
+    nullable_fields:
+    - previous_episode_id
+    - discontinuation_date
+    - discontinuation_reason
+    - switch_date
+    - restart_date
+    - tracking_component_id
+    allowed_values:
+      transition_type:
+      - initial
+      - restart
+      - switch
+    temporal_invariants:
+    - before_or_equal:
+      - treatment_start_date
+      - treatment_end_date
+    - before_or_equal:
+      - treatment_start_date
+      - discontinuation_date
+    - before_or_equal:
+      - treatment_start_date
+      - switch_date
+    - before_or_equal:
+      - treatment_start_date
+      - restart_date
+  treatment_regimen:
+    grain: one regimen attached to a treatment episode
+    primary_key: regimen_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: treatment_episode_id
+      target_table: treatment_episode
+      target_field: treatment_episode_id
+    required_columns:
+    - regimen_id
+    - treatment_episode_id
+    - patient_id
+    - market_code
+    - regimen_name
+    - regimen_type
+    - combination_strategy
+    - regimen_start_date
+    - regimen_end_date
+    - regimen_status
+    - intensification_flag
+    - guideline_concordance_classification
+    - guideline_rule_version
+    - synthetic_event_flag
+    non_nullable_fields:
+    - regimen_id
+    - treatment_episode_id
+    - patient_id
+    - market_code
+    - regimen_name
+    - regimen_type
+    - combination_strategy
+    - regimen_start_date
+    - regimen_end_date
+    - regimen_status
+    - intensification_flag
+    - guideline_concordance_classification
+    - guideline_rule_version
+    - synthetic_event_flag
+    nullable_fields: []
+    allowed_values: {}
+    temporal_invariants:
+    - before_or_equal:
+      - regimen_start_date
+      - regimen_end_date
+  treatment_regimen_component:
+    grain: one drug/procedure component within a regimen
+    primary_key: component_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: treatment_episode_id
+      target_table: treatment_episode
+      target_field: treatment_episode_id
+    - field: regimen_id
+      target_table: treatment_regimen
+      target_field: regimen_id
+    required_columns:
+    - component_id
+    - regimen_id
+    - treatment_episode_id
+    - patient_id
+    - market_code
+    - drug_name
+    - drug_class
+    - component_role
+    - route
+    - component_start_date
+    - dispensing_required_flag
+    - component_end_date
+    - component_status
+    - planned_cycle_count
+    - cycle_length_days
+    - dispensing_detail_available_flag
+    - synthetic_event_flag
+    non_nullable_fields:
+    - component_id
+    - regimen_id
+    - treatment_episode_id
+    - patient_id
+    - market_code
+    - drug_name
+    - drug_class
+    - component_role
+    - route
+    - component_start_date
+    - dispensing_required_flag
+    - component_end_date
+    - component_status
+    - dispensing_detail_available_flag
+    - synthetic_event_flag
+    nullable_fields:
+    - planned_cycle_count
+    - cycle_length_days
+    allowed_values: {}
+    temporal_invariants:
+    - before_or_equal:
+      - component_start_date
+      - component_end_date
+  prescription_event:
+    grain: one dispensing/refill event
+    primary_key: prescription_event_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: treatment_episode_id
+      target_table: treatment_episode
+      target_field: treatment_episode_id
+    - field: regimen_id
+      target_table: treatment_regimen
+      target_field: regimen_id
+    - field: component_id
+      target_table: treatment_regimen_component
+      target_field: component_id
+    required_columns:
+    - prescription_event_id
+    - patient_id
+    - market_code
+    - treatment_episode_id
+    - regimen_id
+    - component_id
+    - service_date
+    - product_id
+    - drug_name
+    - drug_class
+    - quantity_dispensed
+    - days_supply
+    - nominal_covered_until_date
+    - covered_until_date
+    - event_type
+    - refill_gap_days
+    - refill_timing
+    - adherence_profile
+    - detail_level
+    - synthetic_event_flag
+    non_nullable_fields:
+    - prescription_event_id
+    - patient_id
+    - market_code
+    - treatment_episode_id
+    - regimen_id
+    - component_id
+    - service_date
+    - drug_name
+    - drug_class
+    - days_supply
+    - nominal_covered_until_date
+    - covered_until_date
+    - event_type
+    - refill_gap_days
+    - refill_timing
+    - adherence_profile
+    - detail_level
+    - synthetic_event_flag
+    nullable_fields:
+    - product_id
+    - quantity_dispensed
+    allowed_values: {}
+    temporal_invariants:
+    - before_or_equal:
+      - service_date
+      - covered_until_date
+    - before_or_equal:
+      - service_date
+      - nominal_covered_until_date
+  adverse_event:
+    grain: one dated adverse event
+    primary_key: adverse_event_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    - field: treatment_episode_id
+      target_table: treatment_episode
+      target_field: treatment_episode_id
+    required_columns:
+    - adverse_event_id
+    - patient_id
+    - market_code
+    - treatment_episode_id
+    - adverse_event_date
+    - adverse_event_type
+    - severity
+    - serious_event_flag
+    - outcome_model_version
+    - synthetic_event_flag
+    non_nullable_fields:
+    - adverse_event_id
+    - patient_id
+    - market_code
+    - treatment_episode_id
+    - adverse_event_date
+    - adverse_event_type
+    - severity
+    - serious_event_flag
+    - outcome_model_version
+    - synthetic_event_flag
+    nullable_fields: []
+    allowed_values: {}
+    temporal_invariants: []
+  outcome:
+    grain: one derived outcome/censoring record per patient
+    primary_key: outcome_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - outcome_id
+    - patient_id
+    - market_code
+    - progression_event
+    - progression_date
+    - castration_resistant_transition
+    - castration_resistant_date
+    - hospitalisation_flag
+    - first_hospitalisation_date
+    - adverse_event_flag
+    - adverse_event_count
+    - death_flag
+    - death_date
+    - lost_to_follow_up_flag
+    - loss_to_follow_up_date
+    - last_observed_date
+    - censor_date
+    - censor_reason
+    - outcome_status
+    - outcome_model_version
+    - synthetic_event_flag
+    non_nullable_fields:
+    - outcome_id
+    - patient_id
+    - market_code
+    - progression_event
+    - castration_resistant_transition
+    - hospitalisation_flag
+    - adverse_event_flag
+    - adverse_event_count
+    - death_flag
+    - lost_to_follow_up_flag
+    - last_observed_date
+    - censor_date
+    - censor_reason
+    - outcome_status
+    - outcome_model_version
+    - synthetic_event_flag
+    nullable_fields:
+    - progression_date
+    - castration_resistant_date
+    - first_hospitalisation_date
+    - death_date
+    - loss_to_follow_up_date
+    allowed_values: {}
+    temporal_invariants: []
+  patient_split:
+    grain: one reproducible analytical split per patient
+    primary_key: patient_split_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - patient_split_id
+    - patient_id
+    - source_archetype_id
+    - market_code
+    - split
+    - split_rule_version
+    non_nullable_fields:
+    - patient_split_id
+    - patient_id
+    - source_archetype_id
+    - market_code
+    - split
+    - split_rule_version
+    nullable_fields: []
+    allowed_values: {}
+    temporal_invariants: []
+  feature_timing:
+    grain: one timing/governance record per mart field
+    primary_key: feature_metadata_id
+    foreign_keys: []
+    required_columns:
+    - feature_metadata_id
+    - feature_name
+    - availability_stage
+    - allowed_use_cases
+    - future_information_flag
+    - predictor_allowed_flag
+    - availability_condition
+    - target_label_flag
+    - timing_rule_version
+    non_nullable_fields:
+    - feature_metadata_id
+    - feature_name
+    - availability_stage
+    - allowed_use_cases
+    - future_information_flag
+    - predictor_allowed_flag
+    - availability_condition
+    - target_label_flag
+    - timing_rule_version
+    nullable_fields: []
+    allowed_values: {}
+    temporal_invariants: []
+  patient_journey:
+    grain: one analysis-ready row per patient
+    primary_key: patient_id
+    foreign_keys:
+    - field: patient_id
+      target_table: patient
+      target_field: patient_id
+    required_columns:
+    - patient_id
+    - market_code
+    - country
+    - market_depth
+    - source_archetype_id
+    - age_at_index
+    - comorbidity_score
+    - frailty_proxy
+    - complexity_segment
+    - region
+    - insurance_type
+    - access_index
+    - socioeconomic_proxy
+    - prostate_stage
+    - metastatic_flag
+    - hormone_sensitive_flag
+    - castration_resistant_flag
+    - risk_group
+    - psa_value
+    - gleason_score
+    - isup_grade_group
+    - mhspc_flag
+    - denominator_status
+    - eligibility_flag
+    - eligible_for_arpi
+    - eligibility_date
+    - eligibility_reason
+    - ineligibility_reason
+    - clinical_exclusion_reason
+    - contraindication_flag
+    - data_sufficiency_flag
+    - eligibility_rule_version
+    - initial_care_setting
+    - initial_provider_specialty
+    - pathway_care_setting
+    - referral_status
+    - referral_completed_flag
+    - referral_delay_days
+    - decision_owner_specialty
+    - active_surveillance_eligible_flag
+    - active_surveillance_status
+    - active_surveillance_start_date
+    - active_surveillance_exit_date
+    - active_surveillance_exit_reason
+    - active_surveillance_reclassification_flag
+    - active_surveillance_reclassification_date
+    - treatment_initiated
+    - treatment_episode_id
+    - treatment_start_date
+    - days_to_initiation
+    - initiation_90d_status
+    - initiated_within_30d
+    - initiated_within_60d
+    - initiated_within_90d
+    - eligible_not_initiated_90d
+    - initial_regimen
+    - initial_regimen_type
+    - combination_strategy
+    - intensification_flag
+    - regimen_component_count
+    - regimen_at_treatment_start
+    - regimen_type_at_treatment_start
+    - combination_strategy_at_treatment_start
+    - intensification_at_treatment_start_flag
+    - regimen_component_count_at_treatment_start
+    - prescription_event_count
+    - max_refill_gap_days
+    - event_coverage_until_date
+    - discontinuation_flag
+    - discontinuation_date
+    - switch_flag
+    - switch_date
+    - restart_flag
+    - follow_up_days
+    - treatment_follow_up_days
+    - observation_start_date
+    - observation_end_date
+    - last_observed_date
+    - loss_to_follow_up_date
+    - death_date
+    - censor_date
+    - censor_reason
+    - progression_event
+    - progression_date
+    - hospitalisation_flag
+    - first_hospitalisation_date
+    - adverse_event_flag
+    - death_flag
+    - lost_to_follow_up_flag
+    - final_outcome_status
+    - synthetic_data_flag
+    - synthetic_scenario_version
+    - persistence_rule_version
+    - persistence_3m_status
+    - persistent_3m
+    - persistence_6m_status
+    - persistent_6m
+    - persistence_12m_status
+    - persistent_12m
+    - persistence_12m_status_gap_30d
+    - persistent_12m_gap_30d
+    - persistence_12m_status_gap_60d
+    - persistent_12m_gap_60d
+    - persistence_12m_status_gap_90d
+    - persistent_12m_gap_90d
+    non_nullable_fields:
+    - patient_id
+    - market_code
+    - country
+    - market_depth
+    - source_archetype_id
+    - age_at_index
+    - comorbidity_score
+    - frailty_proxy
+    - complexity_segment
+    - region
+    - access_index
+    - socioeconomic_proxy
+    - prostate_stage
+    - metastatic_flag
+    - hormone_sensitive_flag
+    - castration_resistant_flag
+    - risk_group
+    - mhspc_flag
+    - denominator_status
+    - eligibility_flag
+    - eligible_for_arpi
+    - contraindication_flag
+    - data_sufficiency_flag
+    - eligibility_rule_version
+    - initial_care_setting
+    - initial_provider_specialty
+    - pathway_care_setting
+    - referral_status
+    - referral_completed_flag
+    - decision_owner_specialty
+    - active_surveillance_eligible_flag
+    - active_surveillance_status
+    - active_surveillance_reclassification_flag
+    - treatment_initiated
+    - initiation_90d_status
+    - initiated_within_30d
+    - initiated_within_60d
+    - initiated_within_90d
+    - eligible_not_initiated_90d
+    - intensification_flag
+    - regimen_component_count
+    - intensification_at_treatment_start_flag
+    - regimen_component_count_at_treatment_start
+    - prescription_event_count
+    - max_refill_gap_days
+    - discontinuation_flag
+    - switch_flag
+    - restart_flag
+    - follow_up_days
+    - observation_start_date
+    - observation_end_date
+    - last_observed_date
+    - censor_date
+    - censor_reason
+    - progression_event
+    - hospitalisation_flag
+    - adverse_event_flag
+    - death_flag
+    - lost_to_follow_up_flag
+    - final_outcome_status
+    - synthetic_data_flag
+    - synthetic_scenario_version
+    - persistence_rule_version
+    - persistence_3m_status
+    - persistence_6m_status
+    - persistence_12m_status
+    - persistence_12m_status_gap_30d
+    - persistence_12m_status_gap_60d
+    - persistence_12m_status_gap_90d
+    nullable_fields:
+    - insurance_type
+    - psa_value
+    - gleason_score
+    - isup_grade_group
+    - eligibility_date
+    - eligibility_reason
+    - ineligibility_reason
+    - clinical_exclusion_reason
+    - referral_delay_days
+    - active_surveillance_start_date
+    - active_surveillance_exit_date
+    - active_surveillance_exit_reason
+    - active_surveillance_reclassification_date
+    - treatment_episode_id
+    - treatment_start_date
+    - days_to_initiation
+    - initial_regimen
+    - initial_regimen_type
+    - combination_strategy
+    - regimen_at_treatment_start
+    - regimen_type_at_treatment_start
+    - combination_strategy_at_treatment_start
+    - event_coverage_until_date
+    - discontinuation_date
+    - switch_date
+    - treatment_follow_up_days
+    - loss_to_follow_up_date
+    - death_date
+    - progression_date
+    - first_hospitalisation_date
+    - persistent_3m
+    - persistent_6m
+    - persistent_12m
+    - persistent_12m_gap_30d
+    - persistent_12m_gap_60d
+    - persistent_12m_gap_90d
+    allowed_values:
+      persistence_12m_status:
+      - CENSORED_NOT_EVALUABLE
+      - DISCONTINUED
+      - NOT_APPLICABLE
+      - PERSISTENT
+      - SWITCHED
+      initiation_90d_status:
+      - CENSORED_NOT_EVALUABLE
+      - INITIATED_WITHIN_90D
+      - NOT_ELIGIBLE
+      - NOT_INITIATED_WITHIN_90D
+    temporal_invariants: []
+cohort_rules:
+  treatment_opportunity_90d:
+    grain: one row per synthetic patient
+    population: eligibility_flag == true
+    index_date: eligibility_date
+    event: initiated_within_90d == true
+    gap: eligible_not_initiated_90d == true
+    censoring: initiation_90d_status == CENSORED_NOT_EVALUABLE
+    reconciliation: eligible = initiated_within_90d + treatment_gap_90d + censored_not_evaluable
+    definition_version_field: eligibility_rule_version
+  persistence_12m:
+    population: eligibility_flag == true and initiated_within_90d == true
+    index_date: treatment_start_date
+    event_free_state: persistence_12m_status == PERSISTENT
+    evaluable_states:
+    - PERSISTENT
+    - DISCONTINUED
+    - SWITCHED
+    censoring_state: CENSORED_NOT_EVALUABLE
+    primary_permissible_gap_days: 60
+    sensitivity_gap_days:
+    - 30
+    - 60
+    - 90
+    definition_version_field: persistence_rule_version
+model_populations:
+  non_initiation_90d:
+    index: eligibility_date
+    population: >-
+      unique proposed-eligible records with valid eligibility time and a determinable 90-day
+      initiated versus not-initiated status; earlier censoring is excluded and counted
+    target: initiation_90d_status == NOT_INITIATED_WITHIN_90D
+    prediction_stage: eligibility
+    future_information_allowed: false
+    evaluation: repeated rolling temporal, final untouched temporal, and development-only LOMO
+  discontinuation_12m:
+    index: treatment_start_date
+    population: >-
+      unique initiators with a qualifying persistence failure by day 365 or observation remaining
+      event-free beyond day 365; earlier competing and censoring states are excluded and counted
+    target: persistence_failure_flag by day 365 under the 60-day permissible-gap definition
+    prediction_stage: treatment_start
+    future_information_allowed: false
+    evaluation: repeated rolling temporal, final untouched temporal, and development-only LOMO
+  switch_12m:
+    index: treatment_start_date
+    population: >-
+      unique initiators with explicit switch by day 365 or observation remaining event-free beyond
+      day 365; earlier non-switch failures, death and censoring are excluded and counted
+    target: event_classification == SWITCHED by day 365
+    prediction_stage: treatment_start
+    future_information_allowed: false
+    evaluation: repeated rolling temporal, final untouched temporal, and development-only LOMO
+  restart_after_gap:
+    index: treatment_start_date
+    population: >-
+      unique initiators with a qualifying 60-day gap failure by day 365 and either an explicit dated
+      restart by day 365 or observation through day 365 without restart; undated restart classes and
+      earlier indeterminate censoring are excluded and counted
+    target: explicit restart_date by day 365 versus no restart through day 365
+    prediction_stage: treatment_start; this is not a gap-triggered operational model
+    future_information_allowed: false
+    retrospective_selection_warning: gap-failure membership is not known at prediction time
+    evaluation: repeated rolling temporal, final untouched temporal, and development-only LOMO
+artifact_schemas:
+  release_manifest.json:
+    required_fields:
+    - dataset_version
+    - created_at
+    - decision
+    - git
+    - run_metadata
+    - gate_summary
+    - artifact_parity
+    - test_summary
+    - archives
+    - immutable
+    - decision_scope
+    - formal_compliance_claim
+    - synthetic_data_only
+    - code_version
+    - configuration_hash
+    - configuration_component_hashes
+    - active_analytical_definition
+  presentation_manifest.json:
+    required_fields:
+    - dataset_version
+    - source_release_decision
+    - source_git
+    - analysis_git
+    - configuration_hash
+    - code_version
+    - active_analytical_definition
+    - headline_kpis
+    - consistency_gate
+    - patient_level_data_included
+    - scientific_evidence
+    - multi_seed_simulation
+    - predictive_evidence
+    - output_files
+    - artifact_provenance
+  presentation_kpis.csv:
+    required_columns:
+    - kpi
+    - value
+    - definition
+    - data_label
+  cohort_dashboard.html:
+    required_markers:
+    - dataset_version
+    - synthetic
+  executive_story.html:
+    required_markers:
+    - Patient Journey Explorer
+    - dashboardData
+    - synthetic
+  scientific_story.html:
+    required_markers:
+    - Scientific Evidence Lab
+    - scienceData
+    - Three different uncertainty questions
+    - synthetic
+  model_story.html:
+    required_markers:
+    - Model Evidence Lab
+    - modelEvidenceData
+    - Prediction evidence, with every limitation visible
+    - synthetic
+    - 0 deployable models
+  scientific_evidence_manifest.json:
+    required_fields:
+    - manifest_version
+    - package_type
+    - generated_at
+    - release
+    - source_commit
+    - analysis_commit
+    - analysis_worktree_clean
+    - configuration_hash
+    - code_version
+    - scenario
+    - seed_summary
+    - active_analytical_definition
+    - synthetic_data_only
+    - formal_clinical_or_regulatory_claim
+    - causal_interpretation_allowed
+    - artifacts
+  simulation_manifest.json:
+    required_fields:
+    - manifest_version
+    - simulation_version
+    - release
+    - generated_at
+    - source_commit
+    - source_tracked_clean
+    - code_version
+    - configuration_hash
+    - scenario_axis
+    - scenarios
+    - completed_seeds
+    - adaptive_precision_log
+    - child_manifests
+    - uncertainty_types_kept_separate
+    - synthetic_data_only
+    - formal_clinical_or_market_claim
+    - artifacts
+  predictive_evidence_manifest.json:
+    required_fields:
+    - manifest_version
+    - package_type
+    - generated_at
+    - release
+    - source_commit
+    - analysis_commit
+    - configuration_hash
+    - code_version
+    - model_contract_version
+    - governance_version
+    - input_hashes
+    - synthetic_data_only
+    - external_validation
+    - clinical_validation
+    - deployable
+    - patient_level_predictions_included
+    - random_row_split_used_as_principal_evidence
+    - decision_curve_generated
+    - artifacts
+  scientific_chart_ready_csv:
+    required_columns:
+    - numerator
+    - denominator
+    - population_definition
+    - time_zero
+    - horizon_days
+    - scenario
+    - seed_summary
+    - release
+    - assumptions
+    - limitation
+  simulation_chart_ready_csv:
+    required_columns:
+    - numerator
+    - denominator
+    - population_definition
+    - time_zero
+    - horizon_days
+    - scenario
+    - seed_summary
+    - release
+    - assumptions
+    - limitation
+  predictive_chart_ready_csv:
+    required_columns:
+    - population_definition
+    - prediction_time
+    - prediction_horizon_days
+    - release
+    - source_commit
+    - configuration_hash
+    - synthetic_data_only
+    - external_validation
+    - deployable
+    - limitation

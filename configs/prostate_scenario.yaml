@@ -2,8 +2,8 @@ disclaimer: "All values are synthetic demo assumptions and require clinical and 
 random_seed: 42
 target_cohort_size: 10000
 profile: full
-generator_version: "2.1.0"
-scenario_version: "diagnostic-v2.1-release"
+generator_version: "2.2.0"
+scenario_version: "industry-readiness-v2.2-candidate"
 market_config_file: markets.yaml
 clinical_rules_file: clinical_rules.yaml
 
@@ -67,7 +67,7 @@ prescription:
     low: {mean: 38, sd: 30, minimum: -5, maximum: 120}
   permissible_gap_days: 60
   sensitivity_gaps: [30, 60, 90]
-  definition_version: "PERSISTENCE-SYN-v2.1"
+  definition_version: "PERSISTENCE-SYN-v2.2"
 
 active_surveillance:
   eligibility_risk_groups: [low, intermediate]

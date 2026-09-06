@@ -1,7 +1,7 @@
 base_config_file: prostate_scenario.yaml
 profile: quick
 target_cohort_size: 550
-scenario_version: "diagnostic-v2.0-quick"
+scenario_version: "industry-readiness-v2.2-quick"
 readiness:
   verify_reproducibility_full: false
   fail_on_p0_p1: false

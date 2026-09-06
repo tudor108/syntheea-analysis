@@ -4,19 +4,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prostate-patient-journey-synthetic"
-version = "2.1.0"
+version = "2.2.0"
 description = "Reproducible synthetic prostate patient journey demo"
-requires-python = ">=3.11"
-dependencies = ["pandas>=2.2", "numpy>=1.26", "pyarrow>=15", "duckdb>=1.0", "PyYAML>=6", "pydantic>=2.6", "typer>=0.12"]
+requires-python = ">=3.11,<3.14"
+dependencies = ["pandas>=2.2,<4", "numpy>=1.26,<3", "pyarrow>=15,<26", "duckdb>=1,<2", "PyYAML>=6,<7", "pydantic>=2.6,<3", "typer>=0.12,<1"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10"]
+ai = [
+  "openai>=2,<3",
+]
+dev = [
+  "mypy>=1.10,<3",
+  "pandas-stubs>=2.2",
+  "pre-commit>=4,<5",
+  "pytest>=8,<10",
+  "ruff>=0.5,<1",
+  "types-PyYAML>=6",
+]
 
 [project.scripts]
 prostate-journey = "prostate_journey.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+prostate_journey = ["frontend/*.css", "frontend/*.html", "frontend/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -32,5 +45,57 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["typer.Option", "typer.Argument"]
 
+[tool.mypy]
+python_version = "3.13"
+files = ["src"]
+check_untyped_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+show_error_codes = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["pyarrow", "pyarrow.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+  "prostate_journey.active_surveillance_generator",
+  "prostate_journey.adversarial_audit",
+  "prostate_journey.dashboard",
+  "prostate_journey.data_quality",
+  "prostate_journey.diagnosis_generator",
+  "prostate_journey.journey_builder",
+  "prostate_journey.observation_generator",
+  "prostate_journey.outcome_generator",
+  "prostate_journey.pathway_generator",
+  "prostate_journey.readiness_audit",
+  "prostate_journey.release_evidence",
+  "prostate_journey.release_packager",
+  "prostate_journey.release_reconciliation",
+  "prostate_journey.treatment_generator",
+]
+# These modules are dominated by dynamically typed pandas row/index operations.
+# Keep them inside MyPy for symbol/signature checking while isolating known
+# pandas-stubs limitations until typed record adapters replace row iteration.
+disable_error_code = [
+  "arg-type",
+  "assignment",
+  "call-overload",
+  "index",
+  "misc",
+  "operator",
+  "str-bytes-safe",
+  "union-attr",
+  "valid-type",
+]
+
 [tool.ruff.lint.per-file-ignores]
 "src/prostate_journey/dashboard.py" = ["E501"]
+"src/prostate_journey/executive_dashboard.py" = ["E501"]
+"src/prostate_journey/scientific_dashboard.py" = ["E501"]
+"src/prostate_journey/predictive_dashboard.py" = ["E501"]
+"src/prostate_journey/predictive_evidence.py" = ["E501"]
+"src/prostate_journey/ai_demo.py" = ["E501"]
+"scripts/create_cohort_dashboard.py" = ["E501"]

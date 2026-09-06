@@ -1,0 +1,152 @@
+name: Industry Readiness Gates
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readiness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.11.16"
+  UV_FROZEN: "1"
+
+jobs:
+  quality:
+    name: Quality and source contracts (Python 3.13)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Sync locked environment
+        run: uv sync --frozen --extra dev
+      - name: Validate dependency lock and installed dependency graph
+        run: |
+          uv lock --check
+          uv run python -m pip check
+      - name: Check formatting
+        run: uv run ruff format --check src tests eda scripts
+      - name: Lint
+        run: uv run ruff check src tests eda scripts
+      - name: Type check
+        run: uv run mypy src
+      - name: Scan committed text for common credential formats
+        run: uv run python scripts/check_no_secrets.py --root .
+      - name: Validate repository-local documentation links
+        run: uv run python scripts/check_markdown_links.py --root .
+      - name: Validate source contracts, documentation and frontend template
+        run: >-
+          uv run prostate-journey industry-check
+          --allow-missing-release
+          --output .test-work/industry-source.json
+      - name: Run complete test suite
+        run: uv run pytest --junitxml=.test-work/pytest.xml
+
+  runtime-matrix:
+    name: Supported runtime smoke (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Sync locked environment
+        run: uv sync --frozen --extra dev
+      - name: Run deterministic generation smoke tests
+        run: >-
+          uv run pytest
+          tests/test_end_to_end.py
+          tests/test_industry_readiness.py
+          tests/test_presentation_package.py
+
+  analytical-integration:
+    name: Quick pipeline and analytical contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Sync locked environment
+        run: uv sync --frozen --extra dev
+      - name: Generate and audit quick synthetic pipeline
+        run: >-
+          uv run prostate-journey run-all
+          --config configs/prostate_scenario_quick.yaml
+          --output-dir .test-work/ci-gold
+          --report-dir .test-work/ci-reports
+      - name: Enforce schema, keys, chronology, censoring, leakage and denominators
+        run: >-
+          uv run prostate-journey industry-check
+          --dataset-dir .test-work/ci-gold
+          --allow-missing-release
+          --output .test-work/industry-dataset.json
+
+  container:
+    name: Container build and liveness smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Build deterministic runtime image
+        run: docker build --tag prostate-journey-analytics:ci .
+      - name: Start without release data and verify health/readiness separation
+        run: |
+          docker run --detach --name prostate-journey-ci --read-only --tmpfs /tmp \
+            --publish 127.0.0.1:8080:8080 prostate-journey-analytics:ci
+          for attempt in $(seq 1 20); do
+            curl --silent --fail http://127.0.0.1:8080/health && break
+            sleep 1
+          done
+          status=$(curl --silent --output /tmp/ready.json --write-out "%{http_code}" \
+            http://127.0.0.1:8080/ready)
+          test "$status" = "503"
+          grep --quiet '"status":"not_ready"' /tmp/ready.json
+      - name: Stop smoke container
+        if: always()
+        run: docker rm --force prostate-journey-ci || true

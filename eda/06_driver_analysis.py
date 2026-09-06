@@ -21,6 +21,7 @@ from config import (
     OUTPUT_DIR,
     ensure_output_directories,
     resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
 )
 from longitudinal_charts import line
 from png_charts import Canvas
@@ -128,9 +129,7 @@ class FeatureEncoder:
     def transform(self, frame: pd.DataFrame) -> np.ndarray:
         columns: list[np.ndarray] = []
         for feature in self.numeric_features:
-            values = pd.to_numeric(frame[feature], errors="coerce").fillna(
-                self.medians[feature]
-            )
+            values = pd.to_numeric(frame[feature], errors="coerce").fillna(self.medians[feature])
             columns.append(
                 ((values.to_numpy(dtype=float) - self.means[feature]) / self.scales[feature])[
                     :, None
@@ -333,9 +332,7 @@ def build_feature_frame(
         validate="one_to_one",
     )
     frame = frame.merge(
-        tables["diagnosis"][
-            ["patient_id", "diagnosis_date", "metastatic_date", "metastatic_site"]
-        ],
+        tables["diagnosis"][["patient_id", "diagnosis_date", "metastatic_date", "metastatic_site"]],
         on="patient_id",
         how="left",
         validate="one_to_one",
@@ -358,9 +355,9 @@ def build_feature_frame(
         .str.lower()
         .str.contains("hospital|inpatient|emergency|\bed\b", regex=True)
     )
-    prior_hospital = prior_encounters.assign(_hospital=hospitalization).groupby(
-        "patient_id"
-    )._hospital.max()
+    prior_hospital = (
+        prior_encounters.assign(_hospital=hospitalization).groupby("patient_id")._hospital.max()
+    )
     baseline_encounters = encounters[
         encounters.encounter_date.le(encounters.prediction_index_date)
     ].sort_values(["patient_id", "encounter_date", "sequence_number", "encounter_id"])
@@ -368,7 +365,9 @@ def build_feature_frame(
         "patient_id"
     )
 
-    frame["prior_healthcare_utilization_180d"] = frame.patient_id.map(utilization).fillna(0).astype(int)
+    frame["prior_healthcare_utilization_180d"] = (
+        frame.patient_id.map(utilization).fillna(0).astype(int)
+    )
     frame["prior_hospitalization"] = (
         frame.patient_id.map(prior_hospital).fillna(False).map({True: "YES", False: "NO"})
     )
@@ -377,19 +376,21 @@ def build_feature_frame(
     frame["safe_provider_id"] = frame.patient_id.map(last_encounter.provider_id)
 
     if prediction_stage == "treatment_start":
-        episode_provider = tables["treatment_episode"].set_index("treatment_episode_id").prescribing_provider_id
+        episode_provider = (
+            tables["treatment_episode"].set_index("treatment_episode_id").prescribing_provider_id
+        )
         supplied = frame.treatment_episode_id.map(episode_provider)
         frame["safe_provider_id"] = supplied.fillna(frame.safe_provider_id)
     provider = tables["provider"].set_index("provider_id")
     frame["care_setting"] = frame.safe_provider_id.map(provider.care_setting).fillna(
         frame.care_setting
     )
-    frame["provider_specialty"] = frame.safe_provider_id.map(
-        provider.provider_specialty
-    ).fillna(frame.provider_specialty)
-    frame["provider_volume_band"] = frame.safe_provider_id.map(
-        provider.annual_prostate_volume
-    ).map(_volume_band)
+    frame["provider_specialty"] = frame.safe_provider_id.map(provider.provider_specialty).fillna(
+        frame.provider_specialty
+    )
+    frame["provider_volume_band"] = frame.safe_provider_id.map(provider.annual_prostate_volume).map(
+        _volume_band
+    )
 
     referrals = tables["referral"].merge(
         frame[["patient_id", "prediction_index_date"]], on="patient_id", how="inner"
@@ -397,10 +398,9 @@ def build_feature_frame(
     baseline_referrals = referrals[
         referrals.referral_date.le(referrals.prediction_index_date)
     ].copy()
-    baseline_referrals["completed_by_index"] = (
-        baseline_referrals.referral_status.eq("completed")
-        & baseline_referrals.completion_date.le(baseline_referrals.prediction_index_date)
-    )
+    baseline_referrals["completed_by_index"] = baseline_referrals.referral_status.eq(
+        "completed"
+    ) & baseline_referrals.completion_date.le(baseline_referrals.prediction_index_date)
     referral_rows: dict[str, str] = {}
     for patient_id, group in baseline_referrals.groupby("patient_id"):
         referral_rows[str(patient_id)] = (
@@ -408,16 +408,18 @@ def build_feature_frame(
             if group.completed_by_index.any()
             else "RECORDED_NOT_COMPLETED_BY_INDEX"
         )
-    frame["referral_proxy"] = frame.patient_id.astype(str).map(referral_rows).fillna(
-        "NO_PRE_INDEX_REFERRAL"
+    frame["referral_proxy"] = (
+        frame.patient_id.astype(str).map(referral_rows).fillna("NO_PRE_INDEX_REFERRAL")
     )
 
     episodes = tables["treatment_episode"].merge(
         frame[["patient_id", "prediction_index_date"]], on="patient_id", how="inner"
     )
-    prior_treatment = episodes[
-        episodes.treatment_start_date.lt(episodes.prediction_index_date)
-    ].groupby("patient_id").size()
+    prior_treatment = (
+        episodes[episodes.treatment_start_date.lt(episodes.prediction_index_date)]
+        .groupby("patient_id")
+        .size()
+    )
     frame["prior_treatment_count"] = frame.patient_id.map(prior_treatment).fillna(0).astype(int)
     frame["prior_treatment_status"] = np.where(
         frame.prior_treatment_count.gt(0), "PRIOR_TREATMENT", "NO_PRIOR_TREATMENT"
@@ -454,9 +456,9 @@ def build_target_datasets(
         & flags.eligible_candidate.fillna(False)
         & flags.observable_for_90d.fillna(False)
     ].copy()
-    initiation_base = primary[
-        ["patient_id", "cohort_index_date", "pathway_disease_state"]
-    ].rename(columns={"cohort_index_date": "prediction_index_date"})
+    initiation_base = primary[["patient_id", "cohort_index_date", "pathway_disease_state"]].rename(
+        columns={"cohort_index_date": "prediction_index_date"}
+    )
     initiation_base["target"] = (~primary.initiated_within_90d.fillna(False)).astype(int).to_numpy()
     initiation_base["target_name"] = "non_initiated_within_90_days"
     initiation_features = build_feature_frame(
@@ -494,8 +496,11 @@ def build_target_datasets(
     discontinuation_known = (by_12m & outcome.persistence_failure_flag) | persistent_through_12m
     discontinuation_labels = outcome.loc[discontinuation_known, ["patient_id"]].copy()
     discontinuation_labels["target"] = (
-        by_12m & outcome.persistence_failure_flag
-    ).loc[discontinuation_known].astype(int).to_numpy()
+        (by_12m & outcome.persistence_failure_flag)
+        .loc[discontinuation_known]
+        .astype(int)
+        .to_numpy()
+    )
     discontinuation = treatment_features.merge(
         discontinuation_labels, on="patient_id", how="inner", validate="one_to_one"
     )
@@ -537,7 +542,9 @@ def build_target_datasets(
             "positive_n": int(frame.target.sum()),
             "prevalence": float(frame.target.mean()),
             "model_status": (
-                "MODELLED" if int(frame.target.sum()) >= MIN_MODEL_EVENTS else "NOT_MODELLED_LOW_EVENT_COUNT"
+                "MODELLED"
+                if int(frame.target.sum()) >= MIN_MODEL_EVENTS
+                else "NOT_MODELLED_LOW_EVENT_COUNT"
             ),
             "definition": {
                 "non_initiated_within_90_days": "Eligible/observable primary mHSPC cohort without qualifying treatment initiation by day 90.",
@@ -572,37 +579,316 @@ def build_target_datasets(
 def feature_dictionary(datasets: dict[str, pd.DataFrame]) -> pd.DataFrame:
     combined = pd.concat(datasets.values(), ignore_index=True)
     definitions = [
-        ("age_at_index", "patient.age_at_index", "baseline", "ALLOWED", "Available at index", "LOW", "Age at governed index", "Synthetic age; not a treatment recommendation"),
-        ("age_band", "derived from patient.age_at_index", "baseline", "ALLOWED_SUBGROUP_ONLY", "Redundant with continuous age in model", "LOW", "Operational age segment", "Band boundaries are analytic"),
-        ("comorbidity_score", "patient.comorbidity_score", "baseline", "ALLOWED", "Available at index", "MEDIUM", "Synthetic comorbidity burden", "Not a validated clinical index"),
-        ("frailty_proxy", "patient.frailty_proxy", "baseline", "ALLOWED", "Available at index", "MEDIUM", "Synthetic frailty proxy", "Not a clinical frailty assessment"),
-        ("access_index", "patient.access_index", "baseline", "ALLOWED", "Governed feature timing allows prediction", "MEDIUM", "Synthetic access proxy", "May encode market/scenario generation rules"),
-        ("prior_healthcare_utilization_180d", "encounter.encounter_date < prediction index", "baseline", "ALLOWED", "Strict pre-index count", "LOW", "Encounter count in prior 180 days", "Only captured synthetic encounters"),
-        ("prior_treatment_count", "treatment_episode.start < prediction index", "baseline", "ALLOWED", "Strict pre-index episodes", "LOW", "Prior normalized treatment lines", "Often zero in initial-treatment cohort"),
-        ("prior_treatment_status", "derived prior_treatment_count", "baseline", "ALLOWED", "Safe derived category", "LOW", "Prior treatment yes/no", "Zero variance may limit use"),
-        ("disease_state", "cohort_patient_flags.pathway_disease_state", "baseline", "ALLOWED", "Governed cohort state at index", "LOW", "Disease pathway state", "Constant in primary mHSPC model"),
-        ("metastatic_site", "diagnosis.metastatic_site", "baseline", "ALLOWED", "Available at diagnosis", "MEDIUM", "Synthetic metastatic site", "Unknown/not-applicable are data categories"),
-        ("market_code", "patient.market_code", "baseline", "ALLOWED", "Available at index", "MEDIUM", "Synthetic market", "May capture unmeasured market construction effects"),
-        ("care_setting", "last encounter/provider available by index", "baseline", "ALLOWED", "No post-index encounter used", "MEDIUM", "Care setting proxy", "Setting is synthetic and target-stage-specific"),
-        ("provider_specialty", "last safe provider available by index", "baseline", "ALLOWED", "No provider ID used", "MEDIUM", "Provider specialty", "May be constant at eligibility"),
-        ("provider_volume_band", "provider.annual_prostate_volume transformed to band", "baseline", "ALLOWED", "Safe aggregate; provider ID excluded", "MEDIUM", "Provider volume band", "Fixed analytic bands are not validated capacity thresholds"),
-        ("referral_proxy", "referral dates/status observed by index", "baseline", "ALLOWED_STAGE_CONDITIONAL", "Initiation referrals after eligibility are excluded; pre-treatment referrals allowed for later targets", "MEDIUM", "Referral completion proxy", "No causal barrier interpretation"),
-        ("prior_hospitalization", "pre-index encounter type", "baseline", "ALLOWED_IF_OBSERVED", "Outcome hospitalisation_flag excluded", "HIGH", "Prior captured hospital encounter", "No qualifying baseline hospital encounter types in primary release"),
-        ("insurance_type", "patient.insurance_type", "baseline", "ALLOWED", "Available at index", "HIGH", "Synthetic payer category", "Missingness/category meaning differs by market"),
-        ("calendar_period", "derived prediction index year", "baseline", "ALLOWED", "Available at index", "LOW", "Calendar cohort", "May reflect simulation version rather than temporal practice"),
-        ("time_since_diagnosis_days", "prediction index - diagnosis_date", "baseline", "ALLOWED", "Uses dates no later than index", "LOW", "Time from diagnosis", "Often zero for initiation"),
-        ("time_since_metastasis_days", "prediction index - metastatic_date", "baseline", "ALLOWED", "Uses dates no later than index", "MEDIUM", "Time from metastatic evidence", "Synthetic state timing"),
-        ("distance_or_rurality", "NOT AVAILABLE", "baseline", "EXCLUDED", "No legally/analytically justified field", "HIGH", "Potential geographic access factor", "Postal prefix is not transformed or used"),
-        ("patient_id", "all patient-level tables", "identifier", "EXCLUDED", "Identifier; split grouping only", "CRITICAL", "Record linkage only", "Never a predictor"),
-        ("provider_id", "encounter/provider tables", "identifier", "EXCLUDED", "Replaced by safe specialty/setting/volume aggregates", "CRITICAL", "Provider linkage only", "Never a predictor"),
-        ("treatment_start_date", "treatment_episode", "post-outcome for initiation", "EXCLUDED_AS_FEATURE", "Target/future information for initiation; index only for persistence", "CRITICAL", "Treatment timing", "Never entered design matrix"),
-        ("days_to_initiation", "cohort flags/patient_journey", "target-derived", "EXCLUDED", "Directly encodes initiation target", "CRITICAL", "Outcome timing", "Leakage"),
-        ("discontinuation_flag", "treatment_episode/patient_journey", "post-outcome", "EXCLUDED", "Target-derived future outcome", "CRITICAL", "Documented stop", "Leakage"),
-        ("switch_flag", "treatment_episode/patient_journey", "post-outcome", "EXCLUDED", "Target-derived future outcome", "CRITICAL", "Treatment switch", "Leakage"),
-        ("restart_flag", "treatment_episode/patient_journey", "post-outcome", "EXCLUDED", "Target-derived future outcome", "CRITICAL", "Treatment restart", "Leakage"),
-        ("hospitalisation_flag", "patient_journey outcome", "post-outcome", "EXCLUDED", "Final outcome flag; only pre-index encounter evidence allowed", "CRITICAL", "Hospitalisation outcome", "Leakage"),
-        ("post_index_encounters", "encounter after prediction index", "future", "EXCLUDED", "Strict temporal leakage rule", "CRITICAL", "Later utilization", "Unavailable at prediction time"),
-        ("censor_reason", "observation/persistence outputs", "post-outcome", "EXCLUDED", "Used only for risk-set construction", "CRITICAL", "Follow-up endpoint", "Selection/target construction only"),
+        (
+            "age_at_index",
+            "patient.age_at_index",
+            "baseline",
+            "ALLOWED",
+            "Available at index",
+            "LOW",
+            "Age at governed index",
+            "Synthetic age; not a treatment recommendation",
+        ),
+        (
+            "age_band",
+            "derived from patient.age_at_index",
+            "baseline",
+            "ALLOWED_SUBGROUP_ONLY",
+            "Redundant with continuous age in model",
+            "LOW",
+            "Operational age segment",
+            "Band boundaries are analytic",
+        ),
+        (
+            "comorbidity_score",
+            "patient.comorbidity_score",
+            "baseline",
+            "ALLOWED",
+            "Available at index",
+            "MEDIUM",
+            "Synthetic comorbidity burden",
+            "Not a validated clinical index",
+        ),
+        (
+            "frailty_proxy",
+            "patient.frailty_proxy",
+            "baseline",
+            "ALLOWED",
+            "Available at index",
+            "MEDIUM",
+            "Synthetic frailty proxy",
+            "Not a clinical frailty assessment",
+        ),
+        (
+            "access_index",
+            "patient.access_index",
+            "baseline",
+            "ALLOWED",
+            "Governed feature timing allows prediction",
+            "MEDIUM",
+            "Synthetic access proxy",
+            "May encode market/scenario generation rules",
+        ),
+        (
+            "prior_healthcare_utilization_180d",
+            "encounter.encounter_date < prediction index",
+            "baseline",
+            "ALLOWED",
+            "Strict pre-index count",
+            "LOW",
+            "Encounter count in prior 180 days",
+            "Only captured synthetic encounters",
+        ),
+        (
+            "prior_treatment_count",
+            "treatment_episode.start < prediction index",
+            "baseline",
+            "ALLOWED",
+            "Strict pre-index episodes",
+            "LOW",
+            "Prior normalized treatment lines",
+            "Often zero in initial-treatment cohort",
+        ),
+        (
+            "prior_treatment_status",
+            "derived prior_treatment_count",
+            "baseline",
+            "ALLOWED",
+            "Safe derived category",
+            "LOW",
+            "Prior treatment yes/no",
+            "Zero variance may limit use",
+        ),
+        (
+            "disease_state",
+            "cohort_patient_flags.pathway_disease_state",
+            "baseline",
+            "ALLOWED",
+            "Governed cohort state at index",
+            "LOW",
+            "Disease pathway state",
+            "Constant in primary mHSPC model",
+        ),
+        (
+            "metastatic_site",
+            "diagnosis.metastatic_site",
+            "baseline",
+            "ALLOWED",
+            "Available at diagnosis",
+            "MEDIUM",
+            "Synthetic metastatic site",
+            "Unknown/not-applicable are data categories",
+        ),
+        (
+            "market_code",
+            "patient.market_code",
+            "baseline",
+            "ALLOWED",
+            "Available at index",
+            "MEDIUM",
+            "Synthetic market",
+            "May capture unmeasured market construction effects",
+        ),
+        (
+            "care_setting",
+            "last encounter/provider available by index",
+            "baseline",
+            "ALLOWED",
+            "No post-index encounter used",
+            "MEDIUM",
+            "Care setting proxy",
+            "Setting is synthetic and target-stage-specific",
+        ),
+        (
+            "provider_specialty",
+            "last safe provider available by index",
+            "baseline",
+            "ALLOWED",
+            "No provider ID used",
+            "MEDIUM",
+            "Provider specialty",
+            "May be constant at eligibility",
+        ),
+        (
+            "provider_volume_band",
+            "provider.annual_prostate_volume transformed to band",
+            "baseline",
+            "ALLOWED",
+            "Safe aggregate; provider ID excluded",
+            "MEDIUM",
+            "Provider volume band",
+            "Fixed analytic bands are not validated capacity thresholds",
+        ),
+        (
+            "referral_proxy",
+            "referral dates/status observed by index",
+            "baseline",
+            "ALLOWED_STAGE_CONDITIONAL",
+            "Initiation referrals after eligibility are excluded; pre-treatment referrals allowed for later targets",
+            "MEDIUM",
+            "Referral completion proxy",
+            "No causal barrier interpretation",
+        ),
+        (
+            "prior_hospitalization",
+            "pre-index encounter type",
+            "baseline",
+            "ALLOWED_IF_OBSERVED",
+            "Outcome hospitalisation_flag excluded",
+            "HIGH",
+            "Prior captured hospital encounter",
+            "No qualifying baseline hospital encounter types in primary release",
+        ),
+        (
+            "insurance_type",
+            "patient.insurance_type",
+            "baseline",
+            "ALLOWED",
+            "Available at index",
+            "HIGH",
+            "Synthetic payer category",
+            "Missingness/category meaning differs by market",
+        ),
+        (
+            "calendar_period",
+            "derived prediction index year",
+            "baseline",
+            "ALLOWED",
+            "Available at index",
+            "LOW",
+            "Calendar cohort",
+            "May reflect simulation version rather than temporal practice",
+        ),
+        (
+            "time_since_diagnosis_days",
+            "prediction index - diagnosis_date",
+            "baseline",
+            "ALLOWED",
+            "Uses dates no later than index",
+            "LOW",
+            "Time from diagnosis",
+            "Often zero for initiation",
+        ),
+        (
+            "time_since_metastasis_days",
+            "prediction index - metastatic_date",
+            "baseline",
+            "ALLOWED",
+            "Uses dates no later than index",
+            "MEDIUM",
+            "Time from metastatic evidence",
+            "Synthetic state timing",
+        ),
+        (
+            "distance_or_rurality",
+            "NOT AVAILABLE",
+            "baseline",
+            "EXCLUDED",
+            "No legally/analytically justified field",
+            "HIGH",
+            "Potential geographic access factor",
+            "Postal prefix is not transformed or used",
+        ),
+        (
+            "patient_id",
+            "all patient-level tables",
+            "identifier",
+            "EXCLUDED",
+            "Identifier; split grouping only",
+            "CRITICAL",
+            "Record linkage only",
+            "Never a predictor",
+        ),
+        (
+            "provider_id",
+            "encounter/provider tables",
+            "identifier",
+            "EXCLUDED",
+            "Replaced by safe specialty/setting/volume aggregates",
+            "CRITICAL",
+            "Provider linkage only",
+            "Never a predictor",
+        ),
+        (
+            "treatment_start_date",
+            "treatment_episode",
+            "post-outcome for initiation",
+            "EXCLUDED_AS_FEATURE",
+            "Target/future information for initiation; index only for persistence",
+            "CRITICAL",
+            "Treatment timing",
+            "Never entered design matrix",
+        ),
+        (
+            "days_to_initiation",
+            "cohort flags/patient_journey",
+            "target-derived",
+            "EXCLUDED",
+            "Directly encodes initiation target",
+            "CRITICAL",
+            "Outcome timing",
+            "Leakage",
+        ),
+        (
+            "discontinuation_flag",
+            "treatment_episode/patient_journey",
+            "post-outcome",
+            "EXCLUDED",
+            "Target-derived future outcome",
+            "CRITICAL",
+            "Documented stop",
+            "Leakage",
+        ),
+        (
+            "switch_flag",
+            "treatment_episode/patient_journey",
+            "post-outcome",
+            "EXCLUDED",
+            "Target-derived future outcome",
+            "CRITICAL",
+            "Treatment switch",
+            "Leakage",
+        ),
+        (
+            "restart_flag",
+            "treatment_episode/patient_journey",
+            "post-outcome",
+            "EXCLUDED",
+            "Target-derived future outcome",
+            "CRITICAL",
+            "Treatment restart",
+            "Leakage",
+        ),
+        (
+            "hospitalisation_flag",
+            "patient_journey outcome",
+            "post-outcome",
+            "EXCLUDED",
+            "Final outcome flag; only pre-index encounter evidence allowed",
+            "CRITICAL",
+            "Hospitalisation outcome",
+            "Leakage",
+        ),
+        (
+            "post_index_encounters",
+            "encounter after prediction index",
+            "future",
+            "EXCLUDED",
+            "Strict temporal leakage rule",
+            "CRITICAL",
+            "Later utilization",
+            "Unavailable at prediction time",
+        ),
+        (
+            "censor_reason",
+            "observation/persistence outputs",
+            "post-outcome",
+            "EXCLUDED",
+            "Used only for risk-set construction",
+            "CRITICAL",
+            "Follow-up endpoint",
+            "Selection/target construction only",
+        ),
     ]
     rows = []
     model_features = set(NUMERIC_MODEL_FEATURES + CATEGORICAL_MODEL_FEATURES)
@@ -619,7 +905,8 @@ def feature_dictionary(datasets: dict[str, pd.DataFrame]) -> pd.DataFrame:
                 "leakage_risk": risk,
                 "clinical_interpretation": interpretation,
                 "proxy_limitation": limitation,
-                "entered_model_design_matrix": name in model_features and allowed.startswith("ALLOWED"),
+                "entered_model_design_matrix": name in model_features
+                and allowed.startswith("ALLOWED"),
             }
         )
     return pd.DataFrame(rows)
@@ -682,9 +969,7 @@ def _continuous_association(target_name: str, frame: pd.DataFrame, feature: str)
         "magnitude": abs(coefficient),
         "missingness": missingness,
         "small_cell_flag": False,
-        "evidence_type": (
-            "ASSOCIATED" if ci_lower > 1 or ci_upper < 1 else "OBSERVED DESCRIPTIVE"
-        ),
+        "evidence_type": ("ASSOCIATED" if ci_lower > 1 or ci_upper < 1 else "OBSERVED DESCRIPTIVE"),
         "causal_interpretation_allowed": False,
         "limitation": "Univariate association; confounding and synthetic generation effects remain.",
     }
@@ -749,9 +1034,7 @@ def _categorical_associations(
                 "event_rate": a / (a + b) if a + b else None,
                 "reference_n": int((~exposed).sum()),
                 "reference_event_rate": c / (c + d) if c + d else None,
-                "risk_difference": (
-                    a / (a + b) - c / (c + d) if a + b and c + d else None
-                ),
+                "risk_difference": (a / (a + b) - c / (c + d) if a + b and c + d else None),
                 "log_odds_coefficient": log_or,
                 "odds_ratio": odds_ratio,
                 "ci_lower": ci_lower,
@@ -801,19 +1084,21 @@ def temporal_split(frame: pd.DataFrame) -> tuple[pd.Series, pd.Series, pd.Timest
     return pd.Series(train, index=frame.index), pd.Series(test, index=frame.index), cutoff
 
 
-def calibration_bins(
-    target_name: str, target: np.ndarray, probability: np.ndarray
-) -> pd.DataFrame:
+def calibration_bins(target_name: str, target: np.ndarray, probability: np.ndarray) -> pd.DataFrame:
     frame = pd.DataFrame({"target": target, "probability": probability})
     try:
         frame["bin"] = pd.qcut(frame.probability.rank(method="first"), 10, labels=False)
     except ValueError:
         frame["bin"] = 0
-    result = frame.groupby("bin").agg(
-        n=("target", "size"),
-        mean_predicted_probability=("probability", "mean"),
-        observed_event_rate=("target", "mean"),
-    ).reset_index()
+    result = (
+        frame.groupby("bin")
+        .agg(
+            n=("target", "size"),
+            mean_predicted_probability=("probability", "mean"),
+            observed_event_rate=("target", "mean"),
+        )
+        .reset_index()
+    )
     result.insert(0, "target_name", target_name)
     return result
 
@@ -969,7 +1254,9 @@ def run_models(
                     "ci_upper": float(
                         math.exp(np.clip(coefficient + 1.96 * standard_error, -20, 20))
                     ),
-                    "association_direction": "HIGHER_PREDICTED_RISK" if coefficient > 0 else "LOWER_PREDICTED_RISK",
+                    "association_direction": "HIGHER_PREDICTED_RISK"
+                    if coefficient > 0
+                    else "LOWER_PREDICTED_RISK",
                     "magnitude": abs(coefficient),
                     "evidence_type": "PREDICTIVE",
                     "causal_interpretation_allowed": False,
@@ -1057,9 +1344,7 @@ def _driver_actions(feature: str) -> tuple[str, str, str]:
     )
 
 
-def build_driver_tree(
-    associations: pd.DataFrame, importance: pd.DataFrame
-) -> pd.DataFrame:
+def build_driver_tree(associations: pd.DataFrame, importance: pd.DataFrame) -> pd.DataFrame:
     eligible = associations[
         associations.analysis_type.eq("UNIVARIATE_ASSOCIATION")
         & associations.evidence_type.eq("ASSOCIATED")
@@ -1067,17 +1352,15 @@ def build_driver_tree(
         & associations.magnitude.notna()
         & (associations.ci_lower.gt(1) | associations.ci_upper.lt(1))
     ].copy()
-    eligible = eligible.sort_values("magnitude", ascending=False).drop_duplicates(
-        ["target", "feature_name"]
-    ).head(20)
+    eligible = (
+        eligible.sort_values("magnitude", ascending=False)
+        .drop_duplicates(["target", "feature_name"])
+        .head(20)
+    )
     rows: list[dict[str, Any]] = []
     for row in eligible.itertuples(index=False):
         intervention, owner, kpi = _driver_actions(row.feature_name)
-        confidence = (
-            "MEDIUM"
-            if row.ci_lower > 1 or row.ci_upper < 1
-            else "LOW"
-        )
+        confidence = "MEDIUM" if row.ci_lower > 1 or row.ci_upper < 1 else "LOW"
         rows.append(
             {
                 "driver_category": _driver_category(row.feature_name),
@@ -1095,9 +1378,11 @@ def build_driver_tree(
                 "success_KPI": kpi,
             }
         )
-    top_importance = importance[
-        importance.permutation_importance_mean_pr_auc_drop.gt(0)
-    ].sort_values("permutation_importance_mean_pr_auc_drop", ascending=False).head(12)
+    top_importance = (
+        importance[importance.permutation_importance_mean_pr_auc_drop.gt(0)]
+        .sort_values("permutation_importance_mean_pr_auc_drop", ascending=False)
+        .head(12)
+    )
     for row in top_importance.itertuples(index=False):
         intervention, owner, kpi = _driver_actions(row.feature_name)
         rows.append(
@@ -1109,7 +1394,9 @@ def build_driver_tree(
                 "evidence_type": "PREDICTIVE",
                 "association_direction": "MODEL_DEPENDENT",
                 "magnitude": f"Mean PR-AUC drop={row.permutation_importance_mean_pr_auc_drop:.4f}",
-                "confidence": "MEDIUM" if row.permutation_importance_mean_pr_auc_drop >= 0.01 else "LOW",
+                "confidence": "MEDIUM"
+                if row.permutation_importance_mean_pr_auc_drop >= 0.01
+                else "LOW",
                 "limitation": "Permutation importance measures predictive dependence, not direction or causality; correlated features share importance.",
                 "required_validation": "Repeat on a locked external period and inspect calibration/subgroup stability.",
                 "possible_intervention": intervention,
@@ -1197,9 +1484,11 @@ def render_calibration_plot(calibration: pd.DataFrame) -> None:
 
 
 def render_feature_importance(importance: pd.DataFrame) -> None:
-    top = importance.sort_values(
-        "permutation_importance_mean_pr_auc_drop", ascending=False
-    ).head(18).iloc[::-1]
+    top = (
+        importance.sort_values("permutation_importance_mean_pr_auc_drop", ascending=False)
+        .head(18)
+        .iloc[::-1]
+    )
     canvas = Canvas(1600, 1100, (250, 252, 255))
     canvas.text(55, 40, "PERMUTATION IMPORTANCE - PR AUC DROP", (24, 52, 91), 3)
     left, top_y, right, bottom = 610, 120, 1510, 1010
@@ -1238,11 +1527,15 @@ def write_model_card(
     feature_audit: pd.DataFrame,
 ) -> None:
     fitted = metrics[metrics.model_status.eq("FITTED")]
-    top_associations = associations[
-        associations.analysis_type.eq("UNIVARIATE_ASSOCIATION")
-        & associations.evidence_type.eq("ASSOCIATED")
-        & ~associations.small_cell_flag.fillna(False)
-    ].sort_values("magnitude", ascending=False).head(8)
+    top_associations = (
+        associations[
+            associations.analysis_type.eq("UNIVARIATE_ASSOCIATION")
+            & associations.evidence_type.eq("ASSOCIATED")
+            & ~associations.small_cell_flag.fillna(False)
+        ]
+        .sort_values("magnitude", ascending=False)
+        .head(8)
+    )
     top_predictive = importance.sort_values(
         "permutation_importance_mean_pr_auc_drop", ascending=False
     ).head(8)
@@ -1326,19 +1619,19 @@ Tree challengers were not run because no validated tree library is installed; de
 
 ## Top associated drivers
 
-{chr(10).join(association_lines) if association_lines else '- No stable non-small-cell association was verified.'}
+{chr(10).join(association_lines) if association_lines else "- No stable non-small-cell association was verified."}
 
 These are synthetic unadjusted associations. A feature cannot be called a clinical barrier without external temporal, clinical and operational validation.
 
 ## Top predictive features
 
-{chr(10).join(importance_lines) if importance_lines else '- No positive permutation importance was observed.'}
+{chr(10).join(importance_lines) if importance_lines else "- No positive permutation importance was observed."}
 
 Permutation importance is model- and correlation-dependent. It does not supply direction, mechanism or causal attribution.
 
 ## Subgroup disparities and instability
 
-{chr(10).join(f'- {value}' for value in unstable) if unstable else '- No non-small-cell subgroup ROC-AUC spread exceeded 0.10; small cells remain separately flagged.'}
+{chr(10).join(f"- {value}" for value in unstable) if unstable else "- No non-small-cell subgroup ROC-AUC spread exceeded 0.10; small cells remain separately flagged."}
 
 Subgroup differences may be measurement artifacts, simulation effects or sampling noise. Performance is reported by market, disease state, age band, care setting and missingness pattern, including small-cell flags.
 
@@ -1422,6 +1715,7 @@ def main() -> int:
     (OUTPUT_DIR / "driver_analysis_run_summary.json").write_text(
         json.dumps(summary, indent=2, default=str) + "\n", encoding="utf-8"
     )
+    write_eda_artifact_manifest(analytical_dir, selection)
     print(json.dumps(summary, indent=2, default=str))
     return 0
 

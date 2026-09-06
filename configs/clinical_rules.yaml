@@ -1,4 +1,4 @@
-version: "CLINICAL-RULES-v2.1"
+version: "CLINICAL-RULES-v2.2"
 
 clinical_rules:
   clinical_state_model:
@@ -32,7 +32,7 @@ clinical_rules:
     source_assumption: "For synthetic mHSPC analysis, ADT plus ARPI and/or chemotherapy is classified as intensified; not a recommendation."
     market_applicability: [US, DE, JP, FR, CN, AU, CA]
   persistence:
-    version: "PERSISTENCE-SYN-v2.1"
+    version: "PERSISTENCE-SYN-v2.2"
     inputs: [treatment_start_date, dispensing_coverage, refill_gap_days, discontinuation_date, switch_date, censor_date]
     output: persistence_status
     source_assumption: "Operational sensitivity definitions using independently evaluated 30/60/90-day permissible gaps."

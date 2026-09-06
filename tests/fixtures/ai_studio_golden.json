@@ -1,0 +1,56 @@
+[
+  {
+    "tactic_id": "cohort_definition",
+    "question": "Who is in the eligible cohort?",
+    "expected_metric_ids": ["eligible"]
+  },
+  {
+    "tactic_id": "initiation_landmarks",
+    "question": "What is the 90-day initiation result?",
+    "expected_metric_ids": ["initiated_30d", "initiated_60d", "initiated_90d"]
+  },
+  {
+    "tactic_id": "censoring_evaluability",
+    "question": "Who is censored at month 12?",
+    "expected_metric_ids": ["censored_12m"]
+  },
+  {
+    "tactic_id": "persistence_sensitivity",
+    "question": "How does the persistence gap definition change the result?",
+    "expected_metric_ids": [
+      "persistent_12m_gap_30d",
+      "persistent_12m_gap_60d",
+      "persistent_12m_gap_90d"
+    ]
+  },
+  {
+    "tactic_id": "time_to_initiation",
+    "question": "How is time to initiation described?",
+    "expected_metric_ids": ["initiated_30d", "initiated_60d", "initiated_90d"]
+  },
+  {
+    "tactic_id": "referral_pathway",
+    "question": "What does referral completion show?",
+    "expected_metric_ids": ["referral_completion"]
+  },
+  {
+    "tactic_id": "segmented_treatment_gap",
+    "question": "How does the initiation scenario differ by segment?",
+    "expected_metric_ids": ["not_initiated_90d_evaluable"]
+  },
+  {
+    "tactic_id": "missingness_profile",
+    "question": "What missingness evidence is available?",
+    "expected_metric_ids": []
+  },
+  {
+    "tactic_id": "model_disposition",
+    "question": "What is the verified model disposition?",
+    "expected_metric_ids": []
+  },
+  {
+    "tactic_id": "evidence_governance",
+    "question": "How is evidence lineage governed?",
+    "expected_metric_ids": []
+  }
+]

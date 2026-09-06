@@ -1,0 +1,35 @@
+version: REAL-DATA-EVALUATION-HOOKS-v1.0
+synthetic_data_only: true
+default_status: BLOCKED
+blocking_dependency: Governed comparison data plus privacy, security, RWE, and data-owner approval.
+hooks:
+  - hook_id: real_vs_synthetic_fidelity
+    method: Compare marginal, conditional, temporal, and longitudinal distributions by approved strata.
+    status: BLOCKED
+    required_inputs: [governed_real_reference, synthetic_candidate, approved_feature_mapping]
+    output: real_vs_synthetic_fidelity_report
+    approval: [data_owner, privacy, RWE, biostatistics]
+  - hook_id: train_synthetic_test_real
+    method: Train only on synthetic development data and evaluate once on a locked real test population.
+    status: BLOCKED
+    required_inputs: [locked_real_test_set, approved_target, frozen_model, transportability_plan]
+    output: TSTR_external_evaluation_report
+    approval: [clinical_RWE, model_risk, privacy]
+  - hook_id: nearest_neighbour_disclosure
+    method: Measure real-to-synthetic and synthetic-to-real nearest-neighbour distances after approved scaling.
+    status: BLOCKED
+    required_inputs: [governed_real_features, quasi_identifier_policy, distance_specification]
+    output: nearest_neighbour_risk_report
+    approval: [privacy, security, data_owner]
+  - hook_id: membership_inference
+    method: Execute an approved black-box and/or white-box membership-inference threat model.
+    status: BLOCKED
+    required_inputs: [governed_training_membership, threat_model, model_or_generator_access]
+    output: membership_inference_report
+    approval: [privacy, security, model_risk]
+  - hook_id: attribute_inference
+    method: Evaluate inference of approved sensitive attributes under an explicit attacker model.
+    status: BLOCKED
+    required_inputs: [governed_sensitive_attributes, threat_model, approved_attack_baselines]
+    output: attribute_inference_report
+    approval: [privacy, security, ethics_or_model_risk]

@@ -43,7 +43,7 @@ def test_fresh_runner_uses_new_stage_and_pins_generation_commit(tmp_path, monkey
     def fake_package(**kwargs):
         observed["package"] = kwargs
         kwargs["release_dir"].mkdir(parents=True)
-        return {"decision": "CERTIFIED — READY FOR BAYER ANALYSIS"}
+        return {"decision": "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED"}
 
     monkeypatch.setattr("prostate_journey.release_runner.package_certified_release", fake_package)
 

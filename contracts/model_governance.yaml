@@ -1,0 +1,114 @@
+version: RESPONSIBLE-AI-MODEL-GOVERNANCE-SYN-v1.0
+status: ENGINEERING DEFINITION
+synthetic_data_only: true
+reviewer_status: NOT YET VALIDATED
+disposition_states:
+  - REJECTED
+  - RESEARCH ONLY
+  - CANDIDATE FOR EXTERNAL VALIDATION
+  - APPROVED FOR A SPECIFIED USE
+
+intended_use_statement: >-
+  Reproducible research evaluation of synthetic prediction targets, leakage controls, temporal
+  validation methods, calibration, robustness, and subgroup support.
+prohibited_use_statement: >-
+  No output may drive patient care, treatment, eligibility, outreach, provider assessment,
+  commercial action, or automated decision-making. Synthetic validation is not external or
+  clinical validation and does not establish patient benefit.
+
+human_oversight_requirements:
+  - A named clinical/RWE owner approves the target, time zero, outcome and workflow.
+  - A biostatistician approves validation, calibration, uncertainty and support thresholds.
+  - Responsible AI/model risk approves harms, subgroup evaluation and disposition.
+  - Privacy, security and data owners approve any governed real-data evaluation.
+  - An operational owner approves action, capacity, thresholds, fallback and monitoring.
+
+model_harm_register:
+  - harm_id: HARM-01
+    scenario: False-positive risk labels trigger unnecessary or inequitable review.
+    affected_party: patient or care team
+    control: No operational action; thresholds and subgroup harms require approval.
+  - harm_id: HARM-02
+    scenario: False negatives create false reassurance and missed human review.
+    affected_party: patient or care team
+    control: No replacement of clinical judgment; stop-use on sensitivity or calibration failure.
+  - harm_id: HARM-03
+    scenario: Market, insurance, access or provider proxies encode structural or simulation effects.
+    affected_party: patient groups, providers, markets
+    control: Feature-removal robustness, subgroup support warnings, no ranking of groups.
+  - harm_id: HARM-04
+    scenario: Weak synthetic discrimination is presented as clinical meaning or deployability.
+    affected_party: decision makers and patients
+    control: Automatic disposition, wording gates, blocked aliases and no SHAP for rejected models.
+  - harm_id: HARM-05
+    scenario: Drift or data-contract failure silently changes prediction behavior.
+    affected_party: all downstream users
+    control: Stop-use conditions, release hashes, monitoring specification and rollback procedure.
+
+model_disposition_workflow:
+  REJECTED:
+    entry: Evidence is non-evaluable, materially weak, invalid, or fails a mandatory safety gate.
+    allowed_next_step: Redesign target/features or close the model; no promotion.
+  RESEARCH ONLY:
+    entry: Internal synthetic methods evidence is evaluable but not fit for operational use.
+    allowed_next_step: Approved protocol and governed external validation preparation.
+  CANDIDATE FOR EXTERNAL VALIDATION:
+    entry: Named reviewers approve the target and research evidence for a governed validation study.
+    allowed_next_step: Execute the preregistered external validation; no operational use.
+  APPROVED FOR A SPECIFIED USE:
+    entry: >-
+      Actual external/clinical/operational evidence and named approvals exist for one narrowly
+      specified use, threshold, population, workflow, monitoring plan, and rollback route.
+    allowed_next_step: Only the approved use and alias; all other uses remain prohibited.
+
+stop_use_conditions:
+  - input schema, key, feature-timing, or release-provenance gate fails
+  - unknown category or missingness exceeds an approved threshold
+  - calibration, discrimination, or subgroup safety crosses an approved boundary
+  - target, treatment pathway, population, market, or data-generating process materially changes
+  - unapproved alias, use, threshold, user population, or automated action is detected
+  - privacy, security, data-quality, or model incident remains unresolved
+
+misuse_scenarios:
+  - using synthetic probabilities as real patient risks
+  - using market or subgroup results to rank performance despite insufficient support
+  - converting exploratory associations or feature importance into causal explanations
+  - deploying a rejected or research-only model through a configuration alias
+  - selecting a threshold after seeing final holdout outcomes
+
+drift_monitoring_specification:
+  status: BLOCKED PENDING GOVERNED REAL DATA AND APPROVED USE
+  minimum_dimensions:
+    - schema and missingness drift
+    - predictor range/category drift
+    - population and event-prevalence drift
+    - temporal discrimination and calibration drift
+    - subgroup support and error drift
+    - action, override, and outcome-monitoring drift
+  frequency: Must be defined by the approved use and data latency.
+  alert_thresholds: Must be prespecified from external-validation and operational evidence.
+
+incident_and_rollback_procedure:
+  - Disable operational inference and remove the model from any serving alias.
+  - Preserve inputs, outputs, logs, model/release hashes and affected-use evidence.
+  - Notify model risk, clinical/RWE, privacy/security, data and operational owners.
+  - Assess patient/workflow impact and execute the approved incident process.
+  - Restore the last independently approved version or manual workflow only after authorization.
+  - Document root cause, remediation, revalidation and approval before reactivation.
+
+external_validation_requirements:
+  - preregistered intended use, target, estimand, population, exclusions and analysis plan
+  - governed non-synthetic data with source/phenotype/endpoint validation
+  - independent temporal and geographic validation with no development leakage
+  - calibration, discrimination, clinical-utility and subgroup uncertainty at approved horizons
+  - missing-data, transportability, drift, privacy, security and human-factors assessment
+  - comparison with approved simple strategies and any current human workflow
+  - named clinical, statistics, model-risk, data-owner, privacy/security and operational approval
+
+promotion_policy:
+  aliases:
+    research_sandbox: [RESEARCH ONLY, CANDIDATE FOR EXTERNAL VALIDATION, APPROVED FOR A SPECIFIED USE]
+    external_validation_candidate: [CANDIDATE FOR EXTERNAL VALIDATION, APPROVED FOR A SPECIFIED USE]
+    operational: [APPROVED FOR A SPECIFIED USE]
+  immutable_blocked_states: [REJECTED, RESEARCH ONLY]
+  final_state_requires_approval_evidence: true

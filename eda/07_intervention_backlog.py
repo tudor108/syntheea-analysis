@@ -12,7 +12,13 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from config import OUTPUT_DIR, PROJECT_ROOT, ensure_output_directories
+from config import (
+    OUTPUT_DIR,
+    PROJECT_ROOT,
+    ensure_output_directories,
+    resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -215,6 +221,7 @@ def write_manifest() -> None:
 
 def main() -> int:
     ensure_output_directories()
+    analytical_dir, selection_metadata = resolve_analytical_data_dir()
     driver_path = OUTPUT_DIR / "driver_tree.csv"
     metrics_path = OUTPUT_DIR / "model_metrics.csv"
     if not driver_path.is_file() or not metrics_path.is_file():
@@ -233,6 +240,7 @@ def main() -> int:
         "success_probabilities_invented": 0,
         "source_data_modified": False,
     }
+    write_eda_artifact_manifest(analytical_dir, selection_metadata)
     print(json.dumps(summary, indent=2))
     return 0
 

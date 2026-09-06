@@ -1,0 +1,138 @@
+"""Materialize generated Parquet contracts in DuckDB."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import duckdb
+
+TABLES = (
+    "patient",
+    "diagnosis",
+    "disease_state_event",
+    "eligibility",
+    "organization",
+    "provider",
+    "encounter",
+    "referral",
+    "active_surveillance",
+    "observation",
+    "treatment_episode",
+    "treatment_regimen",
+    "treatment_regimen_component",
+    "prescription_event",
+    "adverse_event",
+    "outcome",
+    "patient_split",
+    "feature_timing",
+    "patient_journey",
+)
+
+
+def load_duckdb(gold_dir: str | Path) -> Path:
+    """Load every normalized table and analytical views into one database."""
+    root = Path(gold_dir)
+    db_path = root / "prostate_journey.duckdb"
+    db_path.unlink(missing_ok=True)
+    con = duckdb.connect(str(db_path))
+    for table in TABLES:
+        path = (root / f"{table}.parquet").as_posix().replace("'", "''")
+        con.execute(f"CREATE OR REPLACE TABLE {table} AS SELECT * FROM read_parquet('{path}')")
+    con.execute(
+        "CREATE OR REPLACE VIEW vw_eligible_population AS "
+        "SELECT * FROM patient_journey WHERE eligibility_flag"
+    )
+    con.execute(
+        "CREATE OR REPLACE VIEW vw_eligible_not_initiated AS "
+        "SELECT * FROM patient_journey WHERE eligible_not_initiated_90d"
+    )
+    con.execute(
+        "CREATE OR REPLACE VIEW vw_treatment_initiation AS "
+        "SELECT * FROM patient_journey WHERE treatment_initiated"
+    )
+    con.execute(
+        "CREATE OR REPLACE VIEW vw_persistence AS SELECT patient_id, market_code, "
+        "persistence_3m_status, persistence_6m_status, persistence_12m_status, "
+        "censor_reason FROM patient_journey WHERE treatment_initiated"
+    )
+    con.execute(
+        "CREATE OR REPLACE VIEW vw_active_surveillance AS "
+        "SELECT * FROM patient_journey WHERE active_surveillance_status <> 'not_applicable'"
+    )
+    con.execute(
+        "CREATE OR REPLACE VIEW vw_referral_pathway AS SELECT patient_id, market_code, "
+        "referral_status, referral_delay_days, decision_owner_specialty, "
+        "initial_care_setting FROM patient_journey"
+    )
+    con.execute(
+        """CREATE OR REPLACE VIEW vw_treatment_gap_by_segment AS
+        SELECT market_code, initial_care_setting, complexity_segment, region,
+        CASE WHEN age_at_index < 65 THEN '<65'
+             WHEN age_at_index < 75 THEN '65-74' ELSE '75+' END AS age_group,
+        count(*) FILTER (WHERE eligibility_flag) AS eligible,
+        count(*) FILTER (
+            WHERE eligibility_flag AND initiated_within_90d
+        ) AS initiated_90d,
+        count(*) FILTER (WHERE eligible_not_initiated_90d) AS treatment_gap_90d,
+        count(*) FILTER (
+            WHERE eligibility_flag AND initiation_90d_status = 'CENSORED_NOT_EVALUABLE'
+        ) AS initiation_censored_not_evaluable_90d
+        FROM patient_journey GROUP BY ALL"""
+    )
+    con.execute(
+        """CREATE OR REPLACE VIEW vw_market_opportunity AS
+        WITH opportunity AS (
+            SELECT
+                market_code,
+                market_depth,
+                count(*) AS patients,
+                count(*) FILTER (WHERE eligibility_flag) AS eligible,
+                count(*) FILTER (
+                    WHERE eligibility_flag AND initiated_within_90d
+                ) AS initiated_90d,
+                count(*) FILTER (
+                    WHERE eligible_not_initiated_90d
+                ) AS treatment_gap_90d,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiation_90d_status = 'CENSORED_NOT_EVALUABLE'
+                ) AS initiation_censored_not_evaluable_90d,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status IN ('PERSISTENT', 'DISCONTINUED', 'SWITCHED')
+                ) AS evaluable_12m,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status = 'PERSISTENT'
+                ) AS persistent_12m,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status IN ('DISCONTINUED', 'SWITCHED')
+                ) AS discontinued_or_switched_12m,
+                count(*) FILTER (
+                    WHERE eligibility_flag
+                      AND initiated_within_90d
+                      AND persistence_12m_status = 'CENSORED_NOT_EVALUABLE'
+                ) AS censored_12m
+            FROM patient_journey
+            GROUP BY ALL
+        )
+        SELECT *,
+            eligible - initiation_censored_not_evaluable_90d AS initiation_evaluable_90d,
+            initiated_90d::DOUBLE / NULLIF(eligible, 0) AS initiation_rate_90d_all_eligible,
+            initiated_90d::DOUBLE
+                / NULLIF(eligible - initiation_censored_not_evaluable_90d, 0)
+                AS initiation_rate_90d_evaluable,
+            treatment_gap_90d::DOUBLE / NULLIF(eligible, 0)
+                AS treatment_gap_rate_90d_all_eligible,
+            treatment_gap_90d::DOUBLE
+                / NULLIF(eligible - initiation_censored_not_evaluable_90d, 0)
+                AS treatment_gap_rate_90d_evaluable,
+            persistent_12m::DOUBLE / NULLIF(evaluable_12m, 0) AS persistence_rate_12m
+        FROM opportunity"""
+    )
+    con.close()
+    return db_path

@@ -1,0 +1,103 @@
+version: MULTI-SEED-SYN-v1.0
+status: SYNTHETIC ENGINEERING STRESS-TEST
+synthetic_data_only: true
+clinical_realism_claim: false
+base_config_file: prostate_scenario.yaml
+input_mode: generated_archetypes_only
+simulation:
+  seed_start: 10000
+  seed_end_inclusive: 10099
+  seeds_per_scenario: 100
+  maximum_seeds_per_scenario: 150
+  adaptive_batch_size: 10
+  workers: 4
+  cohort_size_per_seed: 70
+  mcse_tolerance_rate: 0.02
+  adaptive_metrics: [eligibility_rate, initiation_90d_rate, treatment_gap_90d_rate, persistence_12m_rate]
+  simulation_interval_quantiles: [0.025, 0.975]
+  fail_if_minimum_not_reached: true
+  child_run_storage: aggregate_metrics_and_hashed_configuration
+
+scenario_axis: care_pathway_friction
+bundle_rule: >-
+  Each bundle changes a coherent set of access, referral, initiation, adherence, follow-up, and
+  missingness assumptions in the same direction. Values are unsupported engineering stress tests,
+  not clinical inputs or market-realistic estimates, and require SME review.
+
+scenarios:
+  low:
+    label: lower-friction engineering stress test
+    reviewer_status: NOT YET VALIDATED
+    assumption_status: REQUIRES SME REVIEW
+    requires_sme_review: true
+    overrides:
+      scenario_version: multi-seed-v2.2-low-friction
+      treatment:
+        high_comorbidity_initiation_penalty: 0.07
+        low_access_initiation_penalty: 0.06
+        completed_referral_initiation_increment: 0.11
+      referral:
+        eligible_probability_increment: 0.11
+        high_complexity_completion_penalty: 0.03
+      prescription:
+        adherence_profiles: {high: 0.68, variable: 0.24, low: 0.08}
+        refill_gap_by_profile:
+          high: {mean: 0, sd: 5, minimum: -14, maximum: 20}
+          variable: {mean: 10, sd: 15, minimum: -10, maximum: 60}
+          low: {mean: 30, sd: 25, minimum: -5, maximum: 100}
+      outcomes:
+        ltfu_base_probability: 0.045
+      missingness:
+        race_base: 0.018
+        ethnicity_base: 0.025
+        psa_base: 0.028
+        gleason_base: 0.025
+        insurance_base: 0.018
+  base:
+    label: configured v2.2 base assumptions
+    reviewer_status: NOT YET VALIDATED
+    assumption_status: REQUIRES SME REVIEW
+    requires_sme_review: true
+    overrides:
+      scenario_version: multi-seed-v2.2-base
+  high:
+    label: higher-friction engineering stress test
+    reviewer_status: NOT YET VALIDATED
+    assumption_status: REQUIRES SME REVIEW
+    requires_sme_review: true
+    overrides:
+      scenario_version: multi-seed-v2.2-high-friction
+      treatment:
+        high_comorbidity_initiation_penalty: 0.16
+        low_access_initiation_penalty: 0.15
+        completed_referral_initiation_increment: 0.05
+      referral:
+        eligible_probability_increment: 0.05
+        high_complexity_completion_penalty: 0.09
+      prescription:
+        adherence_profiles: {high: 0.47, variable: 0.34, low: 0.19}
+        refill_gap_by_profile:
+          high: {mean: 3, sd: 8, minimum: -14, maximum: 35}
+          variable: {mean: 20, sd: 23, minimum: -10, maximum: 90}
+          low: {mean: 48, sd: 36, minimum: -5, maximum: 140}
+      outcomes:
+        ltfu_base_probability: 0.11
+      missingness:
+        race_base: 0.04
+        ethnicity_base: 0.055
+        psa_base: 0.065
+        gleason_base: 0.055
+        insurance_base: 0.04
+
+missingness_truth_recovery:
+  variable: psa_value
+  estimand: mean complete generated PSA value
+  truth_cohort_size: 550
+  replications: 100
+  seed_start: 40000
+  target_missing_rate: 0.20
+  mechanisms: [EXISTING_CONFIGURED, MCAR, MAR, MNAR]
+  delta_standard_deviations: [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]
+  mar_drivers: [market_code, access_index, comorbidity_score]
+  mnar_driver: unobserved_psa_value
+  reviewer_status: NOT YET VALIDATED

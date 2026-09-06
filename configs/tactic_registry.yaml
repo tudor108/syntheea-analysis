@@ -1,0 +1,312 @@
+schema_version: TACTIC-REGISTRY-v2.0
+registry_status: ENGINEERING DEFINITION
+synthetic_only: true
+default_release_policy: ONE_EXPLICIT_CERTIFIED_RELEASE
+prohibited_interpretations:
+  - Bayer performance
+  - clinical evidence or real-world evidence
+  - population or real-market estimate
+  - causal effect or comparative effectiveness
+  - treatment recommendation or patient action
+  - validated or deployable production AI
+
+tactics:
+  - tactic_id: cohort_definition
+    version: 2.0.0
+    title: Cohort definition and attrition
+    category: Cohort
+    tags: [Cohort, Data Quality, Governance]
+    question: Who enters each analytical population, and where are records excluded?
+    why: A stable, inspectable denominator prevents KPI drift and unsupported comparisons.
+    analysis_id: cohort_definition
+    target_population: Generated prostate-cancer archetypes in the configured synthetic scenarios.
+    numerator_definition: Records retained at the selected cohort step.
+    denominator_definition: Records entering the immediately preceding cohort step.
+    numerator_key: eligible
+    denominator_key: total
+    index_date: Diagnosis/index date or pathway-specific cohort index date.
+    time_horizon: Through the selected analytical landmark.
+    method: Strictly nested attrition counts with explicit inclusion and exclusion reasons.
+    parameters: {active_cohort: synthetic_mhspc_eligible}
+    default_parameters: {active_cohort: synthetic_mhspc_eligible}
+    aggregate_result_source: presentation_kpis.csv
+    methodology_source: contracts/analysis_registry.yaml
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [presentation_kpis.csv, cohort_kpis.csv, cohort_summary.md]
+    release_compatibility: Certified analytical release with the contracted patient journey table.
+    reviewer_status: ENGINEERING DEFINITION
+    synthetic_only: true
+    interpretation: This is the controlled starting population for initiation and persistence analyses.
+    limitation: Eligibility is a synthetic engineering rule and requires clinical and source validation.
+    required_real_data_fields: [patient identifier, diagnosis date, disease state, eligibility date, observation end]
+    prohibited_interpretations: [clinical eligibility, prevalence estimate, Bayer patient count]
+
+  - tactic_id: initiation_landmarks
+    version: 2.0.0
+    title: Censor-aware initiation landmarks
+    category: Cohort
+    tags: [Cohort, Longitudinal, Treatment]
+    question: How many eligible synthetic records initiate by 30, 60, and 90 days?
+    why: Landmark comparison reveals timing patterns while keeping incomplete follow-up visible.
+    analysis_id: initiation_funnel
+    target_population: Generated records satisfying the configured synthetic eligibility rule.
+    numerator_definition: Eligible records with treatment initiation on or before the selected landmark.
+    denominator_definition: Eligible records; early censoring is reported separately and never silently treated as failure.
+    numerator_key: initiated_window
+    denominator_key: eligible
+    index_date: eligibility_date
+    time_horizon: 30, 60, or 90 days after eligibility.
+    method: Censor-aware cumulative landmark counts and proportions.
+    parameters: {initiation_window_days: [30, 60, 90]}
+    default_parameters: {initiation_window_days: 90}
+    aggregate_result_source: healthcare_initiation_funnel.csv
+    methodology_source: contracts/analysis_registry.yaml
+    limitation_source: docs/SCIENTIFIC_METHODS_V2.2.md
+    evidence_files: [healthcare_initiation_funnel.csv, presentation_kpis.csv]
+    release_compatibility: Certified release containing explicit initiation-window status fields.
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+    synthetic_only: true
+    interpretation: Differences between landmarks are scenario timing signals, not evidence of delay or quality.
+    limitation: Landmark windows are governed analytical conventions, not clinical guidance.
+    required_real_data_fields: [eligibility date, treatment start date, death date, loss-to-follow-up date, observation end]
+    prohibited_interpretations: [undertreatment, treatment recommendation, real initiation rate]
+
+  - tactic_id: censoring_evaluability
+    version: 2.0.0
+    title: Censoring and evaluability audit
+    category: Longitudinal
+    tags: [Longitudinal, Data Quality, Governance]
+    question: Is follow-up sufficient to classify each analytical outcome?
+    why: Incomplete observation must not be converted into a negative outcome.
+    analysis_id: censoring_audit
+    target_population: Generated records entering a longitudinal analysis.
+    numerator_definition: Records ending observation before the selected horizon, by classified reason.
+    denominator_definition: Records entering the corresponding longitudinal analysis with a valid time zero.
+    numerator_key: censored_window
+    denominator_key: eligible
+    index_date: Analysis-specific index date.
+    time_horizon: Selected initiation landmark or 365-day persistence horizon.
+    method: Event, competing-event, censoring, and risk-set reconciliation.
+    parameters: {initiation_window_days: [30, 60, 90], persistence_horizon_days: 365}
+    default_parameters: {initiation_window_days: 90, persistence_horizon_days: 365}
+    aggregate_result_source: healthcare_initiation_funnel.csv
+    methodology_source: docs/SCIENTIFIC_METHODS_V2.2.md
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [healthcare_initiation_funnel.csv, healthcare_persistence_summary.csv]
+    release_compatibility: Certified release with governed observation boundaries.
+    reviewer_status: ENGINEERING DEFINITION
+    synthetic_only: true
+    interpretation: Censored records remain visible and are excluded only where the estimand requires evaluability.
+    limitation: Correct censoring logic cannot recover events absent from a source system.
+    required_real_data_fields: [time zero, death date, loss-to-follow-up date, administrative data end]
+    prohibited_interpretations: [censored means no event, complete follow-up, clinical outcome]
+
+  - tactic_id: persistence_sensitivity
+    version: 2.0.0
+    title: Persistence definition sensitivity
+    category: Longitudinal
+    tags: [Longitudinal, Treatment]
+    question: How does the 12-month result change under 30-, 60-, and 90-day permissible-gap rules?
+    why: Sensitivity analysis makes dependence on an operational definition visible.
+    analysis_id: persistence_landmark
+    target_population: Eligible synthetic records initiating by day 90 for whom persistence applies.
+    numerator_definition: Evaluable records classified persistent at month 12 under the selected gap rule.
+    denominator_definition: Evaluable eligible day-90 initiators; 12-month censored records are separate.
+    numerator_key: persistent_gap
+    denominator_key: evaluable_gap
+    index_date: treatment_start_date
+    time_horizon: 365 days after treatment initiation.
+    method: Landmark persistence proportion with 30/60/90-day permissible-gap sensitivity.
+    parameters: {persistence_gap_days: [30, 60, 90]}
+    default_parameters: {persistence_gap_days: 60}
+    aggregate_result_source: healthcare_persistence_summary.csv
+    methodology_source: docs/SCIENTIFIC_METHODS_V2.2.md
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [healthcare_persistence_summary.csv, presentation_kpis.csv]
+    release_compatibility: Certified release containing gap-specific persistence statuses.
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+    synthetic_only: true
+    interpretation: Variation across gap rules is definition sensitivity, not statistical confidence.
+    limitation: Dispensing continuity is a proxy and does not establish medication ingestion or benefit.
+    required_real_data_fields: [treatment start, dispensing date, days supply, discontinuation, switch, censor date]
+    prohibited_interpretations: [adherence, treatment effectiveness, clinically validated persistence]
+
+  - tactic_id: time_to_initiation
+    version: 2.0.0
+    title: Time-to-initiation description
+    category: Longitudinal
+    tags: [Longitudinal, Treatment]
+    question: How quickly does observed initiation occur after synthetic eligibility?
+    why: Time-to-event framing preserves timing and censoring information beyond one binary landmark.
+    analysis_id: time_to_initiation
+    target_population: Generated eligible treatment candidates.
+    numerator_definition: Cumulative observed initiations through the selected event time.
+    denominator_definition: Eligible risk set immediately before that time.
+    numerator_key: initiated_window
+    denominator_key: eligible
+    index_date: eligibility_date
+    time_horizon: Up to 365 days, with 30/60/90-day views.
+    method: Descriptive landmarks in this release; survival and competing-risk estimators require matched scientific evidence.
+    parameters: {initiation_window_days: [30, 60, 90]}
+    default_parameters: {initiation_window_days: 90}
+    aggregate_result_source: cohort_summary.md
+    methodology_source: docs/SCIENTIFIC_METHODS_V2.2.md
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [cohort_summary.md, healthcare_initiation_funnel.csv]
+    release_compatibility: Descriptive landmarks are available; formal curves require release-matched scientific evidence.
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+    synthetic_only: true
+    interpretation: The distribution describes generated pathway timing under configured assumptions.
+    limitation: A median among observed events alone is not a censor-adjusted population estimate.
+    required_real_data_fields: [eligibility date, treatment start, death date, loss-to-follow-up, observation end]
+    prohibited_interpretations: [real treatment delay, access failure, causal pathway effect]
+
+  - tactic_id: referral_pathway
+    version: 2.0.0
+    title: Referral pathway analysis
+    category: Referral
+    tags: [Referral, Longitudinal]
+    question: How often are generated referrals completed, and how long do they take?
+    why: Handoff timing is a testable workflow hypothesis that should precede predictive claims.
+    analysis_id: referral_pathway
+    target_population: Generated records with an observed referral.
+    numerator_definition: Completed referrals or referrals within the selected delay band.
+    denominator_definition: Generated referral rows entering the corresponding summary.
+    numerator_key: referral_completed
+    denominator_key: referral_total
+    index_date: referral_date
+    time_horizon: Referral date to completion or governed observation boundary.
+    method: Completion proportion and empirical delay distribution.
+    parameters: {delay_bands_days: [14, 30, 60]}
+    default_parameters: {completion_status: completed}
+    aggregate_result_source: healthcare_referral_summary.csv
+    methodology_source: contracts/analysis_registry.yaml
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [healthcare_referral_summary.csv, healthcare_analysis_report.md]
+    release_compatibility: Certified release with valid referral and completion dates.
+    reviewer_status: PROPOSED CLINICAL DEFINITION
+    synthetic_only: true
+    interpretation: Completion and delay are configured workflow signals for investigation.
+    limitation: Referral association does not establish that referral caused treatment timing.
+    required_real_data_fields: [referral date, referral status, completion date, observation boundary]
+    prohibited_interpretations: [care quality, provider performance, causal delay]
+
+  - tactic_id: segmented_treatment_gap
+    version: 2.0.0
+    title: Segmented initiation scenario comparison
+    category: Treatment
+    tags: [Treatment, Cohort, Data Quality]
+    question: How do synthetic initiation summaries vary across configured segments?
+    why: Segmentation converts an average into data and workflow questions without ranking groups.
+    analysis_id: segmented_treatment_gap
+    target_population: Generated eligible treatment candidates.
+    numerator_definition: Evaluable eligible records not initiated by the selected landmark within a segment.
+    denominator_definition: Evaluable eligible records in the same selected segment.
+    numerator_key: gap_window
+    denominator_key: eligible
+    index_date: eligibility_date
+    time_horizon: Selected 30-, 60-, or 90-day landmark.
+    method: Stratum-specific descriptive proportions with no adjusted causal contrast.
+    parameters: {segment: [market, care_setting], initiation_window_days: [30, 60, 90]}
+    default_parameters: {segment: market, initiation_window_days: 90}
+    aggregate_result_source: cohort_dashboard.html
+    methodology_source: contracts/analysis_registry.yaml
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [cohort_dashboard.html, healthcare_initiation_funnel.csv]
+    release_compatibility: Certified release with stable cohort definitions across configured segments.
+    reviewer_status: ENGINEERING DEFINITION
+    synthetic_only: true
+    interpretation: Differences are scenario-assumption behavior that can generate validation questions.
+    limitation: Synthetic segments are neither representative nor comparable real markets or providers.
+    required_real_data_fields: [segment identifier, eligibility, initiation, censoring, source coverage]
+    prohibited_interpretations: [best or worst market, provider ranking, commercial performance]
+
+  - tactic_id: missingness_profile
+    version: 2.0.0
+    title: Missingness profile
+    category: Missingness
+    tags: [Missingness, Data Quality]
+    question: Which analytical fields are unavailable, and how does absence vary by configured scenario?
+    why: Missingness determines feasibility and may encode source or workflow processes.
+    analysis_id: missingness_profile_and_truth_recovery
+    target_population: Generated records in the selected synthetic scenario.
+    numerator_definition: Records missing the selected analytical field.
+    denominator_definition: Generated records evaluated for that field in the selected scenario.
+    numerator_key: missing_field
+    denominator_key: total
+    index_date: Not applicable for the descriptive profile.
+    time_horizon: Cross-sectional field availability summary.
+    method: Field-by-scenario missingness counts and proportions; no automatic imputation.
+    parameters: {fields: [race, insurance_type, psa_value, gleason_score, referral_delay_days]}
+    default_parameters: {display: heatmap_and_table}
+    aggregate_result_source: healthcare_missingness_by_market.csv
+    methodology_source: docs/SCIENTIFIC_METHODS_V2.2.md
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [healthcare_missingness_by_market.csv, healthcare_analysis_report.md]
+    release_compatibility: Certified release with aggregate missingness output.
+    reviewer_status: ENGINEERING DEFINITION
+    synthetic_only: true
+    interpretation: Missingness patterns identify source-fit questions, not patient characteristics.
+    limitation: Configured missingness cannot establish a real-data mechanism such as MAR or MNAR.
+    required_real_data_fields: [field-level presence indicator, source system, capture date, market/source coverage]
+    prohibited_interpretations: [real-data missingness mechanism, automatic imputation approval, source quality ranking]
+
+  - tactic_id: model_disposition
+    version: 2.0.0
+    title: Predictive model disposition
+    category: Predictive
+    tags: [Predictive, Governance]
+    question: Is any release-matched predictive model fit for an operational use?
+    why: AUC alone cannot establish utility, safety, external validity, or deployability.
+    analysis_id: predictive_model_portfolio_disposition
+    target_population: The prespecified synthetic model-development populations in each target contract.
+    numerator_definition: Target events in the applicable validation population.
+    denominator_definition: Evaluable records in the applicable validation population and split.
+    numerator_key: model_events
+    denominator_key: model_validation_n
+    index_date: Eligibility date or treatment-start date, as defined by each target contract.
+    time_horizon: 90 or 365 days, depending on target contract.
+    method: Contract-driven temporal validation, calibration, robustness, subgroup support, and governed disposition.
+    parameters: {models: [non_initiation_90d, discontinuation_12m, treatment_switch_12m, restart_after_gap]}
+    default_parameters: {operational_aliases: none}
+    aggregate_result_source: model_disposition.csv
+    methodology_source: docs/PREDICTIVE_METHODS_V2.2.md
+    limitation_source: contracts/model_governance.yaml
+    evidence_files: [model_disposition.csv, validation_metrics.csv, decision_curve_status.json]
+    release_compatibility: A release-matched, verified predictive evidence package is required; otherwise results are unavailable.
+    reviewer_status: NOT YET VALIDATED
+    synthetic_only: true
+    interpretation: RESEARCH ONLY and REJECTED are non-operational dispositions, not confidence tiers.
+    limitation: Synthetic internal validation cannot establish clinical value, transportability, or patient benefit.
+    required_real_data_fields: [validated target, prediction time, approved predictors, outcomes, follow-up, subgroup attributes]
+    prohibited_interpretations: [AI confidence score, clinical risk, deployment approval, patient prioritization]
+
+  - tactic_id: evidence_governance
+    version: 2.0.0
+    title: Evidence, lineage, and reproducibility
+    category: Governance
+    tags: [Governance, Data Quality]
+    question: Can each visible result be traced to one release, configuration, method, and evidence file?
+    why: Analytical trust requires exact identity and reproducibility, not a visual quality badge.
+    analysis_id: provenance_and_reproducibility
+    target_population: Certified release and aggregate presentation artifacts.
+    numerator_definition: Manifest-declared artifacts with matching identity, size, and SHA-256.
+    denominator_definition: All artifacts declared by the applicable verified manifest.
+    numerator_key: verified_artifacts
+    denominator_key: manifest_artifacts
+    index_date: generation_timestamp
+    time_horizon: One immutable build and presentation generation execution.
+    method: Exact identity, inventory, size, hash, and denominator reconciliation.
+    parameters: {hash_algorithm: SHA-256}
+    default_parameters: {release_policy: newest_complete_certified_release}
+    aggregate_result_source: evidence_manifest.json
+    methodology_source: docs/RELEASE_AND_CHANGE_CONTROL.md
+    limitation_source: docs/CLAIM_EVIDENCE_REGISTER.md
+    evidence_files: [evidence_manifest.json, presentation_kpis.csv]
+    release_compatibility: Exactly one accepted certified release and one release-matched presentation manifest.
+    reviewer_status: ENGINEERING DEFINITION
+    synthetic_only: true
+    interpretation: Passing internal controls establishes traceability against this synthetic contract only.
+    limitation: Internal QA does not constitute Bayer, clinical, RWE, privacy, security, or production approval.
+    required_real_data_fields: [source release identifier, source commit, configuration hash, artifact manifest, approvals]
+    prohibited_interpretations: [regulatory certification, production authorization, real-data approval]

@@ -31,6 +31,7 @@ from config import (
     TABLE_CONTRACTS,
     ensure_output_directories,
     resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
 )
 from svg_charts import bar_chart, heatmap, line_chart
 
@@ -1734,6 +1735,7 @@ def main() -> None:
         dq,
         reconciliation,
     )
+    write_eda_artifact_manifest(analytical_dir, selection_metadata)
     print(
         f"EDA complete: {len(dq):,} DQ checks, "
         f"{int(reconciliation.mismatch_count.sum()):,} reconciliation mismatches, "

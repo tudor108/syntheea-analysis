@@ -23,6 +23,7 @@ from config import (
     PROJECT_ROOT,
     ensure_output_directories,
     resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
 )
 from longitudinal_charts import line, render_line_chart, step_points
 from longitudinal_config import (
@@ -88,9 +89,7 @@ def kaplan_meier(
         data["event"] = data.event & data.duration.le(max_time)
         data["duration"] = data.duration.clip(upper=max_time)
     if data.empty:
-        return pd.DataFrame(
-            columns=["time_days", "n_at_risk", "events", "censored", "survival"]
-        )
+        return pd.DataFrame(columns=["time_days", "n_at_risk", "events", "censored", "survival"])
     survival = 1.0
     rows = [{"time_days": 0.0, "n_at_risk": len(data), "events": 0, "censored": 0, "survival": 1.0}]
     at_risk = len(data)
@@ -177,9 +176,7 @@ def build_initiation_event_data(flags: pd.DataFrame) -> pd.DataFrame:
 def _initiation_summary_row(
     group: pd.DataFrame, pathway: str, dimension: str, value: str
 ) -> dict[str, Any]:
-    curve = kaplan_meier(
-        group.time_to_initiation_or_censor_days, group.initiation_observed
-    )
+    curve = kaplan_meier(group.time_to_initiation_or_censor_days, group.initiation_observed)
     initiators = group.loc[group.initiation_observed, "time_to_initiation_days"]
     row: dict[str, Any] = {
         "pathway": pathway,
@@ -206,9 +203,7 @@ def _initiation_summary_row(
         "p90_days_observed_initiators": _quantile(initiators, 0.90),
         "km_median_time_to_initiation_days": km_median(curve),
         "small_cell_flag": bool(len(group) < SMALL_CELL_THRESHOLD),
-        "conclusion_type": (
-            "DESCRIPTIVE" if pathway == PRIMARY_PATHWAY else "PROXY-BASED"
-        ),
+        "conclusion_type": ("DESCRIPTIVE" if pathway == PRIMARY_PATHWAY else "PROXY-BASED"),
     }
     for day in INITIATION_WINDOWS_DAYS:
         survival = survival_at(curve, day)
@@ -223,9 +218,7 @@ def _initiation_summary_row(
         row[f"observable_at_{day}d_n"] = int(observable.sum())
         row[f"initiated_by_{day}d_n"] = int((observable & initiated).sum())
         row[f"crude_percent_not_initiated_by_{day}d_among_observable"] = (
-            100 * (observable & ~initiated).sum() / observable.sum()
-            if observable.sum()
-            else None
+            100 * (observable & ~initiated).sum() / observable.sum() if observable.sum() else None
         )
     return row
 
@@ -244,7 +237,11 @@ def summarize_initiation(events: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     }
     for pathway, pathway_frame in events.groupby("pathway", sort=True):
         for dimension, column in dimensions.items():
-            groups = [("ALL", pathway_frame)] if column is None else pathway_frame.groupby(column, dropna=False)
+            groups = (
+                [("ALL", pathway_frame)]
+                if column is None
+                else pathway_frame.groupby(column, dropna=False)
+            )
             for value, group in groups:
                 rows.append(_initiation_summary_row(group, pathway, dimension, str(value)))
         curve = kaplan_meier(
@@ -290,7 +287,9 @@ def _first_gap_event(
                 "observed refill after a gap exceeding the threshold",
             )
         coverage = pd.Timestamp(event.covered_until_date)
-        previous_coverage = coverage if pd.isna(previous_coverage) else max(previous_coverage, coverage)
+        previous_coverage = (
+            coverage if pd.isna(previous_coverage) else max(previous_coverage, coverage)
+        )
     if pd.notna(previous_coverage):
         return (
             pd.Timestamp(previous_coverage) + pd.Timedelta(days=threshold + 1),
@@ -362,8 +361,7 @@ def evaluate_persistence(
         "event_classification": classification,
         "event_basis": basis,
         "persistence_failure_flag": persistence_failure,
-        "competing_event_flag": classification
-        in {"SWITCHED", "DEATH", "LOST_TO_FOLLOW_UP"},
+        "competing_event_flag": classification in {"SWITCHED", "DEATH", "LOST_TO_FOLLOW_UP"},
         "temporary_gap_restarted_flag": classification == "TEMPORARY_GAP_RESTARTED",
         "observed_max_gap_before_endpoint": observed_gap,
         "add_on_before_endpoint_flag": bool(
@@ -480,9 +478,7 @@ def _persistence_landmark_row(
         "lost_to_follow_up_competing_event_n": int(ltfu.sum()),
         "administrative_censoring_before_landmark_n": int(admin.sum()),
         "unknown_before_landmark_n": int(unknown.sum()),
-        "conclusion_type": (
-            "DESCRIPTIVE" if pathway == PRIMARY_PATHWAY else "PROXY-BASED"
-        ),
+        "conclusion_type": ("DESCRIPTIVE" if pathway == PRIMARY_PATHWAY else "PROXY-BASED"),
         "causal_interpretation_allowed": False,
     }
 
@@ -525,9 +521,7 @@ def summarize_persistence(events: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFr
                     frame.loc[gap_failure, "days_to_persistence_endpoint"], 0.5
                 ),
                 "non_restarted_discontinuation_count": int(discontinued.sum()),
-                "non_restarted_discontinuation_rate": _safe_percent(
-                    discontinued.sum(), len(frame)
-                ),
+                "non_restarted_discontinuation_rate": _safe_percent(discontinued.sum(), len(frame)),
                 "observed_median_days_to_non_restarted_discontinuation": _quantile(
                     frame.loc[discontinued, "days_to_persistence_endpoint"], 0.5
                 ),
@@ -550,9 +544,7 @@ def summarize_persistence(events: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFr
     return pd.DataFrame(rows), pd.DataFrame(sensitivity)
 
 
-def reconcile_persistence_mart(
-    events: pd.DataFrame, patient_journey: pd.DataFrame
-) -> pd.DataFrame:
+def reconcile_persistence_mart(events: pd.DataFrame, patient_journey: pd.DataFrame) -> pd.DataFrame:
     """Reconcile independently rebuilt 12-month status to the governed mart."""
     rows: list[dict[str, Any]] = []
     primary = events[events.pathway.eq(PRIMARY_PATHWAY)].copy()
@@ -602,7 +594,10 @@ def build_switch_restart_summary(
         switches.switch_date - switches.initial_treatment_start
     ).dt.days
     later = relevant.merge(
-        switches[["patient_id", "switch_date"]], on="patient_id", how="inner", suffixes=("", "_index")
+        switches[["patient_id", "switch_date"]],
+        on="patient_id",
+        how="inner",
+        suffixes=("", "_index"),
     )
     later = later[later.treatment_start_date.gt(later.switch_date_index)]
     after = later.groupby("patient_id").agg(
@@ -611,13 +606,21 @@ def build_switch_restart_summary(
     )
 
     patient = initiated.drop_duplicates(["patient_id", "pathway"]).copy()
-    switch_patient = switches.sort_values("switch_date").drop_duplicates("patient_id").set_index("patient_id")
+    switch_patient = (
+        switches.sort_values("switch_date").drop_duplicates("patient_id").set_index("patient_id")
+    )
     patient["switched"] = patient.patient_id.isin(switch_patient.index)
-    patient["switch_days"] = patient.patient_id.map(switch_patient.switch_date).sub(
-        patient.patient_id.map(initial_start)
-    ).dt.days
-    patient["restarted_after_switch"] = patient.patient_id.map(after.restarted_after_switch).fillna(False)
-    patient["discontinued_after_switch"] = patient.patient_id.map(after.discontinued_after_switch).fillna(False)
+    patient["switch_days"] = (
+        patient.patient_id.map(switch_patient.switch_date)
+        .sub(patient.patient_id.map(initial_start))
+        .dt.days
+    )
+    patient["restarted_after_switch"] = patient.patient_id.map(after.restarted_after_switch).fillna(
+        False
+    )
+    patient["discontinued_after_switch"] = patient.patient_id.map(
+        after.discontinued_after_switch
+    ).fillna(False)
 
     rows: list[dict[str, Any]] = []
     dimensions = {
@@ -628,7 +631,11 @@ def build_switch_restart_summary(
     }
     for pathway, pathway_frame in patient.groupby("pathway"):
         for dimension, column in dimensions.items():
-            groups = [("ALL", pathway_frame)] if column is None else pathway_frame.groupby(column, dropna=False)
+            groups = (
+                [("ALL", pathway_frame)]
+                if column is None
+                else pathway_frame.groupby(column, dropna=False)
+            )
             for value, group in groups:
                 switched = group[group.switched]
                 rows.append(
@@ -640,9 +647,13 @@ def build_switch_restart_summary(
                         "initiated_n": int(len(group)),
                         "switch_n": int(len(switched)),
                         "switch_rate": _safe_percent(len(switched), len(group)),
-                        "median_days_initial_treatment_to_switch": _quantile(switched.switch_days, 0.5),
+                        "median_days_initial_treatment_to_switch": _quantile(
+                            switched.switch_days, 0.5
+                        ),
                         "restarted_after_switch_n": int(switched.restarted_after_switch.sum()),
-                        "discontinued_after_switch_n": int(switched.discontinued_after_switch.sum()),
+                        "discontinued_after_switch_n": int(
+                            switched.discontinued_after_switch.sum()
+                        ),
                         "small_cell_flag": bool(len(group) < SMALL_CELL_THRESHOLD),
                     }
                 )
@@ -670,9 +681,7 @@ def build_switch_restart_summary(
     return pd.DataFrame(rows)
 
 
-def build_censoring_summary(
-    initiation: pd.DataFrame, persistence: pd.DataFrame
-) -> pd.DataFrame:
+def build_censoring_summary(initiation: pd.DataFrame, persistence: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     for (pathway, status), group in initiation.groupby(
         ["pathway", "time_to_initiation_status"], dropna=False
@@ -695,8 +704,7 @@ def build_censoring_summary(
     ):
         denominator = len(
             persistence[
-                persistence.pathway.eq(pathway)
-                & persistence.gap_threshold_days.eq(threshold)
+                persistence.pathway.eq(pathway) & persistence.gap_threshold_days.eq(threshold)
             ]
         )
         rows.append(
@@ -833,7 +841,9 @@ def render_boxplots(path: Path, frame: pd.DataFrame) -> None:
 
         line(canvas, x, to_y(low), x, to_y(high), COLORS[index % len(COLORS)], 3)
         canvas.rectangle(x - 35, to_y(q3), 70, max(2, to_y(q1) - to_y(q3)), (185, 215, 238))
-        canvas.outline(x - 35, to_y(q3), 70, max(2, to_y(q1) - to_y(q3)), COLORS[index % len(COLORS)], 2)
+        canvas.outline(
+            x - 35, to_y(q3), 70, max(2, to_y(q1) - to_y(q3)), COLORS[index % len(COLORS)], 2
+        )
         line(canvas, x - 35, to_y(median), x + 35, to_y(median), (30, 45, 62), 3)
         canvas.text(x - 12, bottom + 25, label, (50, 59, 73), 2)
     canvas.text(650, 900, "MARKET", (50, 59, 73), 2)
@@ -842,10 +852,7 @@ def render_boxplots(path: Path, frame: pd.DataFrame) -> None:
 
 
 def render_cumulative_events(path: Path, events: pd.DataFrame) -> None:
-    frame = events[
-        events.pathway.eq(PRIMARY_PATHWAY)
-        & events.gap_threshold_days.eq(60)
-    ]
+    frame = events[events.pathway.eq(PRIMARY_PATHWAY) & events.gap_threshold_days.eq(60)]
     classifications = [
         "DISCONTINUED",
         "TEMPORARY_GAP_RESTARTED",
@@ -876,9 +883,12 @@ def render_cumulative_events(path: Path, events: pd.DataFrame) -> None:
 
 
 def write_sankey(path: Path, episodes: pd.DataFrame) -> None:
-    transitions = episodes[episodes.next_regimen.notna()].groupby(
-        ["regimen_name", "next_regimen"], dropna=False
-    ).size().reset_index(name="count")
+    transitions = (
+        episodes[episodes.next_regimen.notna()]
+        .groupby(["regimen_name", "next_regimen"], dropna=False)
+        .size()
+        .reset_index(name="count")
+    )
     if transitions.empty:
         transitions = pd.DataFrame(
             [{"regimen_name": "NO OBSERVED TRANSITION", "next_regimen": "END", "count": 0}]
@@ -898,9 +908,13 @@ def write_sankey(path: Path, episodes: pd.DataFrame) -> None:
         )
     nodes = []
     for value, y in source_y.items():
-        nodes.append(f'<rect x="20" y="{y - 22}" width="300" height="44" rx="6" fill="#154c79"/><text x="30" y="{y + 6}" fill="white">{html.escape(str(value))}</text>')
+        nodes.append(
+            f'<rect x="20" y="{y - 22}" width="300" height="44" rx="6" fill="#154c79"/><text x="30" y="{y + 6}" fill="white">{html.escape(str(value))}</text>'
+        )
     for value, y in target_y.items():
-        nodes.append(f'<rect x="880" y="{y - 22}" width="300" height="44" rx="6" fill="#7b2d43"/><text x="890" y="{y + 6}" fill="white">{html.escape(str(value))}</text>')
+        nodes.append(
+            f'<rect x="880" y="{y - 22}" width="300" height="44" rx="6" fill="#7b2d43"/><text x="890" y="{y + 6}" fill="white">{html.escape(str(value))}</text>'
+        )
     table_rows = "".join(
         f"<tr><td>{html.escape(str(row.regimen_name))}</td><td>{html.escape(str(row.next_regimen))}</td><td>{row.count}</td></tr>"
         for row in transitions.itertuples(index=False)
@@ -910,7 +924,7 @@ def write_sankey(path: Path, episodes: pd.DataFrame) -> None:
 <style>body{{font-family:Arial,sans-serif;margin:24px;color:#172033}}svg{{width:100%;max-width:1200px;border:1px solid #d8dee9;background:#fbfdff}}text{{font-size:13px}}table{{border-collapse:collapse;margin-top:24px}}th,td{{padding:7px 12px;border:1px solid #d8dee9}}.note{{max-width:1100px}}</style></head>
 <body><h1>Treatment-sequence Sankey / alluvial view</h1>
 <p class="note">Widths encode observed patient transitions between normalized regimens. Planned add-ons within one regimen are excluded from switch links and remain identified separately in the episode file. Synthetic descriptive data only.</p>
-<svg viewBox="0 0 1200 {height}" role="img" aria-label="Treatment sequence transitions">{''.join(paths)}{''.join(nodes)}</svg>
+<svg viewBox="0 0 1200 {height}" role="img" aria-label="Treatment sequence transitions">{"".join(paths)}{"".join(nodes)}</svg>
 <h2>Transition counts</h2><table><thead><tr><th>Previous regimen</th><th>Next regimen</th><th>Patients</th></tr></thead><tbody>{table_rows}</tbody></table></body></html>"""
     path.write_text(document, encoding="utf-8")
 
@@ -923,10 +937,12 @@ def render_figures(
 ) -> None:
     primary = initiation[initiation.pathway.eq(PRIMARY_PATHWAY)]
     observed = primary.loc[primary.initiation_observed, "time_to_initiation_days"].sort_values()
-    ecdf = [(0.0, 0.0)] + [
-        (float(value), (index + 1) / len(observed))
-        for index, value in enumerate(observed)
-    ] if len(observed) else []
+    ecdf = (
+        [(0.0, 0.0)]
+        + [(float(value), (index + 1) / len(observed)) for index, value in enumerate(observed)]
+        if len(observed)
+        else []
+    )
     render_line_chart(
         FIGURES_DIR / "time_to_initiation_ecdf.png",
         "TIME TO TREATMENT INITIATION ECDF - MHSPC",
@@ -1051,12 +1067,12 @@ Treatment initiation is the first qualifying normalized treatment episode on or 
 
 ## Robustness checks
 
-- Initiation is re-estimated at {', '.join(str(value) for value in INITIATION_WINDOWS_DAYS)} days.
-- Discontinuation/persistence is re-estimated for gaps greater than {', '.join(str(value) for value in DISCONTINUATION_GAPS_DAYS)} days.
-- Minimum baseline observation of {', '.join(str(value) for value in BASELINE_REQUIREMENTS_DAYS)} days was tested. Available counts were {', '.join(f'{row.scenario}: {int(row.event_n)}' for row in baseline.itertuples(index=False))}; a zero count is reported as not computable rather than silently relaxing the rule.
-- Landmark risk sets at {', '.join(str(value) for value in PERSISTENCE_LANDMARKS_DAYS)} days explicitly count insufficient follow-up exclusions.
+- Initiation is re-estimated at {", ".join(str(value) for value in INITIATION_WINDOWS_DAYS)} days.
+- Discontinuation/persistence is re-estimated for gaps greater than {", ".join(str(value) for value in DISCONTINUATION_GAPS_DAYS)} days.
+- Minimum baseline observation of {", ".join(str(value) for value in BASELINE_REQUIREMENTS_DAYS)} days was tested. Available counts were {", ".join(f"{row.scenario}: {int(row.event_n)}" for row in baseline.itertuples(index=False))}; a zero count is reported as not computable rather than silently relaxing the rule.
+- Landmark risk sets at {", ".join(str(value) for value in PERSISTENCE_LANDMARKS_DAYS)} days explicitly count insufficient follow-up exclusions.
 - Episode overlap and same-day alternative ordering were audited. Same-day component/refill events are ordered deterministically by service date and stable event ID; episode starts had no same-day ties in this release.
-- Missing-supply scenario values are configurable as {', '.join(str(value) for value in MISSING_SUPPLY_SCENARIOS_DAYS)} days, but none is written into `days_supply`; any future use must set `scenario_based=true`.
+- Missing-supply scenario values are configurable as {", ".join(str(value) for value in MISSING_SUPPLY_SCENARIOS_DAYS)} days, but none is written into `days_supply`; any future use must set `scenario_based=true`.
 
 ## Top data gaps preventing stronger persistence conclusions
 
@@ -1119,7 +1135,7 @@ def write_manifest(analytical_dir: Path, outputs: list[Path]) -> None:
 
 def main() -> int:
     ensure_output_directories()
-    analytical_dir, _ = resolve_analytical_data_dir()
+    analytical_dir, selection_metadata = resolve_analytical_data_dir()
     episode_path = OUTPUT_DIR / "treatment_episodes.parquet"
     if not episode_path.is_file():
         raise FileNotFoundError("Run eda/04_treatment_episode_builder.py first")
@@ -1203,6 +1219,7 @@ def main() -> int:
     )
     output_paths.append(OUTPUT_DIR / "longitudinal_assumptions.md")
     write_manifest(analytical_dir, output_paths)
+    write_eda_artifact_manifest(analytical_dir, selection_metadata)
 
     primary_summary = initiation_summary[
         initiation_summary.pathway.eq(PRIMARY_PATHWAY)

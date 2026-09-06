@@ -12,7 +12,12 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from config import OUTPUT_DIR, ensure_output_directories, resolve_analytical_data_dir
+from config import (
+    OUTPUT_DIR,
+    ensure_output_directories,
+    resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
+)
 
 DATE_COLUMNS = {
     "treatment_episode": (
@@ -78,9 +83,7 @@ def _component_summary(components: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _prescription_summary(
-    episodes: pd.DataFrame, prescriptions: pd.DataFrame
-) -> pd.DataFrame:
+def _prescription_summary(episodes: pd.DataFrame, prescriptions: pd.DataFrame) -> pd.DataFrame:
     tracking = episodes[["treatment_episode_id", "tracking_component_id"]].merge(
         prescriptions.drop(columns=["treatment_episode_id"]),
         left_on="tracking_component_id",
@@ -225,8 +228,8 @@ def build_treatment_episodes(analytical_dir: Path) -> pd.DataFrame:
         result.treatment_start_date - result.previous_episode_end_date
     ).dt.days
     result["episode_overlap_days"] = (
-        -result.inter_episode_gap_days.clip(upper=0)
-    ).fillna(0).astype(int)
+        (-result.inter_episode_gap_days.clip(upper=0)).fillna(0).astype(int)
+    )
     result["episode_overlap_flag"] = result.episode_overlap_days.gt(0)
     result["same_day_episode_flag"] = result.inter_episode_gap_days.eq(0)
     result["same_day_ordering_rule"] = (
@@ -343,6 +346,7 @@ def main() -> int:
     (OUTPUT_DIR / "treatment_episode_build_summary.json").write_text(
         json.dumps(summary, indent=2, default=str) + "\n", encoding="utf-8"
     )
+    write_eda_artifact_manifest(analytical_dir, selection)
     print(json.dumps(summary, indent=2, default=str))
     return 0
 

@@ -1,0 +1,40 @@
+schema_version: "1.0"
+enabled: true
+provider_enabled: true
+service_name: prostate-journey-ai-studio
+environment: local
+host: 127.0.0.1
+port: 8090
+model: gpt-5.6-luna
+reasoning_effort: low
+output_verbosity: low
+max_output_tokens: 900
+retrieval_top_k: 4
+memory_turns: 4
+summary_character_limit: 1600
+max_question_characters: 2400
+request_timeout_seconds: 90
+vector_sync_timeout_seconds: 180
+cost_controls_path: configs/ai_cost_controls.yaml
+budget_ledger_path: outputs/experiments/ai_studio/budget_ledger.sqlite3
+audit_log_path: outputs/experiments/ai_studio/audit.jsonl
+catalogue_path: outputs/experiments/ai_studio/artifact_catalogue.json
+vector_store_state_path: outputs/experiments/ai_studio/vector_store_state.json
+index_staging_directory: outputs/experiments/ai_studio/index_payload
+analytics_url: http://127.0.0.1:8080/
+specialist_model: gpt-5.6-terra
+specialist_reasoning_effort: medium
+specialist_max_output_tokens: 2500
+specialist_max_runtime_seconds: 20
+specialist_max_cpu_seconds: 15
+specialist_max_memory_mb: 256
+specialist_max_output_bytes: 1000000
+specialist_max_disk_bytes: 2000000
+interactive_runs_directory: outputs/experiments/ai_studio/interactive_runs
+interactive_run_ttl_days: 7
+expert_lenses_path: configs/expert_lenses.yaml
+analysis_registry_path: contracts/analysis_registry.yaml
+authentication_mode: local
+allowed_origins:
+  - http://127.0.0.1:8090
+  - http://localhost:8090

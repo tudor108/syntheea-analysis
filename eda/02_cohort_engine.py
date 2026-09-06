@@ -23,6 +23,7 @@ from config import (
     OUTPUT_DIR,
     ensure_output_directories,
     resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
 )
 
 PATHWAY_LABELS = {
@@ -898,6 +899,7 @@ def main() -> None:
     (OUTPUT_DIR / "cohort_engine_run_summary.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"
     )
+    write_eda_artifact_manifest(analytical_dir, selection_metadata)
     print(
         f"Cohort engine complete: {len(output):,} patient-pathway rows; "
         f"mHSPC 90d={summary['initiation_90d']['mhspc_mcspc']:,}; "

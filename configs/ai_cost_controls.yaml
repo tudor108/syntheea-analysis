@@ -1,0 +1,119 @@
+schema_version: "AI-FINOPS-v1.0"
+effective_date: "2026-09-05"
+currency: USD
+source_reference_note: "OpenAI API pricing, https://developers.openai.com/api/docs/pricing, verified 2026-09-05. Re-verify before changing the effective date."
+safety_margin_multiplier: 1.20
+
+models:
+  gpt-5.6-luna:
+    input_per_million_usd: 0.20
+    cached_input_per_million_usd: 0.02
+    cache_write_per_million_usd: 0.25
+    output_per_million_usd: 1.20
+  gpt-5.6-terra:
+    input_per_million_usd: 2.00
+    cached_input_per_million_usd: 0.20
+    cache_write_per_million_usd: 2.50
+    output_per_million_usd: 12.00
+
+tools:
+  file_search:
+    enabled: true
+    per_call_usd: 0.0025
+    storage_per_gb_day_usd: 0.10
+  web_search:
+    enabled: false
+    per_call_usd: 0.01
+  code_interpreter:
+    enabled: false
+    per_session_usd: 0.03
+
+request_profiles:
+  evidence:
+    model_id: gpt-5.6-luna
+    max_input_tokens: 24000
+    max_output_tokens: 900
+    max_retrieved_chunks: 4
+    max_file_search_calls: 1
+    max_deterministic_tool_calls: 3
+    max_model_iterations: 1
+    max_request_cost_usd: 0.02
+  specialist_router:
+    model_id: gpt-5.6-luna
+    max_input_tokens: 24000
+    max_output_tokens: 900
+    max_retrieved_chunks: 0
+    max_file_search_calls: 0
+    max_deterministic_tool_calls: 2
+    max_model_iterations: 1
+    max_request_cost_usd: 0.02
+  specialist_planning:
+    model_id: gpt-5.6-terra
+    max_input_tokens: 80000
+    max_output_tokens: 2500
+    max_retrieved_chunks: 6
+    max_file_search_calls: 2
+    max_deterministic_tool_calls: 6
+    max_model_iterations: 2
+    max_request_cost_usd: 0.50
+  specialist_summary:
+    model_id: gpt-5.6-luna
+    max_input_tokens: 24000
+    max_output_tokens: 900
+    max_retrieved_chunks: 0
+    max_file_search_calls: 0
+    max_deterministic_tool_calls: 2
+    max_model_iterations: 1
+    max_request_cost_usd: 0.02
+  live_evidence:
+    model_id: gpt-5.6-luna
+    max_input_tokens: 16000
+    max_output_tokens: 900
+    max_retrieved_chunks: 4
+    max_file_search_calls: 1
+    max_deterministic_tool_calls: 3
+    max_model_iterations: 1
+    max_request_cost_usd: 0.01
+  live_specialist_planning:
+    model_id: gpt-5.6-terra
+    max_input_tokens: 20000
+    max_output_tokens: 2500
+    max_retrieved_chunks: 0
+    max_file_search_calls: 0
+    max_deterministic_tool_calls: 6
+    max_model_iterations: 1
+    max_request_cost_usd: 0.10
+
+budgets:
+  interactive_session:
+    warning_usd: 1.20
+    specialist_soft_stop_usd: 1.50
+    hard_stop_usd: 2.00
+  specialist_run:
+    hard_stop_usd: 0.55
+  authenticated_user_daily:
+    hard_stop_usd: 5.00
+  live_eval_run:
+    warning_usd: 1.60
+    hard_stop_usd: 2.00
+  monthly_project_alert:
+    warning_usd: 10.00
+    critical_usd: 20.00
+    provider_limit_required_for_production: true
+
+live_eval_suite:
+  luna_evidence_questions: 25
+  terra_planning_scenarios: 5
+  max_file_search_calls: 35
+  hard_stop_usd: 2.00
+
+security_limits:
+  max_request_bytes: 64000
+  session_ttl_seconds: 1800
+  rate_limit_requests: 30
+  rate_limit_window_seconds: 60
+  max_index_artifact_bytes: 2000000
+  max_sandbox_disk_bytes: 2000000
+  audit_log_max_field_characters: 160
+  retry_max_attempts: 2
+  retry_initial_backoff_seconds: 0.25

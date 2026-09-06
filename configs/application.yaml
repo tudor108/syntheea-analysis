@@ -1,0 +1,19 @@
+schema_version: "1.0"
+service_name: prostate-journey-analytics
+environment: local
+host: 127.0.0.1
+port: 8080
+log_level: INFO
+log_format: json
+presentation_entrypoint: executive_story.html
+verify_release_hashes: true
+readiness_cache_seconds: 30
+shutdown_timeout_seconds: 10
+paths:
+  working_analytical: data/gold
+  working_reports: data/reports
+  certified_releases: data/releases
+  qa_evidence: outputs/industry_readiness
+  presentations: outputs/presentation
+  temporary: .test-work/runtime
+  experiments: outputs/experiments

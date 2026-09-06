@@ -1,0 +1,32 @@
+schema_version: "EXPERT-LENSES-v1.0"
+synthetic_only: true
+orchestrator: ONE_CONTROLLED_ORCHESTRATOR
+lenses:
+  - lens_id: rwe_epidemiology
+    title: RWE & Epidemiology
+    purpose: Define the population, estimand, index date, follow-up, censoring, and competing events.
+    required_checks: [population_reconciliation, time_zero, event_hierarchy, censoring]
+  - lens_id: biostatistics
+    title: Biostatistics
+    purpose: Review estimator suitability, uncertainty, sensitivity analyses, and interpretation limits.
+    required_checks: [denominator_reconciliation, estimator, uncertainty_type, sensitivity]
+  - lens_id: oncology_definition_review
+    title: Oncology Definition Review
+    purpose: Surface definitions that require oncology subject-matter review without making clinical recommendations.
+    required_checks: [clinical_definition_status, outcome_definition, prohibited_use]
+  - lens_id: missing_data_analysis
+    title: Missing-Data Analysis
+    purpose: Assess missingness patterns, assumptions, evaluability, and fit-for-use constraints.
+    required_checks: [missingness, evaluability, denominator_reconciliation]
+  - lens_id: predictive_modelling
+    title: Predictive Modelling
+    purpose: Review target timing, leakage, validation, calibration, and model disposition.
+    required_checks: [target_timing, leakage, validation, calibration, disposition]
+  - lens_id: data_quality
+    title: Data Quality
+    purpose: Review schema, duplicates, chronology, completeness, and reconciliation controls.
+    required_checks: [schema, duplicates, chronology, missingness, reconciliation]
+  - lens_id: market_scenario_analysis
+    title: Market Scenario Analysis
+    purpose: Compare configured synthetic scenarios without ranking markets or inferring real-market performance.
+    required_checks: [scenario_compatibility, denominator_reconciliation, market_ranking_guardrail]

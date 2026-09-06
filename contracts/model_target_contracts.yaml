@@ -1,0 +1,187 @@
+contract_version: MODEL-TARGET-CONTRACTS-SYN-v1.0
+synthetic_data_only: true
+reviewer_status: NOT YET VALIDATED
+allowed_dispositions:
+  - REJECTED
+  - RESEARCH ONLY
+  - CANDIDATE FOR EXTERNAL VALIDATION
+  - APPROVED FOR A SPECIFIED USE
+global_interpretation_boundary: >-
+  Synthetic prediction-method research only. Temporal or market holdout performance is not
+  external validation, clinical validation, real-world utility, transportability, patient benefit,
+  or a Bayer insight.
+common_prohibited_uses: &common_prohibited_uses
+  - clinical decision support or treatment recommendation
+  - automated patient ranking, outreach, denial, eligibility, or access decision
+  - provider, site, market, or commercial performance assessment
+  - comparative effectiveness, causal inference, or patient-benefit claim
+  - deployment to any operational or production alias
+common_human_oversight: &common_human_oversight >-
+  A clinical/RWE methodologist, biostatistician, responsible-AI reviewer, data owner, and the owner
+  of any proposed workflow must approve the target, timing, harms, evidence, and intended use.
+
+models:
+  - model_id: non_initiation_90d
+    model_version: 1.0.0
+    analysis_registry_id: predict_non_initiation_90d
+    target_name: non_initiated_within_90_days
+    intended_research_use: >-
+      Evaluate whether information available at synthetic ARPI eligibility can rank generated,
+      evaluable records with an explicit mHSPC state by non-initiation within 90 days.
+    prohibited_uses: *common_prohibited_uses
+    target_population: Generated records with an explicit mHSPC state meeting the proposed eligibility definition.
+    model_development_population: >-
+      Unique eligible records with a valid eligibility date and determinable 90-day initiation
+      status; records censored before day 90 are excluded and counted.
+    prediction_time: eligibility_date
+    prediction_horizon_days: 90
+    outcome_definition: >-
+      initiation_90d_status = NOT_INITIATED_WITHIN_90D versus INITIATED_WITHIN_90D.
+    predictor_availability_cutoff: >-
+      Baseline fields may be observed on eligibility_date; encounters, referrals, and prior
+      treatments must be strictly earlier than eligibility_date.
+    event_handling: Treatment initiation by day 90 is the complement event.
+    censoring_handling: Death, loss to follow-up, or administrative end before day 90 is not failure.
+    denominator_derivation:
+      - all analytical patients
+      - explicit recorded mHSPC pathway
+      - proposed eligible records
+      - valid prediction time
+      - observable through day 90
+      - determinable binary outcome
+      - one row per patient
+    simple_comparator: Training-period event prevalence applied unchanged to validation records.
+    plausible_decision_or_workflow: NOT DEFINED — no approved outreach action or review capacity.
+    operational_action_defined: false
+    plausible_threshold_range: null
+    approved_comparison_strategies: []
+    false_positive_harm: >-
+      Unnecessary review, stigma, inequitable outreach, or diversion of limited navigation capacity.
+    false_negative_harm: A potentially delayed pathway may not receive a human review.
+    required_human_oversight: *common_human_oversight
+    current_disposition: RESEARCH ONLY
+    reviewer_status: NOT YET VALIDATED
+
+  - model_id: discontinuation_12m
+    model_version: 1.0.0
+    analysis_registry_id: predict_discontinuation_12m
+    target_name: discontinued_within_12_months
+    intended_research_use: >-
+      Test whether treatment-start information ranks generated initiators by a 60-day
+      permissible-gap persistence failure within 365 days.
+    prohibited_uses: *common_prohibited_uses
+    target_population: Generated treatment initiators with an explicit recorded mHSPC state.
+    model_development_population: >-
+      Unique initiators with treatment-start time zero and either a qualifying persistence failure
+      by day 365 or observation remaining event-free beyond day 365; earlier competing/censoring
+      states are excluded and counted.
+    prediction_time: treatment_start_date
+    prediction_horizon_days: 365
+    outcome_definition: >-
+      persistence_failure_flag by day 365 under the configured 60-day permissible-gap definition.
+    predictor_availability_cutoff: All predictors must be available no later than treatment_start_date.
+    event_handling: Gap failure is the target; switch and death are competing states.
+    censoring_handling: Loss to follow-up and administrative end before day 365 are excluded and counted.
+    denominator_derivation:
+      - all analytical patients
+      - explicit recorded mHSPC pathway
+      - generated treatment initiators under the 60-day gap specification
+      - valid prediction time
+      - target event by day 365 or event-free beyond day 365
+      - earlier competing and censoring states excluded
+      - one row per patient
+    simple_comparator: Training-period event prevalence applied unchanged to validation records.
+    plausible_decision_or_workflow: NOT DEFINED — no approved adherence intervention or threshold.
+    operational_action_defined: false
+    plausible_threshold_range: null
+    approved_comparison_strategies: []
+    false_positive_harm: Unnecessary adherence review, burden, stigma, or inappropriate intervention.
+    false_negative_harm: A potentially interrupted treatment journey may not receive human review.
+    required_human_oversight: *common_human_oversight
+    current_disposition: RESEARCH ONLY
+    reviewer_status: NOT YET VALIDATED
+
+  - model_id: treatment_switch_12m
+    model_version: 1.0.0
+    analysis_registry_id: predict_treatment_switch
+    target_name: switched_treatment
+    intended_research_use: >-
+      Evaluate whether treatment-start information ranks generated initiators by explicit switch
+      within 365 days.
+    prohibited_uses: *common_prohibited_uses
+    target_population: Generated treatment initiators with an explicit recorded mHSPC state.
+    model_development_population: >-
+      Unique initiators with an explicit switch by day 365 or observation remaining event-free
+      beyond day 365; earlier non-switch persistence failures, death, and censoring are excluded.
+    prediction_time: treatment_start_date
+    prediction_horizon_days: 365
+    outcome_definition: event_classification = SWITCHED by day 365.
+    predictor_availability_cutoff: All predictors must be available no later than treatment_start_date.
+    event_handling: Explicit switch is the target; death and non-switch failure prevent the target.
+    censoring_handling: Loss to follow-up and administrative end before day 365 are excluded and counted.
+    denominator_derivation:
+      - all analytical patients
+      - explicit recorded mHSPC pathway
+      - generated treatment initiators under the 60-day gap specification
+      - valid prediction time
+      - explicit switch by day 365 or event-free beyond day 365
+      - earlier competing and censoring states excluded
+      - one row per patient
+    simple_comparator: Training-period event prevalence applied unchanged to validation records.
+    plausible_decision_or_workflow: NOT DEFINED — a switch is not automatically undesirable or actionable.
+    operational_action_defined: false
+    plausible_threshold_range: null
+    approved_comparison_strategies: []
+    false_positive_harm: Inappropriate scrutiny of a clinically appropriate treatment change.
+    false_negative_harm: A potentially reviewable transition may not be surfaced to a human.
+    required_human_oversight: *common_human_oversight
+    current_disposition: RESEARCH ONLY
+    reviewer_status: NOT YET VALIDATED
+
+  - model_id: restart_after_gap
+    model_version: 1.0.0
+    analysis_registry_id: predict_restart_after_gap
+    target_name: restarted_after_gap
+    intended_research_use: >-
+      Test whether treatment-start information ranks generated records that later experience a
+      qualifying gap by subsequent restart classification.
+    prohibited_uses: *common_prohibited_uses
+    target_population: Generated records with an explicit mHSPC state and persistence failure by day 365.
+    model_development_population: >-
+      Unique records with a 60-day permissible-gap failure by day 365 and either an explicit dated
+      restart by day 365 or observation through day 365 without restart. Undated restart classes and
+      records censored before the restart status is determinable are excluded and counted.
+    prediction_time: treatment_start_date
+    prediction_horizon_days: 365
+    outcome_definition: >-
+      Explicit restart_date on or before day 365 versus no restart through day 365, conditional on
+      a qualifying gap failure by day 365.
+    predictor_availability_cutoff: >-
+      All predictors are frozen at treatment_start_date; this is not a gap-triggered operational model.
+    event_handling: >-
+      A dated restart by day 365 is the event; later restart is a non-event at this horizon. The
+      analysis remains retrospectively conditional on a qualifying gap by day 365.
+    censoring_handling: >-
+      Without a dated restart by day 365, observation must extend through day 365. Earlier censoring
+      and undated temporary-restart classifications are excluded and counted.
+    denominator_derivation:
+      - all analytical patients
+      - explicit recorded mHSPC pathway
+      - generated treatment initiators under the 60-day gap specification
+      - valid treatment-start prediction time
+      - qualifying persistence failure by day 365
+      - dated restart by day 365 or observation through day 365 without restart
+      - one row per patient
+    simple_comparator: Training-period event prevalence applied unchanged to validation records.
+    plausible_decision_or_workflow: NOT DEFINED — prediction occurs before the qualifying gap.
+    retrospective_selection_warning: >-
+      Gap-failure membership is unknown at treatment start, so this conditional model cannot define
+      an operational treatment-start cohort. A future gap-triggered target requires a new contract.
+    operational_action_defined: false
+    plausible_threshold_range: null
+    approved_comparison_strategies: []
+    false_positive_harm: Unnecessary follow-up based on an unsupported future restart classification.
+    false_negative_harm: A potentially reviewable restart pattern may not be identified for research.
+    required_human_oversight: *common_human_oversight
+    current_disposition: RESEARCH ONLY
+    reviewer_status: NOT YET VALIDATED

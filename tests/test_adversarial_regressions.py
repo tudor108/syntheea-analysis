@@ -249,7 +249,7 @@ def test_mart_care_outcome_and_feature_timing_are_reconstructable(generated_tabl
     assert set(generated_tables["patient_journey"].columns) == set(timing.feature_name)
     assert not (timing.future_information_flag & timing.predictor_allowed_flag).any()
     assert not (timing.target_label_flag & timing.predictor_allowed_flag).any()
-    assert journey.persistence_rule_version.eq("PERSISTENCE-SYN-v2.1").all()
+    assert journey.persistence_rule_version.eq("PERSISTENCE-SYN-v2.2").all()
     referral_features = timing[timing.feature_name.str.startswith("referral_")]
     assert referral_features.availability_condition.eq(
         "referral_or_completion_date_le_prediction_index"

@@ -31,6 +31,7 @@ from config import (
     TABLE_CONTRACTS,
     ensure_output_directories,
     resolve_analytical_data_dir,
+    write_eda_artifact_manifest,
 )
 
 
@@ -474,6 +475,7 @@ def main() -> None:
     (OUTPUT_DIR / "inventory_run_summary.json").write_text(
         json.dumps(summary, indent=2, default=str), encoding="utf-8"
     )
+    write_eda_artifact_manifest(analytical_dir, selection_metadata)
     print(
         f"Wrote {len(inventory):,} inventory rows and {len(dictionary):,} field profiles "
         f"from {analytical_dir}"
