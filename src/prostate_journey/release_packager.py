@@ -359,6 +359,7 @@ def run_release_tests(
     python_executable: str | Path | None = None,
     dataset_dir: str | Path | None = None,
     timeout: int = 3600,
+    allow_failed_tests: bool = False,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> dict[str, Any]:
     """Run formatting, lint, typing, contracts and tests with persisted evidence."""
@@ -412,6 +413,7 @@ def run_release_tests(
         "project_root": str(project),
         "python_executable": python,
         "passed": passed,
+        "allow_failed_tests": allow_failed_tests,
         "commands": results,
         "junit": junit,
         "junit_sha256": sha256_file(junit_path),
@@ -450,7 +452,7 @@ def run_release_tests(
             ]
         )
     (qa / "test_report.md").write_text("\n".join(markdown) + "\n", encoding="utf-8")
-    if not passed:
+    if not passed and not allow_failed_tests:
         raise ReleasePackagingError(
             "Ruff or pytest failed, or another quality gate failed; release packaging is blocked"
         )
@@ -915,6 +917,7 @@ def write_final_release_files(
     test_report: Mapping[str, Any],
     archive_hashes: Mapping[str, Any],
     external_definition_blockers: int = 0,
+    allow_failed_tests: bool = False,
     apply_filesystem_readonly: bool = False,
 ) -> dict[str, Any]:
     """Write the certified decision, final manifest, checksums, and immutable marker."""
@@ -923,8 +926,15 @@ def write_final_release_files(
         raise ReleasePackagingError(
             f"External definition blockers remain: {external_definition_blockers}"
         )
-    if test_report.get("passed") is not True:
+    if test_report.get("passed") is not True and not allow_failed_tests:
         raise ReleasePackagingError("Test report is not passing")
+
+    dev_override_active = bool(allow_failed_tests and test_report.get("passed") is not True)
+    release_decision = (
+        "DEV DEMO — RELEASE TEST FAILURES ALLOWED"
+        if dev_override_active
+        else "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED"
+    )
 
     release = Path(release_root).resolve()
     required_archives = {"analytical", "qa_evidence"}
@@ -963,43 +973,57 @@ def write_final_release_files(
             )
     decision_path = release / "RELEASE_DECISION.md"
     analytical_archive = archive_hashes["analytical"]["path"]
-    decision_path.write_text(
-        "\n".join(
-            [
-                "# Final Release Decision",
-                "",
-                f"Dataset version: {dataset_version}",
-                "",
-                "Internal synthetic release gate score: 100/100",
-                "",
-                "Internal synthetic-contract P0 blockers: 0",
-                "",
-                "Internal synthetic-contract P1 issues: 0",
-                "",
-                "Synthetic-contract definition blockers: 0",
-                "",
-                "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED",
-                "",
-                "Internal engineering and analytical contract gate: **PASS**.",
-                "",
-                "This is not Bayer approval, clinical validation, regulatory compliance, "
-                "production approval, or real-data fitness. The local artifact reconciliation, "
-                "quality gates, provenance, and checksums pass. Preserve the complete release "
-                "directory and the "
-                f"immutable analytical baseline archive `{analytical_archive}`.",
-                "",
-                "Scientific Stage-4 work remains conditional on an approved intended use, "
-                "protocol/SAP, governed real data, and named clinical, RWE, privacy, security, "
-                "statistics, model-risk, accessibility, and platform approvals.",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    if dev_override_active:
+        decision_lines = [
+            "# Development Demo Release Decision",
+            "",
+            f"Dataset version: {dataset_version}",
+            "",
+            "DEV/DEMO OVERRIDE — RELEASE TEST FAILURES WERE ALLOWED.",
+            "",
+            "The release test report is retained and remains FAIL. This override exists only ",
+            "to unblock a synthetic development/demo deployment and must not be interpreted as ",
+            "certification, Bayer approval, clinical validation, regulatory compliance, ",
+            "production approval, or real-data fitness.",
+            "",
+            f"Immutable analytical baseline archive: `{analytical_archive}`.",
+        ]
+    else:
+        decision_lines = [
+            "# Final Release Decision",
+            "",
+            f"Dataset version: {dataset_version}",
+            "",
+            "Internal synthetic release gate score: 100/100",
+            "",
+            "Internal synthetic-contract P0 blockers: 0",
+            "",
+            "Internal synthetic-contract P1 issues: 0",
+            "",
+            "Synthetic-contract definition blockers: 0",
+            "",
+            "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED",
+            "",
+            "Internal engineering and analytical contract gate: **PASS**.",
+            "",
+            "This is not Bayer approval, clinical validation, regulatory compliance, "
+            "production approval, or real-data fitness. The local artifact reconciliation, "
+            "quality gates, provenance, and checksums pass. Preserve the complete release "
+            "directory and the "
+            f"immutable analytical baseline archive `{analytical_archive}`.",
+            "",
+            "Scientific Stage-4 work remains conditional on an approved intended use, "
+            "protocol/SAP, governed real data, and named clinical, RWE, privacy, security, "
+            "statistics, model-risk, accessibility, and platform approvals.",
+        ]
+    decision_path.write_text("\n".join(decision_lines) + "\n", encoding="utf-8")
+
     manifest = {
         "dataset_version": dataset_version,
         "created_at": _utc_now(),
-        "decision": "CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED",
+        "decision": release_decision,
+        "dev_release_override": dev_override_active,
+        "release_tests_allowed_to_fail": bool(allow_failed_tests),
         "decision_scope": "internal synthetic-data engineering and analytical contract only",
         "formal_compliance_claim": False,
         "synthetic_data_only": True,
@@ -1027,6 +1051,8 @@ def write_final_release_files(
         "artifact_parity": dict(parity_evidence),
         "test_summary": {
             "passed": test_report["passed"],
+            "allow_failed_tests": bool(test_report.get("allow_failed_tests", False)),
+            "dev_override_active": dev_override_active,
             "junit": test_report.get("junit", {}),
             "commands": {
                 name: {
@@ -1080,6 +1106,7 @@ def package_certified_release(
     evidence_callback: Callable[..., Any] | None = None,
     test_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
     git_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    allow_failed_tests: bool = False,
     apply_filesystem_readonly: bool = False,
 ) -> dict[str, Any]:
     """Build a strict two-archive release from a fresh, already-generated staging run."""
@@ -1149,6 +1176,7 @@ def package_certified_release(
         qa,
         python_executable=python_executable,
         dataset_dir=analytical,
+        allow_failed_tests=allow_failed_tests,
         runner=test_runner,
     )
     write_component_hash_manifests(project_root, input_dir, release, qa)
@@ -1162,5 +1190,6 @@ def package_certified_release(
         parity_evidence=parity,
         test_report=test_report,
         archive_hashes=archives,
+        allow_failed_tests=allow_failed_tests,
         apply_filesystem_readonly=apply_filesystem_readonly,
     )

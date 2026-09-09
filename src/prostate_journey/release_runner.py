@@ -25,6 +25,7 @@ def create_fresh_certified_release(
     dataset_version: str,
     git_executable: str | Path = "git",
     python_executable: str | Path | None = None,
+    allow_failed_tests: bool = False,
 ) -> dict[str, Any]:
     """Generate into a never-used stage, reload, certify, and package the exact run."""
     project = Path(project_root).resolve()
@@ -50,6 +51,7 @@ def create_fresh_certified_release(
         expected_git_commit=source["git_commit"],
         git_executable=git_executable,
         python_executable=python_executable or sys.executable,
+        allow_failed_tests=allow_failed_tests,
     )
     return {
         **manifest,

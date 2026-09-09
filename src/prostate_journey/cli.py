@@ -665,6 +665,14 @@ def final_release_command(
     release_name: str | None = None,
     scenario_version: str | None = None,
     git_executable: str = "git",
+    dev_allow_failed_release_tests: bool = typer.Option(
+        False,
+        "--dev-allow-failed-release-tests",
+        help=(
+            "DEV/DEMO ONLY: preserve failed release-test evidence but allow packaging "
+            "to continue. Does not represent certification or production approval."
+        ),
+    ),
     log_level: str = "INFO",
 ) -> None:
     """Create a fresh candidate with separate analytical and QA evidence archives."""
@@ -688,8 +696,16 @@ def final_release_command(
             release_dir=release_dir,
             dataset_version=dataset_version,
             git_executable=git_executable,
+            allow_failed_tests=dev_allow_failed_release_tests,
         )
-    typer.echo(f"CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED: {result['release_directory']}")
+    if result.get("dev_release_override"):
+        typer.echo(
+            f"DEV DEMO — RELEASE TEST FAILURES ALLOWED: {result['release_directory']}"
+        )
+    else:
+        typer.echo(
+            f"CANDIDATE — INTERNAL SYNTHETIC CONTRACT PASSED: {result['release_directory']}"
+        )
 
 
 if __name__ == "__main__":
